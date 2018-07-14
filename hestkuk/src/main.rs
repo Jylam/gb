@@ -1,3 +1,5 @@
+use std::env;
+
 mod rom;
 use rom::ROM;
 /* struct Opcode {
@@ -25,12 +27,14 @@ static g_opcode : Opcode = Opcode {
 */
 fn main() {
     println!("Hestkuk.");
+    let args: Vec<String> = env::args().collect();
 
-    let rom = ROM{
-        filename: String::from("test.gb"),
-    };
 
-    rom.readfile();
+
+    match rom::read_ROM(&String::from(args[1].clone())) {
+        Ok(_v) => println!("Ok ! {:?}", _v),
+        Err(e) => println!("Error {:?}", e),
+    }
 
 
 }
