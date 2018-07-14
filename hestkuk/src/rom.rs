@@ -40,6 +40,14 @@ impl ROM {
         let logo = self.buffer[0x104..0x133].to_vec().clone();
         logo
     }
+    pub fn get_cgb_flag(&self) -> u8 {
+        let cgb = self.buffer[0x143];
+        cgb
+    }
+    pub fn get_type(&self) -> u8 {
+        let t = self.buffer[0x147];
+        t
+    }
     pub fn get_name(&self) -> String {
         String::from_utf8(self.buffer[0x0134..0x0143].to_vec()).unwrap()
     }
