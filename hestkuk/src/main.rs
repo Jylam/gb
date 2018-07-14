@@ -21,6 +21,6 @@ fn main() {
     println!("CGB Flag:\t {:02X}", rom.get_cgb_flag());
     println!("Cartridge Type:\t {:02X}", rom.get_cartridge_type());
     println!("Cartridge Size:\t {}kB", rom.get_cartridge_size_kb());
-
+    // FIXME rom.validate_checkchum();
     process::exit(0)
 }
