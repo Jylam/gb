@@ -28,17 +28,20 @@ impl ROM {
     pub fn read_from_file(&mut self) -> io::Result<()> {
         let metadata = try!(fs::metadata(&self.filename));
         self.size = metadata.len() as usize;
-        self.buffer = vec![0; self.size];
         let mut f = File::open(&self.filename)?;
-        f.read_to_end(&mut self.buffer)?;
+        let read_size = f.read_to_end(&mut self.buffer)?;
+        println!("Read {} bytes", read_size);
         Ok(())
     }
     pub fn get_size(&self) -> usize {
         self.size
     }
+    pub fn get_logo(&self) -> Vec<u8> {
+        let logo = self.buffer[0x104..0x133].to_vec().clone();
+        logo
+    }
     pub fn get_name(&self) -> String {
         String::from_utf8(self.buffer[0x0134..0x0143].to_vec()).unwrap()
     }
-
 
 }

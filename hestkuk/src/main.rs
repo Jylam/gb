@@ -17,6 +17,6 @@ fn main() {
     }
     println!("ROM Size:\t {:?}", rom.get_size());
     println!("ROM Name:\t {}", rom.get_name());
-
+    println!("Logo:\t\t {:02X?}", rom.get_logo());
     process::exit(0)
 }
