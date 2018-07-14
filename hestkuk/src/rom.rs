@@ -16,8 +16,10 @@ pub fn read_ROM(filename: &String) -> io::Result<ROM> {
         filename: String::from(filename.clone()),
         size: 0,
     };
-    rom.read_from_file();
-    Ok(rom)
+    match rom.read_from_file() {
+        Ok(_v) => Ok(rom),
+        Err(e) => Err(e),
+    }
 }
 
 impl ROM {
