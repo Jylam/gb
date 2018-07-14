@@ -4,7 +4,7 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ROM {
     filename: String,
     size: usize,
@@ -26,14 +26,9 @@ impl ROM {
     pub fn read_from_file(&mut self) -> io::Result<()> {
         let metadata = try!(fs::metadata(&self.filename));
         self.size = metadata.len() as usize;
-        println!("Reading {}, {} bytes", &self.filename, self.size);
-
         let mut buffer = vec![0; self.size];
         let mut f = File::open(&self.filename)?;
         f.read_to_end(&mut buffer)?;
-
-
-
         Ok(())
     }
     pub fn get_size(&self) -> usize {
