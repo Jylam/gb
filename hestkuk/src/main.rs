@@ -19,7 +19,8 @@ fn main() {
     println!("ROM Name:\t {}", rom.get_name());
     println!("Logo:\t\t {:02X?}", rom.get_logo());
     println!("CGB Flag:\t {:02X}", rom.get_cgb_flag());
-    println!("Cartridge Type:\t {:02X}", rom.get_type());
+    println!("Cartridge Type:\t {:02X}", rom.get_cartridge_type());
+    println!("Cartridge Size:\t {}kB", rom.get_cartridge_size_kb());
 
     process::exit(0)
 }

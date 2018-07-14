@@ -44,8 +44,12 @@ impl ROM {
         let cgb = self.buffer[0x143];
         cgb
     }
-    pub fn get_type(&self) -> u8 {
+    pub fn get_cartridge_type(&self) -> u8 {
         let t = self.buffer[0x147];
+        t
+    }
+    pub fn get_cartridge_size_kb(&self) -> u32 {
+        let t = 32<<self.buffer[0x148];
         t
     }
     pub fn get_name(&self) -> String {
