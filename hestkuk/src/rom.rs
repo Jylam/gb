@@ -11,7 +11,7 @@ pub struct ROM {
 }
 
 
-pub fn read_ROM(filename: &String) -> io::Result<ROM> {
+pub fn read_rom_from_file(filename: &String) -> io::Result<ROM> {
     let mut rom = ROM{
         filename: String::from(filename.clone()),
         size: 0,
@@ -35,5 +35,8 @@ impl ROM {
 
 
         Ok(())
+    }
+    pub fn get_size(&self) -> usize {
+        self.size
     }
 }

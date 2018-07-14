@@ -1,7 +1,6 @@
 use std::env;
 
 mod rom;
-use rom::ROM;
 /* struct Opcode {
     x: u8,
     y: u8,
@@ -31,10 +30,9 @@ fn main() {
 
 
 
-    match rom::read_ROM(&String::from(args[1].clone())) {
-        Ok(_v) => println!("Ok ! {:?}", _v),
+    match rom::read_rom_from_file(&String::from(args[1].clone())) {
+        Ok(_v) => println!("Ok ! {:?}", _v.get_size()),
         Err(e) => println!("Error {:?}", e),
     }
-
 
 }
