@@ -49,7 +49,9 @@ fn main() {
     cpu.reset();
     cpu.print_status();
     cpu.step();
-    cpu.print_status();
+    cpu.step();
+    cpu.step();
+    cpu.step();
     cpu.step();
     cpu.print_status();
 

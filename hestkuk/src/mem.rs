@@ -15,7 +15,12 @@ impl<'a> Mem<'a>{
         }
     }
     pub fn read8(&self, addr: u16) -> u8 {
-        println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
+        //println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
         self.rom.buffer[addr as usize]
+    }
+    pub fn read16(&self, addr: u16) -> u16 {
+        let v = (((self.rom.buffer[(addr+1) as usize] as u16)<<8)|(self.rom.buffer[addr as usize]) as u16) as u16;
+        //println!("[{:04X}] >>> {:04X}", addr, v);
+        v
     }
 }
