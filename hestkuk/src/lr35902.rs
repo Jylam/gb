@@ -15,7 +15,7 @@ pub struct Cpu<'a> {
     mem: mem::Mem<'a>,
     PC: u16,
     total_cyles: u64,
-    opcodes: [Opcode; 256],
+    opcodes: Vec<Opcode>,
 }
 
 
@@ -24,20 +24,32 @@ pub fn UNK(cpu: &mut Cpu) {
 }
 impl<'a> Cpu<'a>{
 
-
     pub fn new(mem: mem::Mem) -> Cpu {
-        let cpu: Cpu;
+        let mut cpu: Cpu;
         cpu = Cpu{
             PC: 0x100,
             mem: mem,
             total_cyles: 0,
-            opcodes: [
-                    Opcode {
-                        name: "UNK",
-                        len: 1,
-                        cycles: 4,
-                        execute: UNK,
-                    }; 256]
+            opcodes:
+                vec![Opcode{
+                    name: "UNK",
+                    len: 1,
+                    cycles: 4,
+                    execute: UNK,
+                }; 256]
+
+        };
+        cpu.opcodes[0] = Opcode {
+            name: "NOP",
+            len: 1,
+            cycles: 4,
+            execute: UNK,
+        };
+        cpu.opcodes[0xC3] = Opcode {
+            name: "JP a16",
+            len: 1,
+            cycles: 4,
+            execute: UNK,
         };
         cpu
     }
