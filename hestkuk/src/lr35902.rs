@@ -85,10 +85,19 @@ pub fn LDhld16(cpu: &mut Cpu) {
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
 }
+pub fn LDDhla(cpu: &mut Cpu) {
+    cpu.mem.write8(cpu.regs.get_HL(), cpu.regs.A);
+    println!("LD [HL], a")
+}
 pub fn LDcd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.C = imm;
     println!("LD C, {:02X}", imm)
+}
+pub fn LDbd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.B = imm;
+    println!("LD B, {:02X}", imm)
 }
 pub fn JPa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -131,6 +140,13 @@ impl<'a> Cpu<'a>{
             execute: NOP,
             jump: false,
         };
+        cpu.opcodes[0x06] = Opcode {
+            name: "LD B,d8",
+            len: 2,
+            cycles: 8,
+            execute: LDbd8,
+            jump: false,
+        };
         cpu.opcodes[0x0E] = Opcode {
             name: "LD C,d8",
             len: 2,
@@ -143,6 +159,13 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 13,
             execute: LDhld16,
+            jump: false,
+        };
+        cpu.opcodes[0x32] = Opcode {
+            name: "LDD (HL), a",
+            len: 1,
+            cycles: 8,
+            execute: LDDhla,
             jump: false,
         };
         cpu.opcodes[0xAF] = Opcode {
