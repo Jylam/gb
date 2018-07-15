@@ -1,3 +1,4 @@
+use std::io;
 use std::env;
 use std::process;
 mod mem;
@@ -18,20 +19,15 @@ fn main() {
             process::exit(2);
     }
 
+    let v: io::Result<rom::ROM> = rom::ROM::new(String::from(args[1].clone()));
     /* Read first argument and create a ROM from that */
-    match rom::read_rom_from_file(&String::from(args[1].clone())) {
+    match v {
         Ok(_v) => rom = _v.clone(),
         Err(_e) => {
             println!("Error: {:?}", _e);
             process::exit(1)
         },
     }
-
-    /* Create Memory Controller */
-    mem = mem::Mem::new(rom);
-    /* Create Sharp LR35902 CPU instance */
-    cpu = lr35902::Cpu::new(&mem);
-
 
     /* Print informations about the loaded ROM */
     // FIXME rom.validate_checkchum();
@@ -42,6 +38,13 @@ fn main() {
     println!("Cartridge Type:\t {:02X}", rom.get_cartridge_type());
     println!("Cartridge Size:\t {}kB",   rom.get_cartridge_size_kb());
     println!("Destination:\t {}",        rom.get_destination_code());
+
+    /* Create Memory Controller */
+    mem = mem::Mem::new(rom);
+    /* Create Sharp LR35902 CPU instance */
+    cpu = lr35902::Cpu::new(mem);
+
+
 
     cpu.reset();
     cpu.print_status();

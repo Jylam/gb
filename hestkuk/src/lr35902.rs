@@ -2,15 +2,15 @@
 use mem;
 // Sharp LR35902 CPU emulator
 pub struct Cpu<'a> {
-    mem: &'a mem::Mem<'a>,
+    mem: mem::Mem<'a>,
     PC: u16,
 }
 
 impl<'a> Cpu<'a>{
-    pub fn new(mem: &'a mem::Mem) -> Cpu<'a> {
+    pub fn new(mem: mem::Mem) -> Cpu {
         Cpu{
             PC: 0x100,
-            mem: mem,
+            mem: mem.clone(),
         }
     }
     pub fn get_PC(&self) -> u16 {
@@ -23,11 +23,11 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn reset(&mut self) {
-        self.PC = 0x100
+        self.PC = 0x101
     }
 
     pub fn step(&mut self) {
-        println!("{:02X}", self.mem.read8())
+        println!("{:04X}: {:02X}", self.PC, self.mem.read8(self.PC))
     }
 
 }

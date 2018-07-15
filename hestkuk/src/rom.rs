@@ -3,35 +3,40 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 use std::fs;
+use std::borrow::Cow;
 
 #[derive(Clone, Debug, Default)]
 pub struct ROM<'a> {
-    filename: String,
-    size: usize,
-    buffer: Vec<u8>,
+    filename: Cow<'a, str>,
+    size:     usize,
+    pub buffer:   Vec<u8>,
 }
 
-
-pub fn read_rom_from_file(filename: &String) -> io::Result<ROM> {
-    let mut rom = ROM{
-        filename: String::from(filename.clone()),
-        size: 0,
-        ..Default::default()
-    };
-    match rom.read_from_file() {
-        Ok(_v) => Ok(rom),
-        Err(e) => Err(e),
-    }
-}
 
 impl<'a> ROM<'a> {
-    pub fn read_from_file(&'a mut self) -> io::Result<()> {
-        let metadata = try!(fs::metadata(&self.filename));
+
+    pub fn new(filename: String) -> io::Result<ROM<'a>> {
+
+        let rom: ROM = ROM {
+            filename: Cow::Owned(filename.clone()),
+            size: 0,
+            ..Default::default()
+        };
+        match rom.read_from_file() {
+            Ok(_v) => {
+                Ok(_v)
+            },
+            Err(e) => Err(e),
+        }
+    }
+
+    pub fn read_from_file(mut self) -> io::Result<ROM<'a>> {
+        let metadata = try!(fs::metadata(self.filename.to_mut()));
         self.size = metadata.len() as usize;
-        let mut f = File::open(&self.filename)?;
+        let mut f = File::open(self.filename.to_mut())?;
         let read_size = f.read_to_end(&mut self.buffer)?;
         println!("Read {} bytes", read_size);
-        Ok(())
+        Ok(self)
     }
     pub fn get_size(&self) -> usize {
         self.size
