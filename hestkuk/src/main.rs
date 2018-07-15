@@ -53,6 +53,7 @@ fn main() {
     cpu.step();
     cpu.step();
     cpu.step();
+    cpu.step();
     cpu.print_status();
 
 

@@ -29,14 +29,14 @@ impl Registers {
     fn get_AF(self) -> u16 {
        ((self.A as u16)<<8) | ((self.F as u16)&0xFF)
     }
-    fn set_AF(mut self, v: u16) {
+    fn set_AF(&mut self, v: u16) {
         self.A = ((v&0xFF00)>>8) as u8;
         self.F = (v&0xFF) as u8;
     }
     fn get_BC(self) -> u16 {
        ((self.B as u16)<<8) | ((self.C as u16)&0xFF)
     }
-    fn set_DE(mut self, v: u16) {
+    fn set_DE(&mut self, v: u16) {
         self.D = ((v&0xFF00)>>8) as u8;
         self.E = (v&0xFF) as u8;
     }
@@ -44,8 +44,6 @@ impl Registers {
        ((self.H as u16)<<8) | ((self.L as u16)&0xFF)
     }
     fn set_HL(&mut self, v: u16) {
-        println!("Setting HL to {:04X}...", v);
-
         self.H = (((v&0xFF00)as u16)>>8) as u8;
         self.L = (v&0xFF) as u8;
     }
@@ -67,6 +65,10 @@ pub fn imm16(cpu: &mut Cpu) -> u16 {
     let v = cpu.mem.read16(cpu.get_PC()+1);
     v
 }
+pub fn imm8(cpu: &mut Cpu) -> u8 {
+    let v = cpu.mem.read8(cpu.get_PC()+1);
+    v
+}
 
 pub fn UNK(cpu: &mut Cpu) {
     println!("*** Unknow instruction at {:04X}", cpu.get_PC())
@@ -82,7 +84,11 @@ pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
-
+}
+pub fn LDcd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.C = imm;
+    println!("LD C, {:02X}", imm)
 }
 pub fn JPa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -123,6 +129,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: NOP,
+            jump: false,
+        };
+        cpu.opcodes[0x0E] = Opcode {
+            name: "LD C,d8",
+            len: 2,
+            cycles: 8,
+            execute: LDcd8,
             jump: false,
         };
         cpu.opcodes[0x21] = Opcode {
