@@ -55,6 +55,17 @@ impl ROM {
     pub fn get_name(&self) -> String {
         String::from_utf8(self.buffer[0x0134..0x0143].to_vec()).unwrap()
     }
+    pub fn get_destination_code(&self) -> String {
+        let mut ret: String = String::from("Unknown");
+
+        if self.buffer[0x014A]==0x00 {
+            ret = format!("Japanese");
+        } else if self.buffer[0x014A]==0x01 {
+            ret = format!("Non-Japanese");
+        }
+        ret
+    }
+    #[allow(dead_code)]
     pub fn validate_checkchum(&self) {
         let orig = self.buffer[0x14D];
         let mut new: u8 = 0x01;
