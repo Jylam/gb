@@ -5,7 +5,7 @@ use std::fs::File;
 use std::fs;
 
 #[derive(Clone, Debug, Default)]
-pub struct ROM {
+pub struct ROM<'a> {
     filename: String,
     size: usize,
     buffer: Vec<u8>,
@@ -24,8 +24,8 @@ pub fn read_rom_from_file(filename: &String) -> io::Result<ROM> {
     }
 }
 
-impl ROM {
-    pub fn read_from_file(&mut self) -> io::Result<()> {
+impl<'a> ROM<'a> {
+    pub fn read_from_file(&'a mut self) -> io::Result<()> {
         let metadata = try!(fs::metadata(&self.filename));
         self.size = metadata.len() as usize;
         let mut f = File::open(&self.filename)?;

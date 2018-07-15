@@ -1,8 +1,14 @@
 use std::env;
 use std::process;
+mod mem;
 mod rom;
+mod lr35902;
 
 fn main() {
+    let rom: rom::ROM;
+    let mut cpu: lr35902::Cpu;
+    let mut mem: mem::Mem;
+
     println!("Hestkuk.");
 
     /* Parse arguments */
@@ -13,7 +19,6 @@ fn main() {
     }
 
     /* Read first argument and create a ROM from that */
-    let rom: rom::ROM;
     match rom::read_rom_from_file(&String::from(args[1].clone())) {
         Ok(_v) => rom = _v.clone(),
         Err(_e) => {
@@ -22,14 +27,34 @@ fn main() {
         },
     }
 
+    /* Create Memory Controller */
+    mem = mem::Mem::new(rom);
+    /* Create Sharp LR35902 CPU instance */
+    cpu = lr35902::Cpu::new(&mem);
+
+
+    /* Print informations about the loaded ROM */
     // FIXME rom.validate_checkchum();
     println!("ROM Size:\t {:?}",         rom.get_size());
-    println!("ROM Name:\t '{}'",           rom.get_name());
+    println!("ROM Name:\t '{}'",         rom.get_name());
     println!("Logo:\t\t {:02X?}",        rom.get_logo());
     println!("CGB Flag:\t {:02X}",       rom.get_cgb_flag());
     println!("Cartridge Type:\t {:02X}", rom.get_cartridge_type());
     println!("Cartridge Size:\t {}kB",   rom.get_cartridge_size_kb());
-    println!("Destination:\t {}",   rom.get_destination_code());
+    println!("Destination:\t {}",        rom.get_destination_code());
+
+    cpu.reset();
+    cpu.print_status();
+    cpu.step();
+    cpu.print_status();
+
+
+
+
+
+
+
+
 
     process::exit(0)
 }
