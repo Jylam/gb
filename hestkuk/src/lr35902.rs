@@ -10,6 +10,18 @@ struct Opcode {
     jump: bool,
 }
 
+pub struct Registers {
+    A: u8,
+    B: u8,
+    D: u8,
+    H: u8,
+    F: u8,
+    C: u8,
+    E: u8,
+    L: u8,
+    PC: u16,
+    SP: u16,
+}
 
 // Sharp LR35902 CPU emulator
 pub struct Cpu<'a> {
