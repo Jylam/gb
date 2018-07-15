@@ -23,9 +23,7 @@ impl<'a> ROM<'a> {
             ..Default::default()
         };
         match rom.read_from_file() {
-            Ok(_v) => {
-                Ok(_v)
-            },
+            Ok(_v) => Ok(_v),
             Err(e) => Err(e),
         }
     }

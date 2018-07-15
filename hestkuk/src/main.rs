@@ -8,7 +8,7 @@ mod lr35902;
 fn main() {
     let rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
-    let mut mem: mem::Mem;
+    let mem: mem::Mem;
 
     println!("Hestkuk.");
 
@@ -47,6 +47,8 @@ fn main() {
 
 
     cpu.reset();
+    cpu.print_status();
+    cpu.step();
     cpu.print_status();
     cpu.step();
     cpu.print_status();
