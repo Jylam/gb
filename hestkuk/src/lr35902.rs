@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+use std::process;
 use mem;
 
 #[derive(Copy, Clone)]
@@ -83,7 +84,9 @@ pub fn imm8(cpu: &mut Cpu) -> u8 {
 }
 
 pub fn UNK(cpu: &mut Cpu) {
-    println!("*** Unknow instruction at {:04X}", cpu.regs.get_PC())
+    println!("*** Unknow instruction at {:04X}", cpu.regs.get_PC());
+    cpu.print_status();
+    process::exit(3);
 }
 pub fn NOP(_cpu: &mut Cpu) {
     println!("NOP")
@@ -111,10 +114,20 @@ pub fn LDcd8(cpu: &mut Cpu) {
     cpu.regs.C = imm;
     println!("LD C, {:02X}", imm)
 }
+pub fn LDad8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.A = imm;
+    println!("LD A, {:02X}", imm)
+}
 pub fn LDbd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.B = imm;
     println!("LD B, {:02X}", imm)
+}
+pub fn LDha8a(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
+    println!("LDH ({:02X}), A", imm)
 }
 pub fn LDa16a(cpu: &mut Cpu) {
     let imm = addr16(cpu);
@@ -209,6 +222,13 @@ impl<'a> Cpu<'a>{
             execute: XORa,
             jump: false,
         };
+        cpu.opcodes[0xE0] = Opcode {
+            name: "LDH (a8),A",
+            len: 2,
+            cycles: 12,
+            execute: LDha8a,
+            jump: false,
+        };
         cpu.opcodes[0xEA] = Opcode {
             name: "LD (a16),A",
             len: 3,
@@ -228,6 +248,13 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 12,
             execute: LDspd16,
+            jump: false,
+        };
+        cpu.opcodes[0x3E] = Opcode {
+            name: "LD A,d8",
+            len: 2,
+            cycles: 8,
+            execute: LDad8,
             jump: false,
         };
         cpu.opcodes[0xC3] = Opcode {
