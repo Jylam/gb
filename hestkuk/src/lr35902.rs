@@ -47,6 +47,18 @@ impl Registers {
         self.H = (((v&0xFF00)as u16)>>8) as u8;
         self.L = (v&0xFF) as u8;
     }
+    fn get_SP(self) -> u16 {
+       self.SP
+    }
+    fn set_SP(&mut self, v: u16) {
+        self.SP = v;
+    }
+    fn get_PC(self) -> u16 {
+       self.PC
+    }
+    fn set_PC(&mut self, v: u16) {
+        self.PC = v;
+    }
 }
 
 // Sharp LR35902 CPU emulator
@@ -58,20 +70,20 @@ pub struct Cpu<'a> {
 }
 
 pub fn addr16(cpu: &mut Cpu) -> u16 {
-    let v = cpu.mem.read16(cpu.get_PC()+1);
+    let v = cpu.mem.read16(cpu.regs.get_PC()+1);
     v
 }
 pub fn imm16(cpu: &mut Cpu) -> u16 {
-    let v = cpu.mem.read16(cpu.get_PC()+1);
+    let v = cpu.mem.read16(cpu.regs.get_PC()+1);
     v
 }
 pub fn imm8(cpu: &mut Cpu) -> u8 {
-    let v = cpu.mem.read8(cpu.get_PC()+1);
+    let v = cpu.mem.read8(cpu.regs.get_PC()+1);
     v
 }
 
 pub fn UNK(cpu: &mut Cpu) {
-    println!("*** Unknow instruction at {:04X}", cpu.get_PC())
+    println!("*** Unknow instruction at {:04X}", cpu.regs.get_PC())
 }
 pub fn NOP(_cpu: &mut Cpu) {
     println!("NOP")
@@ -84,6 +96,11 @@ pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
+}
+pub fn LDspd16(cpu: &mut Cpu) {
+    let imm = imm16(cpu);
+    cpu.regs.set_SP(imm);
+    println!("LD SP, {:04X}", imm)
 }
 pub fn LDDhla(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_HL(), cpu.regs.A);
@@ -99,11 +116,21 @@ pub fn LDbd8(cpu: &mut Cpu) {
     cpu.regs.B = imm;
     println!("LD B, {:02X}", imm)
 }
+pub fn LDa16a(cpu: &mut Cpu) {
+    let imm = addr16(cpu);
+    cpu.mem.write8(imm, cpu.regs.A);
+    println!("LD ({:04X}), A", imm)
+}
 pub fn JPa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     cpu.regs.PC = addr;
     println!("JP {:04X}", addr)
 }
+pub fn DI(_cpu: &mut Cpu) {
+    println!("DI")
+}
+
+
 impl<'a> Cpu<'a>{
 
     pub fn new(mem: mem::Mem) -> Cpu {
@@ -161,6 +188,13 @@ impl<'a> Cpu<'a>{
             execute: LDhld16,
             jump: false,
         };
+        cpu.opcodes[0x31] = Opcode {
+            name: "LD SP,d16",
+            len: 3,
+            cycles: 12,
+            execute: LDspd16,
+            jump: false,
+        };
         cpu.opcodes[0x32] = Opcode {
             name: "LDD (HL), a",
             len: 1,
@@ -175,6 +209,27 @@ impl<'a> Cpu<'a>{
             execute: XORa,
             jump: false,
         };
+        cpu.opcodes[0xEA] = Opcode {
+            name: "LD (a16),A",
+            len: 3,
+            cycles: 16,
+            execute: LDa16a,
+            jump: false,
+        };
+        cpu.opcodes[0xF3] = Opcode {
+            name: "DI",
+            len: 1,
+            cycles: 4,
+            execute: DI,
+            jump: false,
+        };
+        cpu.opcodes[0x31] = Opcode {
+            name: "LD SP, d16",
+            len: 3,
+            cycles: 12,
+            execute: LDspd16,
+            jump: false,
+        };
         cpu.opcodes[0xC3] = Opcode {
             name: "JP a16",
             len: 3,
@@ -184,13 +239,11 @@ impl<'a> Cpu<'a>{
         };
         cpu
     }
-    pub fn get_PC(&self) -> u16 {
-        self.regs.PC
-    }
 
     pub fn print_status(&self) {
         println!("==== CPU ====");
-        println!("PC: {:04X}", self.get_PC());
+        println!("PC: {:04X}", self.regs.get_PC());
+        println!("SP: {:04X}", self.regs.get_SP());
         println!("A : {:02X}\tF : {:02X}", self.regs.A, self.regs.F);
         println!("B : {:02X}\tC : {:02X}", self.regs.B, self.regs.C);
         println!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
@@ -205,7 +258,6 @@ impl<'a> Cpu<'a>{
     pub fn step(&mut self) {
         let code = self.mem.read8(self.regs.PC) as usize;
         let opcode = self.opcodes[code];
-        let _name  = opcode.name;
         print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
