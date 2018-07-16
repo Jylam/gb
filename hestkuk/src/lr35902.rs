@@ -99,13 +99,25 @@ pub fn NOP(_cpu: &mut Cpu) {
     println!("NOP")
 }
 pub fn XORa(cpu: &mut Cpu) {
-    println!("XOR a");
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
+    println!("XOR A");
+}
+pub fn INCe(cpu: &mut Cpu) {
+    cpu.regs.E = cpu.regs.E.wrapping_add(1);
+    println!("INC E");
 }
 pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
+}
+pub fn LDahl(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.mem.read8(cpu.regs.get_HL());
+    println!("LDI A, HL")
+}
+pub fn LDdea(cpu: &mut Cpu) {
+    cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
+    println!("LDI (DE), A")
 }
 pub fn LDded16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -254,6 +266,14 @@ impl<'a> Cpu<'a>{
             execute: LDded16,
             jump: false,
         };
+        cpu.opcodes[0x12] = Opcode {
+            name: "LD (DE), A",
+            len: 1,
+            cycles: 8,
+            execute: LDdea,
+            jump: false,
+        };
+
         cpu.opcodes[0x18] = Opcode {
             name: "JR r8",
             len: 2,
@@ -261,11 +281,25 @@ impl<'a> Cpu<'a>{
             execute: JRr8,
             jump: true,
         };
+        cpu.opcodes[0x1C] = Opcode {
+            name: "INC E",
+            len: 1,
+            cycles: 4,
+            execute: INCe,
+            jump: false,
+        };
         cpu.opcodes[0x21] = Opcode {
             name: "LD HL, d16",
             len: 3,
             cycles: 13,
             execute: LDhld16,
+            jump: false,
+        };
+        cpu.opcodes[0x2A] = Opcode {
+            name: "LDI A, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDahl,
             jump: false,
         };
         cpu.opcodes[0x31] = Opcode {
