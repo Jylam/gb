@@ -33,6 +33,7 @@ fn main() {
     // FIXME rom.validate_checkchum();
     println!("ROM Size:\t {:?}",         rom.get_size());
     println!("ROM Name:\t '{}'",         rom.get_name());
+    println!("RAM Size:\t {}kB",         rom.get_ram_size_kb());
     println!("Logo:\t\t {:02X?}",        rom.get_logo());
     println!("CGB Flag:\t {:02X}",       rom.get_cgb_flag());
     println!("Cartridge Type:\t {:02X}", rom.get_cartridge_type());
@@ -48,7 +49,6 @@ fn main() {
 
     cpu.reset();
     cpu.print_status();
-
     loop {
         cpu.step();
     }

@@ -20,16 +20,15 @@ impl<'a> Mem<'a>{
         //println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
 
         match addr {
-            0x0100..=0x3FFF => self.rom.buffer[addr as usize],
+            0x0100..=0x7FFF => self.rom.buffer[addr as usize],
             //0xFF00 ... 0xFF7F => { println!("Unsupported read8 in Hardware area {:04X}", addr); 0xFF},
             _ => {self.ram[addr as usize]},
         }
-
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
         println!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
-            0x0100..=0x3FFF => { self.rom.buffer[addr as usize] = v;},
+            0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             //0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},
             _ => {self.ram[addr as usize] = v;},
         }
@@ -44,7 +43,7 @@ impl<'a> Mem<'a>{
     }
 
     pub fn print_infos(&mut self) {
-        println!("Zero Page   (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
-        println!("Harware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
+        println!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
+        println!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
     }
 }

@@ -69,22 +69,25 @@ impl Registers {
     }
 
     fn set_FZ(&mut self) {
-        self.F |= 0b1000_0000
+        self.F |= 0b1000_0000;
+        println!("#### Set F to {:b}", self.F);
     }
     fn unset_FZ(&mut self) {
-        self.F &= 0b0111_1111
+        println!("F is {:b}", self.F);
+        self.F &= 0b0111_1111;
+        println!("#### UnSet F to {:b}", self.F);
     }
     fn get_FZ(&mut self) -> bool{
-        ((self.F&(0b1000_0000)>>7)==1) as bool
+        (((self.F&(0b1000_0000))>>7)==1) as bool
     }
     fn set_FN(&mut self) {
         self.F |= 0b0100_0000
     }
     fn unset_FN(&mut self) {
-        self.F |= 0b1011_1111
+        self.F &= 0b1011_1111
     }
     fn get_FN(&mut self) -> bool{
-        ((self.F&(0b0100_0000)>>6)==1) as bool
+        (((self.F&(0b0100_0000))>>6)==1) as bool
     }
     fn set_FH(&mut self) {
         self.F |= 0b0010_0000
@@ -93,16 +96,16 @@ impl Registers {
         self.F &= 0b1101_1111
     }
     fn get_FH(&mut self) -> bool{
-        ((self.F&(0b0010_0000)>>5)==1) as bool
+        (((self.F&(0b0010_0000))>>5)==1) as bool
     }
     fn set_FC(&mut self) {
         self.F |= 0b0001_0000
     }
     fn unset_FC(&mut self) {
-        self.F |= 0b1110_1111
+        self.F &= 0b1110_1111
     }
     fn get_FC(&mut self) -> bool{
-        ((self.F&(0b0001_0000)>>4)==1) as bool
+        (((self.F&(0b0001_0000))>>4)==1) as bool
     }
 
 }
@@ -141,7 +144,9 @@ pub fn XORa(cpu: &mut Cpu) {
     println!("XOR A");
 }
 pub fn DECc(cpu: &mut Cpu) {
+    println!("[[[[before C: {:02X}]]]]", cpu.regs.C);
     cpu.regs.C = cpu.regs.C.wrapping_sub(1);
+    println!("[[[[after C: {:02X}]]]]", cpu.regs.C);
     if cpu.regs.C == 0 {
         cpu.regs.set_FZ();
     } else {
@@ -150,7 +155,7 @@ pub fn DECc(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC C");
+    println!("DEC C, F is {:b}", cpu.regs.F);
 }
 pub fn DECb(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.B.wrapping_sub(1);
@@ -244,8 +249,6 @@ pub fn INCe(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
-    // Z 0 H -
-    //Z N H C
     println!("INC E");
 }
 pub fn LDhld16(cpu: &mut Cpu) {
@@ -253,13 +256,16 @@ pub fn LDhld16(cpu: &mut Cpu) {
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
 }
-pub fn LDahl(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.mem.read8(cpu.regs.get_HL());
-    println!("LDI A, HL")
+pub fn LDIahl(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    cpu.regs.A = cpu.mem.read8(hl);
+    println!("############## LDI A, (HL+) -> hl is {:04X}, value at hl is {:04X}", hl, cpu.mem.read8(hl));
+    cpu.regs.set_HL(hl.wrapping_add(1));
+    println!("LD A, (HL+)")
 }
 pub fn LDdea(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
-    println!("LDI (DE), A")
+    println!("LD (DE), A")
 }
 pub fn LDab(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
@@ -331,15 +337,17 @@ pub fn JRr8(cpu: &mut Cpu) {
     cpu.regs.PC += offset;
     println!("JR {:04X}", cpu.regs.PC)
 }
-pub fn JPnzr8(cpu: &mut Cpu) {
-    let offset = cpu.regs.PC;
-    let v      = imm8(cpu) as u16;
+pub fn JRnzr8(cpu: &mut Cpu) {
+    let offset = cpu.regs.PC + 2;
+    let v:i8      = imm8(cpu) as i8;
+    println!("JR NZ : Z is {}", cpu.regs.get_FZ());
     if cpu.regs.get_FZ() == false {
-        cpu.regs.PC = offset+v;
+        println!("JUMPING !");
+        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
     } else {
-        cpu.regs.PC = offset + 2;
+        cpu.regs.PC = offset;
     }
-    println!("JP NZ {:02X}", v)
+    println!("JR NZ {:02X}", v)
 }
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -488,7 +496,7 @@ impl<'a> Cpu<'a>{
             name: "JR NZ, r8",
             len: 2,
             cycles: 12,
-            execute: JPnzr8,
+            execute: JRnzr8,
             jump: true,
         };
         cpu.opcodes[0x21] = Opcode {
@@ -509,7 +517,7 @@ impl<'a> Cpu<'a>{
             name: "LDI A, (HL)",
             len: 1,
             cycles: 8,
-            execute: LDahl,
+            execute: LDIahl,
             jump: false,
         };
         cpu.opcodes[0x2D] = Opcode {
@@ -643,7 +651,7 @@ impl<'a> Cpu<'a>{
         println!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
         println!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
         println!("==== END ====");
-        self.mem.print_infos();
+//        self.mem.print_infos();
     }
 
     pub fn reset(&mut self) {
@@ -653,8 +661,11 @@ impl<'a> Cpu<'a>{
     pub fn step(&mut self) {
         let code = self.mem.read8(self.regs.PC) as usize;
         let opcode = self.opcodes[code];
+        println!("----------------------------------------");
         print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
+        self.print_status();
+        println!("----------------------------------------");
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
