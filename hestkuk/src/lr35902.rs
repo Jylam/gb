@@ -37,6 +37,13 @@ impl Registers {
     fn get_BC(self) -> u16 {
        ((self.B as u16)<<8) | ((self.C as u16)&0xFF)
     }
+    fn set_BC(&mut self, v: u16) {
+        self.B = (((v&0xFF00)as u16)>>8) as u8;
+        self.C = (v&0xFF) as u8;
+    }
+    fn get_DE(self) -> u16 {
+       ((self.D as u16)<<8) | ((self.E as u16)&0xFF)
+    }
     fn set_DE(&mut self, v: u16) {
         self.D = ((v&0xFF00)>>8) as u8;
         self.E = (v&0xFF) as u8;
@@ -99,6 +106,11 @@ pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
+}
+pub fn LDded16(cpu: &mut Cpu) {
+    let imm = imm16(cpu);
+    cpu.regs.set_DE(imm);
+    println!("LD DE, {:04X}", imm)
 }
 pub fn LDspd16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -233,6 +245,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: LDcd8,
+            jump: false,
+        };
+        cpu.opcodes[0x11] = Opcode {
+            name: "LD DE, d16",
+            len: 3,
+            cycles: 12,
+            execute: LDded16,
             jump: false,
         };
         cpu.opcodes[0x18] = Opcode {
