@@ -275,6 +275,16 @@ pub fn LDIahl(cpu: &mut Cpu) {
     cpu.regs.set_HL(hl.wrapping_add(1));
     println!("LD A, (HL+)")
 }
+pub fn LDhhl(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    cpu.regs.H = cpu.mem.read8(hl);
+    println!("LD H, (HL)")
+}
+pub fn LDhlb(cpu: &mut Cpu) {
+    let B = cpu.regs.B;
+    cpu.regs.set_HL(B as u16);
+    println!("LD (HL), B")
+}
 pub fn LDdea(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
     println!("LD (DE), A")
@@ -282,6 +292,14 @@ pub fn LDdea(cpu: &mut Cpu) {
 pub fn LDab(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
     println!("LD A, B")
+}
+pub fn LDhb(cpu: &mut Cpu) {
+    cpu.regs.H = cpu.regs.B;
+    println!("LD H, B")
+}
+pub fn LDlh(cpu: &mut Cpu) {
+    cpu.regs.L = cpu.regs.H;
+    println!("LD L, H")
 }
 pub fn LDded16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -352,14 +370,12 @@ pub fn JRr8(cpu: &mut Cpu) {
 pub fn JRnzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v:i8      = imm8(cpu) as i8;
-    println!("JR NZ : Z is {}", cpu.regs.get_FZ());
     if cpu.regs.get_FZ() == false {
-        println!("JUMPING !");
         cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
     } else {
         cpu.regs.PC = offset;
     }
-    println!("JR NZ {:02X}", v)
+    println!("JRNZ {:02X}", v)
 }
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -579,6 +595,34 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: LDba,
+            jump: false,
+        };
+        cpu.opcodes[0x60] = Opcode {
+            name: "LD H, B",
+            len: 1,
+            cycles: 4,
+            execute: LDhb,
+            jump: false,
+        };
+        cpu.opcodes[0x66] = Opcode {
+            name: "LD H, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDhhl,
+            jump: false,
+        };
+        cpu.opcodes[0x6C] = Opcode {
+            name: "LD L, H",
+            len: 1,
+            cycles: 4,
+            execute: LDlh,
+            jump: false,
+        };
+        cpu.opcodes[0x70] = Opcode {
+            name: "LD (HL),B",
+            len: 1,
+            cycles: 8,
+            execute: LDhlb,
             jump: false,
         };
         cpu.opcodes[0x78] = Opcode {
