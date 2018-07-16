@@ -634,7 +634,7 @@ impl<'a> Cpu<'a>{
         cpu
     }
 
-    pub fn print_status(&self) {
+    pub fn print_status(&mut self) {
         println!("==== CPU ====");
         println!("PC: {:04X}", self.regs.get_PC());
         println!("SP: {:04X}", self.regs.get_SP());
@@ -643,6 +643,7 @@ impl<'a> Cpu<'a>{
         println!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
         println!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
         println!("==== END ====");
+        self.mem.print_infos();
     }
 
     pub fn reset(&mut self) {
