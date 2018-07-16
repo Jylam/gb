@@ -140,6 +140,18 @@ pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
     println!("XOR A");
 }
+pub fn INCd(cpu: &mut Cpu) {
+    cpu.regs.D = cpu.regs.D.wrapping_add(1);
+    if cpu.regs.D == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("INC D");
+}
 pub fn INCe(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.E.wrapping_add(1);
     if cpu.regs.E == 0 {
@@ -231,6 +243,8 @@ pub fn JPnzr8(cpu: &mut Cpu) {
     let v      = imm8(cpu) as u16;
     if cpu.regs.get_FZ() == false {
         cpu.regs.PC = offset+v;
+    } else {
+        cpu.regs.PC = offset + 2;
     }
     println!("JP NZ {:02X}", v)
 }
@@ -328,6 +342,13 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
 
+        cpu.opcodes[0x14] = Opcode {
+            name: "INC D",
+            len: 1,
+            cycles: 4,
+            execute: INCd,
+            jump: false,
+        };
         cpu.opcodes[0x18] = Opcode {
             name: "JR r8",
             len: 2,
