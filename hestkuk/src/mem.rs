@@ -16,8 +16,13 @@ impl<'a> Mem<'a>{
     }
     pub fn read8(&self, addr: u16) -> u8 {
         //println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
-        self.rom.buffer[addr as usize]
-    }
+        if addr <= 0x7FFF {
+            self.rom.buffer[addr as usize]
+        } else {
+            println!("Unsupported read8 at {:04X}", addr);
+            0xFF
+        }
+        }
     pub fn write8(&mut self, addr: u16, v: u8)  {
         if addr <= 0x7FFF {
             println!("[{:04X}] <<< {:02X}", addr, v);

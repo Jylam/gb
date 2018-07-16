@@ -140,6 +140,18 @@ pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
     println!("XOR A");
 }
+pub fn DECd(cpu: &mut Cpu) {
+    cpu.regs.D = cpu.regs.D.wrapping_sub(1);
+    if cpu.regs.D == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC D");
+}
 pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_add(1);
     if cpu.regs.D == 0 {
@@ -176,6 +188,10 @@ pub fn LDahl(cpu: &mut Cpu) {
 pub fn LDdea(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
     println!("LDI (DE), A")
+}
+pub fn LDab(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.B;
+    println!("LD A, B")
 }
 pub fn LDded16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -320,6 +336,13 @@ impl<'a> Cpu<'a>{
             execute: LDbd8,
             jump: false,
         };
+        cpu.opcodes[0x0D] = Opcode {
+            name: "DEC D",
+            len: 1,
+            cycles: 4,
+            execute: DECd,
+            jump: false,
+        };
         cpu.opcodes[0x0E] = Opcode {
             name: "LD C, d8",
             len: 2,
@@ -410,6 +433,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: LDba,
+            jump: false,
+        };
+        cpu.opcodes[0x78] = Opcode {
+            name: "LD A, B",
+            len: 1,
+            cycles: 4,
+            execute: LDab,
             jump: false,
         };
         cpu.opcodes[0x7C] = Opcode {
