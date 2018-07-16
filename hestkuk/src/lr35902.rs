@@ -139,6 +139,12 @@ pub fn JPa16(cpu: &mut Cpu) {
     cpu.regs.PC = addr;
     println!("JP {:04X}", addr)
 }
+pub fn CALLa16(cpu: &mut Cpu) {
+    let addr = addr16(cpu);
+    cpu.regs.PC = addr;
+    println!("CALL {:04X}", addr)
+}
+
 pub fn DI(_cpu: &mut Cpu) {
     println!("DI")
 }
@@ -215,6 +221,13 @@ impl<'a> Cpu<'a>{
             execute: LDDhla,
             jump: false,
         };
+        cpu.opcodes[0x3E] = Opcode {
+            name: "LD A,d8",
+            len: 2,
+            cycles: 8,
+            execute: LDad8,
+            jump: false,
+        };
         cpu.opcodes[0xAF] = Opcode {
             name: "XOR A",
             len: 1,
@@ -243,25 +256,18 @@ impl<'a> Cpu<'a>{
             execute: DI,
             jump: false,
         };
-        cpu.opcodes[0x31] = Opcode {
-            name: "LD SP, d16",
-            len: 3,
-            cycles: 12,
-            execute: LDspd16,
-            jump: false,
-        };
-        cpu.opcodes[0x3E] = Opcode {
-            name: "LD A,d8",
-            len: 2,
-            cycles: 8,
-            execute: LDad8,
-            jump: false,
-        };
         cpu.opcodes[0xC3] = Opcode {
             name: "JP a16",
             len: 3,
             cycles: 16,
             execute: JPa16,
+            jump: true,
+        };
+        cpu.opcodes[0xCD] = Opcode {
+            name: "CALL a16",
+            len: 3,
+            cycles: 24,
+            execute: CALLa16,
             jump: true,
         };
         cpu

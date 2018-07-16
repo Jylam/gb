@@ -48,18 +48,8 @@ fn main() {
 
     cpu.reset();
     cpu.print_status();
-    while true {
-    cpu.step();
+
+    loop {
+        cpu.step();
     }
-    cpu.print_status();
-
-
-
-
-
-
-
-
-
-    process::exit(0)
 }
