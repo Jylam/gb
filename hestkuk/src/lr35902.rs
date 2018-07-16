@@ -140,6 +140,78 @@ pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
     println!("XOR A");
 }
+pub fn DECc(cpu: &mut Cpu) {
+    cpu.regs.C = cpu.regs.C.wrapping_sub(1);
+    if cpu.regs.C == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC C");
+}
+pub fn DECb(cpu: &mut Cpu) {
+    cpu.regs.B = cpu.regs.B.wrapping_sub(1);
+    if cpu.regs.B == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC B");
+}
+pub fn DECh(cpu: &mut Cpu) {
+    cpu.regs.H = cpu.regs.H.wrapping_sub(1);
+    if cpu.regs.H == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC H");
+}
+pub fn DECa(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.A.wrapping_sub(1);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC A");
+}
+pub fn DECe(cpu: &mut Cpu) {
+    cpu.regs.E = cpu.regs.E.wrapping_sub(1);
+    if cpu.regs.E == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC E");
+}
+pub fn DECl(cpu: &mut Cpu) {
+    cpu.regs.L = cpu.regs.L.wrapping_sub(1);
+    if cpu.regs.L == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("DEC D");
+}
 pub fn DECd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_sub(1);
     if cpu.regs.D == 0 {
@@ -226,6 +298,11 @@ pub fn LDha8a(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
     println!("LDH ({:02X}), A", imm)
+}
+pub fn LDhaa8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.A = cpu.mem.read8(0xFF00+imm as u16);
+    println!("LDH A, ({:02X})", imm)
 }
 pub fn LDa16a(cpu: &mut Cpu) {
     let imm = addr16(cpu);
@@ -329,6 +406,13 @@ impl<'a> Cpu<'a>{
             execute: NOP,
             jump: false,
         };
+        cpu.opcodes[0x05] = Opcode {
+            name: "DEC B",
+            len: 1,
+            cycles: 4,
+            execute: DECb,
+            jump: false,
+        };
         cpu.opcodes[0x06] = Opcode {
             name: "LD B,d8",
             len: 2,
@@ -337,10 +421,10 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x0D] = Opcode {
-            name: "DEC D",
+            name: "DEC C",
             len: 1,
             cycles: 4,
-            execute: DECd,
+            execute: DECc,
             jump: false,
         };
         cpu.opcodes[0x0E] = Opcode {
@@ -372,6 +456,13 @@ impl<'a> Cpu<'a>{
             execute: INCd,
             jump: false,
         };
+        cpu.opcodes[0x15] = Opcode {
+            name: "DEC D",
+            len: 1,
+            cycles: 4,
+            execute: DECd,
+            jump: false,
+        };
         cpu.opcodes[0x18] = Opcode {
             name: "JR r8",
             len: 2,
@@ -384,6 +475,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: INCe,
+            jump: false,
+        };
+        cpu.opcodes[0x1D] = Opcode {
+            name: "DEC E",
+            len: 1,
+            cycles: 4,
+            execute: DECe,
             jump: false,
         };
         cpu.opcodes[0x20] = Opcode {
@@ -400,11 +498,25 @@ impl<'a> Cpu<'a>{
             execute: LDhld16,
             jump: false,
         };
+        cpu.opcodes[0x25] = Opcode {
+            name: "DEC H",
+            len: 1,
+            cycles: 4,
+            execute: DECh,
+            jump: false,
+        };
         cpu.opcodes[0x2A] = Opcode {
             name: "LDI A, (HL)",
             len: 1,
             cycles: 8,
             execute: LDahl,
+            jump: false,
+        };
+        cpu.opcodes[0x2D] = Opcode {
+            name: "DEC L",
+            len: 1,
+            cycles: 4,
+            execute: DECl,
             jump: false,
         };
         cpu.opcodes[0x31] = Opcode {
@@ -419,6 +531,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDDhla,
+            jump: false,
+        };
+        cpu.opcodes[0x3D] = Opcode {
+            name: "DEC A",
+            len: 1,
+            cycles: 4,
+            execute: DECa,
             jump: false,
         };
         cpu.opcodes[0x3E] = Opcode {
@@ -504,6 +623,13 @@ impl<'a> Cpu<'a>{
             cycles: 24,
             execute: CALLa16,
             jump: true,
+        };
+        cpu.opcodes[0xF0] = Opcode {
+            name: "LDH A,(a8)",
+            len: 2,
+            cycles: 12,
+            execute: LDhaa8,
+            jump: false,
         };
         cpu
     }
