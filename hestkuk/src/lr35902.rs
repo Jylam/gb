@@ -138,6 +138,10 @@ pub fn LDal(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.L;
     println!("LDH A, L")
 }
+pub fn LDba(cpu: &mut Cpu) {
+    cpu.regs.B = cpu.regs.A;
+    println!("LD B, A")
+}
 pub fn LDah(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.H;
     println!("LDH A, H")
@@ -159,14 +163,27 @@ pub fn CALLa16(cpu: &mut Cpu) {
     cpu.regs.PC = addr;
     println!("CALL {:04X}", addr)
 }
+pub fn RET(cpu: &mut Cpu) {
+    let addr = PopStack(cpu);
+    cpu.regs.PC = addr;
+    println!("RET (-> {:04X})", addr)
+}
 pub fn DI(_cpu: &mut Cpu) {
     println!("DI")
 }
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
+    println!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
     cpu.mem.write16(cpu.regs.SP, v);
     cpu.regs.SP -= 2
 }
+pub fn PopStack(cpu: &mut Cpu) -> u16 {
+    cpu.regs.SP += 2;
+    let addr = cpu.mem.read16(cpu.regs.SP);
+    println!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
+    addr
+}
+
 
 impl<'a> Cpu<'a>{
 
@@ -253,6 +270,13 @@ impl<'a> Cpu<'a>{
             execute: LDad8,
             jump: false,
         };
+        cpu.opcodes[0x47] = Opcode {
+            name: "LD B, A",
+            len: 1,
+            cycles: 4,
+            execute: LDba,
+            jump: false,
+        };
         cpu.opcodes[0x7C] = Opcode {
             name: "LD A, H",
             len: 1,
@@ -300,6 +324,13 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 16,
             execute: JPa16,
+            jump: true,
+        };
+        cpu.opcodes[0xC9] = Opcode {
+            name: "RET",
+            len: 1,
+            cycles: 16,
+            execute: RET,
             jump: true,
         };
         cpu.opcodes[0xCD] = Opcode {

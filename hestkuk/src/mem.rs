@@ -34,7 +34,7 @@ impl<'a> Mem<'a>{
         if addr <= 0x7FFF {
             println!("[{:04X}] <<< {:02X}", addr, v);
             self.rom.buffer[addr as usize] = ((v&0xFF00)>>8) as u8;
-            self.rom.buffer[(addr+1) as usize] = ((v&0x00FF)>>0) as u8;
+            self.rom.buffer[(addr+1) as usize] = ((v&0x00FF)) as u8;
         } else if addr <= 0xDFFF {
         }
     }
