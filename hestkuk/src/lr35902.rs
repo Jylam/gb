@@ -67,6 +67,32 @@ impl Registers {
     fn set_PC(&mut self, v: u16) {
         self.PC = v;
     }
+
+    fn set_FZ(&mut self) {
+        self.F |= 0b1000_0000
+    }
+    fn get_FZ(&mut self) -> bool{
+        ((self.F&(0b1000_0000)>>7)==1) as bool
+    }
+    fn set_FN(&mut self) {
+        self.F |= 0b0100_0000
+    }
+    fn get_FN(&mut self) -> bool{
+        ((self.F&(0b0100_0000)>>6)==1) as bool
+    }
+    fn set_FH(&mut self) {
+        self.F |= 0b0010_0000
+    }
+    fn get_FH(&mut self) -> bool{
+        ((self.F&(0b0010_0000)>>5)==1) as bool
+    }
+    fn set_FC(&mut self) {
+        self.F |= 0b0001_0000
+    }
+    fn get_FC(&mut self) -> bool{
+        ((self.F&(0b0001_0000)>>4)==1) as bool
+    }
+
 }
 
 // Sharp LR35902 CPU emulator
@@ -180,6 +206,14 @@ pub fn JRr8(cpu: &mut Cpu) {
     cpu.regs.PC += offset;
     println!("JR {:04X}", cpu.regs.PC)
 }
+pub fn JPnzr8(cpu: &mut Cpu) {
+    let offset = cpu.regs.PC;
+    let v      = imm8(cpu) as u16;
+    if cpu.regs.get_FZ() == false {
+        cpu.regs.PC = offset+v;
+    }
+    println!("JP NZ {:02X}", v)
+}
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     let next = cpu.regs.PC + 3;
@@ -287,6 +321,13 @@ impl<'a> Cpu<'a>{
             cycles: 4,
             execute: INCe,
             jump: false,
+        };
+        cpu.opcodes[0x20] = Opcode {
+            name: "JR NZ, r8",
+            len: 2,
+            cycles: 12,
+            execute: JPnzr8,
+            jump: true,
         };
         cpu.opcodes[0x21] = Opcode {
             name: "LD HL, d16",
