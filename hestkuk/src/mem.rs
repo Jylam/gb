@@ -30,4 +30,12 @@ impl<'a> Mem<'a>{
         //println!("[{:04X}] >>> {:04X}", addr, v);
         v
     }
+    pub fn write16(&mut self, addr: u16, v: u16)  {
+        if addr <= 0x7FFF {
+            println!("[{:04X}] <<< {:02X}", addr, v);
+            self.rom.buffer[addr as usize] = ((v&0xFF00)>>8) as u8;
+            self.rom.buffer[(addr+1) as usize] = ((v&0x00FF)>>0) as u8;
+        } else if addr <= 0xDFFF {
+        }
+    }
 }

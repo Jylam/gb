@@ -134,21 +134,39 @@ pub fn LDa16a(cpu: &mut Cpu) {
     cpu.mem.write8(imm, cpu.regs.A);
     println!("LD ({:04X}), A", imm)
 }
+pub fn LDal(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.L;
+    println!("LDH A, L")
+}
+pub fn LDah(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.H;
+    println!("LDH A, H")
+}
 pub fn JPa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     cpu.regs.PC = addr;
     println!("JP {:04X}", addr)
 }
+pub fn JRr8(cpu: &mut Cpu) {
+    let offset = imm8(cpu) as u16;
+    cpu.regs.PC = cpu.regs.PC+offset;
+    println!("JR {:04X}", cpu.regs.PC)
+}
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
+    let next = cpu.regs.PC + 3;
+    PushStack(cpu, next);
     cpu.regs.PC = addr;
     println!("CALL {:04X}", addr)
 }
-
 pub fn DI(_cpu: &mut Cpu) {
     println!("DI")
 }
 
+pub fn PushStack(cpu: &mut Cpu, v: u16) {
+    cpu.mem.write16(cpu.regs.SP, v);
+    cpu.regs.SP = cpu.regs.SP-2
+}
 
 impl<'a> Cpu<'a>{
 
@@ -194,21 +212,28 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x0E] = Opcode {
-            name: "LD C,d8",
+            name: "LD C, d8",
             len: 2,
             cycles: 8,
             execute: LDcd8,
             jump: false,
         };
+        cpu.opcodes[0x18] = Opcode {
+            name: "JR r8",
+            len: 2,
+            cycles: 12,
+            execute: JRr8,
+            jump: true,
+        };
         cpu.opcodes[0x21] = Opcode {
-            name: "LDhld16",
+            name: "LD HL, d16",
             len: 3,
             cycles: 13,
             execute: LDhld16,
             jump: false,
         };
         cpu.opcodes[0x31] = Opcode {
-            name: "LD SP,d16",
+            name: "LD SP, d16",
             len: 3,
             cycles: 12,
             execute: LDspd16,
@@ -222,10 +247,24 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x3E] = Opcode {
-            name: "LD A,d8",
+            name: "LD A, d8",
             len: 2,
             cycles: 8,
             execute: LDad8,
+            jump: false,
+        };
+        cpu.opcodes[0x7C] = Opcode {
+            name: "LD A, H",
+            len: 1,
+            cycles: 4,
+            execute: LDah,
+            jump: false,
+        };
+        cpu.opcodes[0x7D] = Opcode {
+            name: "LD A, L",
+            len: 1,
+            cycles: 4,
+            execute: LDal,
             jump: false,
         };
         cpu.opcodes[0xAF] = Opcode {
