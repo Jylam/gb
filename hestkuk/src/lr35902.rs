@@ -229,6 +229,18 @@ pub fn DECd(cpu: &mut Cpu) {
     //Z N H C
     println!("DEC D");
 }
+pub fn INCa(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.A.wrapping_add(1);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
+    println!("INC A");
+}
 pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_add(1);
     if cpu.regs.D == 0 {
@@ -539,6 +551,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDDhla,
+            jump: false,
+        };
+        cpu.opcodes[0x3C] = Opcode {
+            name: "INC A",
+            len: 1,
+            cycles: 4,
+            execute: INCa,
             jump: false,
         };
         cpu.opcodes[0x3D] = Opcode {
