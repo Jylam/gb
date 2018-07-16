@@ -35,18 +35,12 @@ impl<'a> Mem<'a>{
         }
     }
     pub fn read16(&self, addr: u16) -> u16 {
-        let v = (((self.rom.buffer[(addr+1) as usize] as u16)<<8)|(self.rom.buffer[addr as usize]) as u16) as u16;
-        //println!("[{:04X}] >>> {:04X}", addr, v);
+        let v = ((self.read8(addr+1) as u16)<<8)|(self.read8(addr) as u16);
         v
     }
     pub fn write16(&mut self, addr: u16, v: u16)  {
-        if addr <= 0x7FFF {
-            println!("[{:04X}] <<< {:02X}", addr, v);
-            self.rom.buffer[addr as usize] = ((v&0xFF00)>>8) as u8;
-            self.rom.buffer[(addr+1) as usize] = ((v&0x00FF)) as u8;
-        } else {
-            println!("!!!! Non-existent memory location ${:04X}", addr)
-        }
+        self.write8(addr,  ((v&0xFF00)>>8) as u8);
+        self.write8(addr+1, (v&0xFF)       as u8);
     }
 
     pub fn print_infos(&mut self) {
