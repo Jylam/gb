@@ -71,11 +71,17 @@ impl Registers {
     fn set_FZ(&mut self) {
         self.F |= 0b1000_0000
     }
+    fn unset_FZ(&mut self) {
+        self.F &= 0b0111_1111
+    }
     fn get_FZ(&mut self) -> bool{
         ((self.F&(0b1000_0000)>>7)==1) as bool
     }
     fn set_FN(&mut self) {
         self.F |= 0b0100_0000
+    }
+    fn unset_FN(&mut self) {
+        self.F |= 0b1011_1111
     }
     fn get_FN(&mut self) -> bool{
         ((self.F&(0b0100_0000)>>6)==1) as bool
@@ -83,11 +89,17 @@ impl Registers {
     fn set_FH(&mut self) {
         self.F |= 0b0010_0000
     }
+    fn unset_FH(&mut self) {
+        self.F &= 0b1101_1111
+    }
     fn get_FH(&mut self) -> bool{
         ((self.F&(0b0010_0000)>>5)==1) as bool
     }
     fn set_FC(&mut self) {
         self.F |= 0b0001_0000
+    }
+    fn unset_FC(&mut self) {
+        self.F |= 0b1110_1111
     }
     fn get_FC(&mut self) -> bool{
         ((self.F&(0b0001_0000)>>4)==1) as bool
@@ -130,6 +142,14 @@ pub fn XORa(cpu: &mut Cpu) {
 }
 pub fn INCe(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.E.wrapping_add(1);
+    if cpu.regs.E == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    // Z 0 H -
+    //Z N H C
     println!("INC E");
 }
 pub fn LDhld16(cpu: &mut Cpu) {
