@@ -149,7 +149,7 @@ pub fn JPa16(cpu: &mut Cpu) {
 }
 pub fn JRr8(cpu: &mut Cpu) {
     let offset = imm8(cpu) as u16;
-    cpu.regs.PC = cpu.regs.PC+offset;
+    cpu.regs.PC += offset;
     println!("JR {:04X}", cpu.regs.PC)
 }
 pub fn CALLa16(cpu: &mut Cpu) {
@@ -165,7 +165,7 @@ pub fn DI(_cpu: &mut Cpu) {
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     cpu.mem.write16(cpu.regs.SP, v);
-    cpu.regs.SP = cpu.regs.SP-2
+    cpu.regs.SP -= 2
 }
 
 impl<'a> Cpu<'a>{
