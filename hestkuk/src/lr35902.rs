@@ -263,6 +263,17 @@ pub fn INCe(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     println!("INC E");
 }
+pub fn CPd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.set_FN();
+    cpu.regs.unset_FZ();
+    if cpu.regs.A == imm {
+        cpu.regs.set_FZ();
+    }
+    if cpu.regs.A < imm {
+        cpu.regs.set_FC();
+    }
+}
 pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
@@ -700,6 +711,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 12,
             execute: LDhaa8,
+            jump: false,
+        };
+        cpu.opcodes[0xFE] = Opcode {
+            name: "CP d8",
+            len: 2,
+            cycles: 8,
+            execute: CPd8,
             jump: false,
         };
         cpu
