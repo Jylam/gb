@@ -21,7 +21,7 @@ impl<'a> Mem<'a>{
 
         match addr {
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
-            //0xFF00 ... 0xFF7F => { println!("Unsupported read8 in Hardware area {:04X}", addr); 0xFF},
+            0xFF00 ... 0xFF7F => { println!("Unsupported read8 in Hardware area {:04X}", addr); 0xFF},
             _ => {self.ram[addr as usize]},
         }
     }
@@ -29,7 +29,7 @@ impl<'a> Mem<'a>{
         println!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
-            //0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},
+            0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},
             _ => {self.ram[addr as usize] = v;},
         }
     }
