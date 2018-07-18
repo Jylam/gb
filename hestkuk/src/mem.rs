@@ -19,8 +19,9 @@ impl<'a> Mem<'a>{
             lcd: alcd,
         }
     }
-    pub fn read8(&self, addr: u16) -> u8 {
+    pub fn read8(&mut self, addr: u16) -> u8 {
         //println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
+        self.lcd.update();
         match addr {
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
             0xFF40..=0xFF55 => self.lcd.read8(addr),
@@ -36,7 +37,7 @@ impl<'a> Mem<'a>{
             _ => {self.ram[addr as usize] = v;},
         }
     }
-    pub fn read16(&self, addr: u16) -> u16 {
+    pub fn read16(&mut self, addr: u16) -> u16 {
         let v = ((self.read8(addr+1) as u16)<<8)|(self.read8(addr) as u16);
         v
     }

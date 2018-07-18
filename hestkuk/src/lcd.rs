@@ -21,4 +21,8 @@ impl<'a> LCD<'a>{
             _ => {println!("LCD read8 at {:04X}", addr); self.regs[(addr-0xFF40) as usize]}
         }
     }
+
+    pub fn update(&mut self) {
+        self.regs[(0x04)] = self.regs[(0x04)].wrapping_add(1);
+    }
 }
