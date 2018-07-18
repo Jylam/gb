@@ -279,10 +279,14 @@ pub fn LDhld16(cpu: &mut Cpu) {
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
 }
+pub fn LDhld8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.mem.write8(cpu.regs.get_HL(), imm);
+    println!("LD (HL), {:02X}", imm)
+}
 pub fn LDIahl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.A = cpu.mem.read8(hl);
-    println!("############## LDI A, (HL+) -> hl is {:04X}, value at hl is {:04X}", hl, cpu.mem.read8(hl));
     cpu.regs.set_HL(hl.wrapping_add(1));
     println!("LD A, (HL+)")
 }
@@ -345,6 +349,9 @@ pub fn LDha8a(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
     println!("LDH ({:02X}), A", imm)
+}
+pub fn LDca(cpu :&mut Cpu) {
+    cpu.mem.write8(0xFF00 + cpu.regs.C as u16, cpu.regs.A)
 }
 pub fn LDhaa8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -578,6 +585,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDDhla,
+            jump: false,
+        };
+        cpu.opcodes[0x36] = Opcode {
+            name: "LD (HL), d8",
+            len: 2,
+            cycles: 12,
+            execute: LDhld8,
             jump: false,
         };
         cpu.opcodes[0x3C] = Opcode {
