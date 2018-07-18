@@ -720,6 +720,13 @@ impl<'a> Cpu<'a>{
             execute: CALLa16,
             jump: true,
         };
+        cpu.opcodes[0xE2] = Opcode {
+            name: "LD (C), A",
+            len: 2,
+            cycles: 8,
+            execute: LDca,
+            jump: true,
+        };
         cpu.opcodes[0xF0] = Opcode {
             name: "LDH A,(a8)",
             len: 2,
