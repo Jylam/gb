@@ -4,8 +4,11 @@ use std::process;
 mod mem;
 mod rom;
 mod lr35902;
+mod lcd;
+
 
 fn main() {
+    let lcd: lcd::LCD;
     let rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
     let mem: mem::Mem;
@@ -40,8 +43,9 @@ fn main() {
     println!("Cartridge Size:\t {}kB",   rom.get_cartridge_size_kb());
     println!("Destination:\t {}",        rom.get_destination_code());
 
+    lcd = lcd::LCD::new();
     /* Create Memory Controller */
-    mem = mem::Mem::new(rom);
+    mem = mem::Mem::new(rom, lcd);
     /* Create Sharp LR35902 CPU instance */
     cpu = lr35902::Cpu::new(mem);
 

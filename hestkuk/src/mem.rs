@@ -1,4 +1,5 @@
 use rom;
+use lcd;
 
 // Memory controller
 #[derive(Clone, Debug, Default)]
@@ -6,21 +7,23 @@ pub struct Mem<'a> {
     size: u16,
     rom:  rom::ROM<'a>,
     ram: Vec<u8>,
+    lcd:  lcd::LCD<'a>,
 }
 
 impl<'a> Mem<'a>{
-    pub fn new(arom: rom::ROM) -> Mem {
+    pub fn new(arom: rom::ROM<'a>, alcd: lcd::LCD<'a>) -> Mem<'a> {
         Mem{
             size: 0xFFFF,
             rom: arom,
             ram: vec![0x00; 65536],
+            lcd: alcd,
         }
     }
     pub fn read8(&self, addr: u16) -> u8 {
         //println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
-
         match addr {
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
+            0xFF40..=0xFF55 => self.lcd.read8(addr),
             0xFF00 ... 0xFF7F => { println!("Unsupported read8 in Hardware area {:04X}", addr); 0xFF},
             _ => {self.ram[addr as usize]},
         }
