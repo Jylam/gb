@@ -766,7 +766,7 @@ impl<'a> Cpu<'a>{
         println!("----------------------------------------");
         print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
-        self.print_status();
+        //self.print_status();
         println!("----------------------------------------");
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {

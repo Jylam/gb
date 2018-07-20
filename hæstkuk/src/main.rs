@@ -52,7 +52,7 @@ fn main() {
 
 
     cpu.reset();
-    cpu.print_status();
+    //cpu.print_status();
     loop {
         cpu.step();
     }
