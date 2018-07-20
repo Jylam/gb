@@ -1,3 +1,4 @@
+// Sharp LR35902 CPU emulator
 #![allow(non_snake_case)]
 use std::process;
 use mem;
@@ -110,7 +111,6 @@ impl Registers {
 
 }
 
-// Sharp LR35902 CPU emulator
 pub struct Cpu<'a> {
     mem: mem::Mem<'a>,
     regs: Registers,
@@ -744,6 +744,11 @@ impl<'a> Cpu<'a>{
         cpu
     }
 
+
+    pub fn readMem8(&mut self, addr: u16) -> u8 {
+        self.mem.read8(addr)
+    }
+
     pub fn print_status(&mut self) {
         println!("==== CPU ====");
         println!("PC: {:04X}", self.regs.get_PC());
@@ -760,18 +765,19 @@ impl<'a> Cpu<'a>{
         self.regs.PC = 0x100
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> u8 {
         let code = self.mem.read8(self.regs.PC) as usize;
         let opcode = self.opcodes[code];
-        println!("----------------------------------------");
-        print!("{:04X}: {:02X} -> ", self.regs.PC, code);
+        //println!("----------------------------------------");
+        //print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
         //self.print_status();
-        println!("----------------------------------------");
+        //println!("----------------------------------------");
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
         }
+        opcode.cycles as u8
     }
 
 

@@ -4,3 +4,5 @@ version = "0.0.0"
 authors = ["Jylam <jylam@lnxscene.org>"]
 
 [dependencies]
+    [dependencies.sdl2]
+        git = "https://github.com/AngryLawyer/rust-sdl2"

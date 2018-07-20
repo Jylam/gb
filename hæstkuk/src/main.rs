@@ -1,6 +1,20 @@
 use std::io;
 use std::env;
 use std::process;
+extern crate sdl2;
+
+
+//use sdl2::pixels::Color;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+//use sdl2::video::Window;
+//use sdl2::rect::Rect;
+//use std::time::Duration;
+
+const WINDOW_WIDTH : u32 = 160;
+const WINDOW_HEIGHT : u32 = 144;
+
+
 mod mem;
 mod rom;
 mod lr35902;
@@ -32,6 +46,20 @@ fn main() {
         },
     }
 
+    // Open SDL2 Window
+
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
+
+    let mut _window = video_subsystem.window("rust-sdl2 demo: No Renderer", WINDOW_WIDTH, WINDOW_HEIGHT)
+        .position_centered()
+        .build()
+        .unwrap();
+    let mut event_pump = sdl_context.event_pump().unwrap();
+
+
+
+
     /* Print informations about the loaded ROM */
     // FIXME rom.validate_checkchum();
     println!("ROM Size:\t {:?}",         rom.get_size());
@@ -53,7 +81,24 @@ fn main() {
 
     cpu.reset();
     //cpu.print_status();
-    loop {
+    'running : loop {
+
+        let mut keypress : bool = false;
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    break 'running
+                },
+                Event::KeyDown { repeat: false, .. } => {
+                    println!("KeyDown {:}", keypress);
+                    keypress = true;
+                },
+                _ => {}
+            }
+        }
+
+
         cpu.step();
+        //println!("{:02X}", cpu.readMem8(0xFFB6));
     }
 }
