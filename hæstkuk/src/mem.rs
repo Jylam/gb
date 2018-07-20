@@ -30,7 +30,7 @@ impl<'a> Mem<'a>{
         }
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
-        println!(">>> Writing {:02X} at {:04X}", v, addr);
+        //println!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},
@@ -46,6 +46,7 @@ impl<'a> Mem<'a>{
         self.write8(addr+1, (v&0xFF)       as u8);
     }
 
+#[allow(dead_code)]
     pub fn print_infos(&mut self) {
         println!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
         println!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())

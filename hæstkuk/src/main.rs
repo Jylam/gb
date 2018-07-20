@@ -1,15 +1,8 @@
 use std::io;
 use std::env;
 use std::process;
-extern crate sdl2;
 
 
-//use sdl2::pixels::Color;
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-//use sdl2::video::Window;
-//use sdl2::rect::Rect;
-//use std::time::Duration;
 
 const WINDOW_WIDTH : u32 = 160;
 const WINDOW_HEIGHT : u32 = 144;
@@ -19,6 +12,7 @@ mod mem;
 mod rom;
 mod lr35902;
 mod lcd;
+mod render;
 
 
 fn main() {
@@ -26,6 +20,7 @@ fn main() {
     let rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
     let mem: mem::Mem;
+    let mut render: render::Render;
 
     println!("Hestkuk.");
 
@@ -45,31 +40,9 @@ fn main() {
             process::exit(1)
         },
     }
-
+    rom.print_infos();
     // Open SDL2 Window
 
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
-
-    let mut _window = video_subsystem.window("rust-sdl2 demo: No Renderer", WINDOW_WIDTH, WINDOW_HEIGHT)
-        .position_centered()
-        .build()
-        .unwrap();
-    let mut event_pump = sdl_context.event_pump().unwrap();
-
-
-
-
-    /* Print informations about the loaded ROM */
-    // FIXME rom.validate_checkchum();
-    println!("ROM Size:\t {:?}",         rom.get_size());
-    println!("ROM Name:\t '{}'",         rom.get_name());
-    println!("RAM Size:\t {}kB",         rom.get_ram_size_kb());
-    println!("Logo:\t\t {:02X?}",        rom.get_logo());
-    println!("CGB Flag:\t {:02X}",       rom.get_cgb_flag());
-    println!("Cartridge Type:\t {:02X}", rom.get_cartridge_type());
-    println!("Cartridge Size:\t {}kB",   rom.get_cartridge_size_kb());
-    println!("Destination:\t {}",        rom.get_destination_code());
 
     lcd = lcd::LCD::new();
     /* Create Memory Controller */
@@ -78,27 +51,17 @@ fn main() {
     cpu = lr35902::Cpu::new(mem);
 
 
+    render = render::Render::new();
+
+
 
     cpu.reset();
     //cpu.print_status();
     'running : loop {
 
-        let mut keypress : bool = false;
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
-                Event::KeyDown { repeat: false, .. } => {
-                    println!("KeyDown {:}", keypress);
-                    keypress = true;
-                },
-                _ => {}
-            }
-        }
-
+        render.get_events();
 
         cpu.step();
-        //println!("{:02X}", cpu.readMem8(0xFFB6));
+       //println!("{:02X}", cpu.readMem8(0xFFB6));
     }
 }

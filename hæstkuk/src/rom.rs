@@ -82,5 +82,17 @@ impl<'a> ROM<'a> {
         println!("Read: {:02X}  Computed: {:02X}", orig, new);
     }
 
+    pub fn print_infos(&self) {
+        /* Print informations about the loaded ROM */
+        // FIXME self.validate_checkchum();
+        println!("ROM Size:\t {:?}",         self.get_size());
+        println!("ROM Name:\t '{}'",         self.get_name());
+        println!("RAM Size:\t {}kB",         self.get_ram_size_kb());
+        println!("Logo:\t\t {:02X?}",        self.get_logo());
+        println!("CGB Flag:\t {:02X}",       self.get_cgb_flag());
+        println!("Cartridge Type:\t {:02X}", self.get_cartridge_type());
+        println!("Cartridge Size:\t {}kB",   self.get_cartridge_size_kb());
+        println!("Destination:\t {}",        self.get_destination_code());
 
+    }
 }
