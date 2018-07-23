@@ -1,6 +1,7 @@
 // Graphical; renderer
 #![allow(non_snake_case)]
 use std::marker::PhantomData;
+use std::process;
 extern crate sdl2;
 
 //use render::sdl2::pixels::Color;
@@ -48,10 +49,11 @@ impl<'a> Render<'a> {
         for event in self.sdl_context.event_pump().unwrap().poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    process::exit(3);
                     break
                 },
                 Event::KeyDown { repeat: false, .. } => {
-                    println!("KeyDown {:}", keypress);
+                    println!("KeyDown {:}, event {:?}", keypress, event);
                     keypress = true;
                 },
                 _ => {}
