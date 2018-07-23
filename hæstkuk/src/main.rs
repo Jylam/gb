@@ -2,12 +2,6 @@ use std::io;
 use std::env;
 use std::process;
 
-
-
-const WINDOW_WIDTH : u32 = 160;
-const WINDOW_HEIGHT : u32 = 144;
-
-
 mod mem;
 mod rom;
 mod lr35902;
