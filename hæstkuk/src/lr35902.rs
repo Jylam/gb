@@ -1,5 +1,6 @@
 // Sharp LR35902 CPU emulator
 #![allow(non_snake_case)]
+#![allow(dead_code)]
 use std::process;
 use mem;
 
@@ -74,9 +75,9 @@ impl Registers {
         println!("#### Set F to {:b}", self.F);
     }
     fn unset_FZ(&mut self) {
-        println!("F is {:b}", self.F);
+        //println!("F is {:b}", self.F);
         self.F &= 0b0111_1111;
-        println!("#### UnSet F to {:b}", self.F);
+        //println!("#### UnSet F to {:b}", self.F);
     }
     fn get_FZ(&mut self) -> bool{
         (((self.F&(0b1000_0000))>>7)==1) as bool
@@ -284,7 +285,7 @@ pub fn LDhld8(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_HL(), imm);
     println!("LD (HL), {:02X}", imm)
 }
-pub fn LDIahl(cpu: &mut Cpu) {
+pub fn LDIahlp(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.A = cpu.mem.read8(hl);
     cpu.regs.set_HL(hl.wrapping_add(1));
@@ -326,8 +327,10 @@ pub fn LDspd16(cpu: &mut Cpu) {
     cpu.regs.set_SP(imm);
     println!("LD SP, {:04X}", imm)
 }
-pub fn LDDhla(cpu: &mut Cpu) {
-    cpu.mem.write8(cpu.regs.get_HL(), cpu.regs.A);
+pub fn LDDhmla(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    cpu.mem.write8(hl, cpu.regs.A);
+    cpu.regs.set_HL(hl.wrapping_sub(1));
     println!("LD [HL], a")
 }
 pub fn LDcd8(cpu: &mut Cpu) {
@@ -560,10 +563,10 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x2A] = Opcode {
-            name: "LDI A, (HL)",
+            name: "LDI A, (HL+)",
             len: 1,
             cycles: 8,
-            execute: LDIahl,
+            execute: LDIahlp,
             jump: false,
         };
         cpu.opcodes[0x2D] = Opcode {
@@ -584,7 +587,7 @@ impl<'a> Cpu<'a>{
             name: "LDD (HL), a",
             len: 1,
             cycles: 8,
-            execute: LDDhla,
+            execute: LDDhmla,
             jump: false,
         };
         cpu.opcodes[0x36] = Opcode {
@@ -725,7 +728,7 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: LDca,
-            jump: true,
+            jump: false,
         };
         cpu.opcodes[0xF0] = Opcode {
             name: "LDH A,(a8)",
@@ -769,7 +772,7 @@ impl<'a> Cpu<'a>{
         let code = self.mem.read8(self.regs.PC) as usize;
         let opcode = self.opcodes[code];
         //println!("----------------------------------------");
-        //print!("{:04X}: {:02X} -> ", self.regs.PC, code);
+        print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
         //self.print_status();
         //println!("----------------------------------------");

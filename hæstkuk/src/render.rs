@@ -62,11 +62,28 @@ impl<'a> Render<'a> {
         }
     }
 
+    pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
+        let mut offset: u16 = 0xFE00;
+        for i in 0..=40 {
+            let x = cpu.readMem8(offset);
+            let y = cpu.readMem8(offset+1);
+            let pattern_number = cpu.readMem8(offset+2);
+            let flags = cpu.readMem8(offset+3);
+            if y!=0 {
+                println!("X: {:02X}", x);
+                println!("Y: {:02X}", y);
+                println!("Pattern Number: {:02X}", pattern_number);
+                println!("Flags: {:02X}", flags);
+            }
+            offset+=4;
+        }
+    }
+
     pub fn show_memory(&mut self, cpu: &mut Cpu<'a> ) {
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 
-        let mut offset: u32 = 0x9800-((160*144)*1);
+        let mut offset: u32 = 0xFE00-((160*144)*1);
         for y in 0 .. (WINDOW_HEIGHT) {
             for x in 0 .. (WINDOW_WIDTH) {
                 if offset < 0xFFFF {

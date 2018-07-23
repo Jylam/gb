@@ -43,10 +43,16 @@ fn main() {
 
     render = render::Render::new(); // Open SDL window
 
+    let mut refresh_count: u32 = 1;
     cpu.reset();
     'running : loop {
-        render.get_events();
-        render.show_memory(&mut cpu);
+        refresh_count-=1;
+        if refresh_count == 0 {
+            render.get_events();
+            render.show_memory(&mut cpu);
+            render.oam(&mut cpu);
+            refresh_count = 100;
+        }
         cpu.step();
     }
 }
