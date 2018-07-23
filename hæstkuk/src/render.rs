@@ -1,20 +1,23 @@
 // Graphical; renderer
 #![allow(non_snake_case)]
+#![allow(unused_imports)]
 use std::marker::PhantomData;
 use std::process;
 extern crate sdl2;
 
-//use render::sdl2::pixels::Color;
+use render::sdl2::pixels::Color;
 use render::sdl2::event::Event;
 use render::sdl2::keyboard::Keycode;
-//use render::sdl2::EventPump;
 
-//use sdl2::video::Window;
-//use sdl2::rect::Rect;
-//use std::time::Duration;
+use render::sdl2::video::Window;
+use render::sdl2::rect::Rect;
+use std::time::Duration;
+
+use lr35902::Cpu;
 
 const WINDOW_WIDTH : u32 = 160;
 const WINDOW_HEIGHT : u32 = 144;
+const SCALE : u32 = 8;
 
 
 #[allow(dead_code)]
@@ -30,7 +33,7 @@ impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem  = sdl_context.video().unwrap();
-        let window = video_subsystem.window("rust-sdl2 demo: No Renderer", WINDOW_WIDTH, WINDOW_HEIGHT)
+        let window = video_subsystem.window("rust-sdl2 demo: No Renderer", WINDOW_WIDTH*SCALE, WINDOW_HEIGHT*SCALE)
             .position_centered()
             .build()
             .unwrap();
@@ -45,12 +48,10 @@ impl<'a> Render<'a> {
     }
     pub fn get_events(&mut self) {
         let mut keypress : bool = false;
-
         for event in self.sdl_context.event_pump().unwrap().poll_iter() {
             match event {
                 Event::Quit {..} | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     process::exit(3);
-                    break
                 },
                 Event::KeyDown { repeat: false, .. } => {
                     println!("KeyDown {:}, event {:?}", keypress, event);
@@ -59,6 +60,27 @@ impl<'a> Render<'a> {
                 _ => {}
             }
         }
+    }
+
+    pub fn show_memory(&mut self, cpu: &mut Cpu<'a> ) {
+        let pump = &self.sdl_context.event_pump().unwrap();
+        let mut surface = self.window.surface(pump).unwrap();
+
+        let mut offset: u32 = 0x9800-((160*144)*1);
+        for y in 0 .. (WINDOW_HEIGHT) {
+            for x in 0 .. (WINDOW_WIDTH) {
+                if offset < 0xFFFF {
+                    let r = cpu.readMem8(offset as u16);
+                    let color = Color::RGB(r, r, r);
+                    surface.fill_rect(Rect::new((x * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
+                } else {
+                    let color = Color::RGB(255, 0, 0);
+                    surface.fill_rect(Rect::new((x *SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
+                }
+                offset = offset+1;
+            }
+        }
+        surface.finish().unwrap();
     }
 }
 

@@ -24,13 +24,13 @@ impl<'a> Mem<'a>{
         self.lcd.update();
         match addr {
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
-            0xFF40..=0xFF55 => self.lcd.read8(addr),
+            0xFF40...0xFF54 => self.lcd.read8(addr),
             0xFF00 ... 0xFF7F => { println!("Unsupported read8 in Hardware area {:04X}", addr); 0xFF},
             _ => {self.ram[addr as usize]},
         }
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
-        //println!(">>> Writing {:02X} at {:04X}", v, addr);
+        println!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},

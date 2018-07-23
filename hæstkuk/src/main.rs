@@ -35,27 +35,18 @@ fn main() {
         },
     }
     rom.print_infos();
-    // Open SDL2 Window
 
 
     lcd = lcd::LCD::new();
-    /* Create Memory Controller */
     mem = mem::Mem::new(rom, lcd);
-    /* Create Sharp LR35902 CPU instance */
     cpu = lr35902::Cpu::new(mem);
 
-
-    render = render::Render::new();
-
-
+    render = render::Render::new(); // Open SDL window
 
     cpu.reset();
-    //cpu.print_status();
     'running : loop {
-
         render.get_events();
-
+        render.show_memory(&mut cpu);
         cpu.step();
-       //println!("{:02X}", cpu.readMem8(0xFFB6));
     }
 }
