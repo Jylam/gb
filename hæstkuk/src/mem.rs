@@ -30,7 +30,7 @@ impl<'a> Mem<'a>{
         }
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
-        println!(">>> Writing {:02X} at {:04X}", v, addr);
+        //println!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             0xFF40...0xFF54 => {println!("Unsupported write8 in LCD")},

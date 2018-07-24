@@ -242,6 +242,16 @@ pub fn INCa(cpu: &mut Cpu) {
     //Z N H C
     println!("INC A");
 }
+pub fn INCc(cpu: &mut Cpu) {
+    cpu.regs.C = cpu.regs.C.wrapping_add(1);
+    if cpu.regs.C == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    println!("INC C");
+}
 pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_add(1);
     if cpu.regs.D == 0 {
@@ -322,6 +332,11 @@ pub fn LDded16(cpu: &mut Cpu) {
     cpu.regs.set_DE(imm);
     println!("LD DE, {:04X}", imm)
 }
+pub fn LDbcd16(cpu: &mut Cpu) {
+    let imm = imm16(cpu);
+    cpu.regs.set_BC(imm);
+    println!("LD BC, {:04X}", imm)
+}
 pub fn LDspd16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_SP(imm);
@@ -354,7 +369,8 @@ pub fn LDha8a(cpu: &mut Cpu) {
     println!("LDH ({:02X}), A", imm)
 }
 pub fn LDca(cpu :&mut Cpu) {
-    cpu.mem.write8(0xFF00 + cpu.regs.C as u16, cpu.regs.A)
+    cpu.mem.write8(0xFF00 + cpu.regs.C as u16, cpu.regs.A);
+    println!("LD ({:04X}), A", cpu.regs.C);
 }
 pub fn LDhaa8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -463,6 +479,13 @@ impl<'a> Cpu<'a>{
             execute: NOP,
             jump: false,
         };
+        cpu.opcodes[0x01] = Opcode {
+            name: "LD BC, d16",
+            len: 3,
+            cycles: 12,
+            execute: LDbcd16,
+            jump: false,
+        };
         cpu.opcodes[0x05] = Opcode {
             name: "DEC B",
             len: 1,
@@ -475,6 +498,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: LDbd8,
+            jump: false,
+        };
+        cpu.opcodes[0x0C] = Opcode {
+            name: "INC C",
+            len: 1,
+            cycles: 4,
+            execute: INCc,
             jump: false,
         };
         cpu.opcodes[0x0D] = Opcode {
@@ -725,7 +755,7 @@ impl<'a> Cpu<'a>{
         };
         cpu.opcodes[0xE2] = Opcode {
             name: "LD (C), A",
-            len: 2,
+            len: 1,
             cycles: 8,
             execute: LDca,
             jump: false,
