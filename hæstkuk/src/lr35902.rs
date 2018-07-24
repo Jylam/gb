@@ -69,15 +69,11 @@ impl Registers {
     fn set_PC(&mut self, v: u16) {
         self.PC = v;
     }
-
     fn set_FZ(&mut self) {
         self.F |= 0b1000_0000;
-        println!("#### Set F to {:b}", self.F);
     }
     fn unset_FZ(&mut self) {
-        //println!("F is {:b}", self.F);
         self.F &= 0b0111_1111;
-        //println!("#### UnSet F to {:b}", self.F);
     }
     fn get_FZ(&mut self) -> bool{
         (((self.F&(0b1000_0000))>>7)==1) as bool
