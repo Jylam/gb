@@ -117,6 +117,7 @@ pub struct Cpu<'a> {
     regs: Registers,
     total_cyles: u64,
     opcodes: Vec<Opcode>,
+    alt_opcodes: Vec<Opcode>,
 }
 
 pub fn addr16(cpu: &mut Cpu) -> u16 {
@@ -137,8 +138,25 @@ pub fn UNK(cpu: &mut Cpu) {
     cpu.print_status();
     process::exit(3);
 }
+pub fn ALTUNK(cpu: &mut Cpu) {
+    println!("*** Unknow alternative instruction at {:04X}", cpu.regs.get_PC());
+    cpu.print_status();
+    process::exit(3);
+}
 pub fn NOP(_cpu: &mut Cpu) {
     println!("NOP")
+}
+pub fn XORc(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.A^cpu.regs.C;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("XOR C");
 }
 pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
@@ -161,6 +179,44 @@ pub fn ORc(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("OR C");
+}
+pub fn ORb(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.B|cpu.regs.A;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("OR B");
+}
+pub fn ANDc(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.A|cpu.regs.C;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.set_FH();
+    cpu.regs.unset_FC();
+    println!("AND C");
+}
+pub fn ANDd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.A = cpu.regs.A & imm;
+
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.set_FH();
     cpu.regs.unset_FC();
     println!("OR C");
 }
@@ -297,6 +353,14 @@ pub fn INCe(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     println!("INC E");
 }
+pub fn CPL(cpu: &mut Cpu) {
+    let A = cpu.regs.A;
+    cpu.regs.A = !A;
+
+    cpu.regs.set_FN();
+    cpu.regs.set_FH();
+
+}
 pub fn CPd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.set_FN();
@@ -307,6 +371,26 @@ pub fn CPd8(cpu: &mut Cpu) {
     if cpu.regs.A < imm {
         cpu.regs.set_FC();
     }
+}
+
+pub fn RRCa(cpu: &mut Cpu) {
+
+    if ((cpu.regs.A&0b10000000)>>7) == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    cpu.regs.A = cpu.regs.A>>1;
+
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    println!("OR C");
+
 }
 pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -342,6 +426,10 @@ pub fn LDab(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
     println!("LD A, B")
 }
+pub fn LDac(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.C;
+    println!("LD A, C")
+}
 pub fn LDhb(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.B;
     println!("LD H, B")
@@ -349,6 +437,10 @@ pub fn LDhb(cpu: &mut Cpu) {
 pub fn LDlh(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.H;
     println!("LD L, H")
+}
+pub fn LDca(cpu: &mut Cpu) {
+    cpu.regs.C = cpu.regs.A;
+    println!("LD C, A")
 }
 pub fn LDded16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -391,10 +483,6 @@ pub fn LDha8a(cpu: &mut Cpu) {
     cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
     println!("LDH ({:02X}), A", imm)
 }
-pub fn LDca(cpu :&mut Cpu) {
-    cpu.mem.write8(0xFF00 + cpu.regs.C as u16, cpu.regs.A);
-    println!("LD ({:04X}), A", cpu.regs.C);
-}
 pub fn LDhaa8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.A = cpu.mem.read8(0xFF00+imm as u16);
@@ -427,6 +515,12 @@ pub fn JRr8(cpu: &mut Cpu) {
     cpu.regs.PC += offset;
     println!("JR {:04X}", cpu.regs.PC)
 }
+pub fn RST28h(cpu: &mut Cpu) {
+    let PC = cpu.regs.PC;
+    PushStack(cpu, PC);
+    cpu.regs.PC = 0x28;
+    println!("RST 28h")
+}
 pub fn JRnzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v:i8      = imm8(cpu) as i8;
@@ -454,6 +548,21 @@ pub fn DI(_cpu: &mut Cpu) {
 }
 pub fn EI(_cpu: &mut Cpu) {
     println!("EI")
+}
+
+
+pub fn SWAPa(cpu: &mut Cpu) {
+    cpu.regs.A = ((cpu.regs.A&0xF0)>>4)|(cpu.regs.A<<4);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+
+    println!("SWAP A");
 }
 
 
@@ -495,6 +604,14 @@ impl<'a> Cpu<'a>{
                     len: 1,
                     cycles: 4,
                     execute: UNK,
+                    jump: false,
+                }; 256],
+            alt_opcodes:
+                vec![Opcode{
+                    name: "ALT UNK",
+                    len: 1,
+                    cycles: 4,
+                    execute: ALTUNK,
                     jump: false,
                 }; 256]
 
@@ -553,6 +670,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: LDcd8,
+            jump: false,
+        };
+        cpu.opcodes[0x0F] = Opcode {
+            name: "RRC A",
+            len: 1,
+            cycles: 4,
+            execute: RRCa,
             jump: false,
         };
         cpu.opcodes[0x11] = Opcode {
@@ -637,6 +761,13 @@ impl<'a> Cpu<'a>{
             name: "DEC L",
             len: 1,
             cycles: 4,
+            execute: CPL,
+            jump: false,
+        };
+        cpu.opcodes[0x2F] = Opcode {
+            name: "DEC L",
+            len: 1,
+            cycles: 4,
             execute: DECl,
             jump: false,
         };
@@ -689,6 +820,13 @@ impl<'a> Cpu<'a>{
             execute: LDba,
             jump: false,
         };
+        cpu.opcodes[0x4F] = Opcode {
+            name: "LD C, A",
+            len: 1,
+            cycles: 4,
+            execute: LDca,
+            jump: false,
+        };
         cpu.opcodes[0x60] = Opcode {
             name: "LD H, B",
             len: 1,
@@ -724,6 +862,13 @@ impl<'a> Cpu<'a>{
             execute: LDab,
             jump: false,
         };
+        cpu.opcodes[0x79] = Opcode {
+            name: "LD A, C",
+            len: 1,
+            cycles: 4,
+            execute: LDac,
+            jump: false,
+        };
         cpu.opcodes[0x7C] = Opcode {
             name: "LD A, H",
             len: 1,
@@ -738,11 +883,32 @@ impl<'a> Cpu<'a>{
             execute: LDal,
             jump: false,
         };
+        cpu.opcodes[0xA1] = Opcode {
+            name: "AND C",
+            len: 1,
+            cycles: 4,
+            execute: ANDc,
+            jump: false,
+        };
+        cpu.opcodes[0xA9] = Opcode {
+            name: "XOR C",
+            len: 1,
+            cycles: 4,
+            execute: XORc,
+            jump: false,
+        };
         cpu.opcodes[0xAF] = Opcode {
             name: "XOR A",
             len: 1,
             cycles: 4,
             execute: XORa,
+            jump: false,
+        };
+        cpu.opcodes[0xB0] = Opcode {
+            name: "OR B",
+            len: 1,
+            cycles: 4,
+            execute: ORb,
             jump: false,
         };
         cpu.opcodes[0xB1] = Opcode {
@@ -795,11 +961,25 @@ impl<'a> Cpu<'a>{
             jump: true,
         };
         cpu.opcodes[0xE2] = Opcode {
+            name: "AND d8",
+            len: 2,
+            cycles: 8,
+            execute: ANDd8,
+            jump: false,
+        };
+        cpu.opcodes[0xE6] = Opcode {
             name: "LD (C), A",
             len: 1,
             cycles: 8,
             execute: LDca,
             jump: false,
+        };
+        cpu.opcodes[0xEF] = Opcode {
+            name: "RST 28h",
+            len: 1,
+            cycles: 16,
+            execute: RST28h,
+            jump: true,
         };
         cpu.opcodes[0xF0] = Opcode {
             name: "LDH A,(a8)",
@@ -820,6 +1000,15 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: CPd8,
+            jump: false,
+        };
+        /************ Alternative (PREFIX) opcodes **************/
+
+        cpu.alt_opcodes[0x37] = Opcode {
+            name: "SWAP A",
+            len: 2,
+            cycles: 8,
+            execute: SWAPa,
             jump: false,
         };
         cpu
@@ -848,7 +1037,15 @@ impl<'a> Cpu<'a>{
 
     pub fn step(&mut self) -> u8 {
         let code = self.mem.read8(self.regs.PC) as usize;
-        let opcode = self.opcodes[code];
+
+        let opcode;
+        if code == 0xCB {
+            let code = self.mem.read8(self.regs.PC+1) as usize;
+            println!("ALT !!!!! -> {:02X}", code);
+            opcode = self.alt_opcodes[code];
+        } else {
+            opcode = self.opcodes[code];
+        }
         //println!("----------------------------------------");
         print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);

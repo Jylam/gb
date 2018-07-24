@@ -64,7 +64,7 @@ impl<'a> Render<'a> {
 
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
         let mut offset: u16 = 0xFE00;
-        for i in 0..=40 {
+        for _i in 0..=40 {
             let x = cpu.readMem8(offset);
             let y = cpu.readMem8(offset+1);
             let pattern_number = cpu.readMem8(offset+2);
