@@ -34,6 +34,15 @@ impl<'a> ROM<'a> {
         let mut f = File::open(self.filename.to_mut())?;
         let read_size = f.read_to_end(&mut self.buffer)?;
         println!("Read {} bytes", read_size);
+
+        /* Patch boot rom in place */
+        let metadata = try!(fs::metadata("./DMG_ROM.bin".to_string()));
+        let mut f = File::open(self.filename.to_mut())?;
+        let read_size = f.read_to_end(&mut self.buffer)?;
+        println!("First byte of boot rom : {:02X}", self.buffer[0]);
+
+
+
         Ok(self)
     }
     pub fn get_size(&self) -> usize {

@@ -36,7 +36,6 @@ fn main() {
     }
     rom.print_infos();
 
-
     lcd = lcd::LCD::new();
     mem = mem::Mem::new(rom, lcd);
     cpu = lr35902::Cpu::new(mem);
