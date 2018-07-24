@@ -216,6 +216,31 @@ pub fn ANDd8(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("OR C");
 }
+pub fn ADDaa(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.A);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    //      C - Set if carry from bit 7.
+    println!("ADD A,A");
+}
+pub fn ADDhlde(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    let de = cpu.regs.get_DE();
+
+    cpu.regs.set_HL(hl.wrapping_add(de));
+
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 11.
+    //      C - Set if carry from bit 15.
+    println!("ADD HL,DE");
+}
 pub fn DECc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_sub(1);
     if cpu.regs.C == 0 {
@@ -469,6 +494,11 @@ pub fn LDad8(cpu: &mut Cpu) {
     cpu.regs.A = imm;
     println!("LD A, {:02X}", imm)
 }
+pub fn LDdd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.D = imm;
+    println!("LD D, {:02X}", imm)
+}
 pub fn LDbd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.B = imm;
@@ -497,9 +527,18 @@ pub fn LDba(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.A;
     println!("LD B, A")
 }
+pub fn LDea(cpu: &mut Cpu) {
+    cpu.regs.E = cpu.regs.A;
+    println!("LD E, A")
+}
 pub fn LDah(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.H;
     println!("LDH A, H")
+}
+pub fn LDehl(cpu: &mut Cpu) {
+    let m = cpu.mem.read8(cpu.regs.get_HL());
+    cpu.regs.E = m;
+    println!("LD E, {:04X}", m);
 }
 pub fn JPa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -510,6 +549,11 @@ pub fn JRr8(cpu: &mut Cpu) {
     let offset = imm8(cpu) as u16;
     cpu.regs.PC += offset;
     println!("JR {:04X}", cpu.regs.PC)
+}
+pub fn POPhl(cpu: &mut Cpu) {
+    let sp = PopStack(cpu);
+    cpu.regs.set_HL(sp);
+    println!("POP HL");
 }
 pub fn RST28h(cpu: &mut Cpu) {
     let PC = cpu.regs.PC;
@@ -704,12 +748,26 @@ impl<'a> Cpu<'a>{
             execute: DECd,
             jump: false,
         };
+        cpu.opcodes[0x16] = Opcode {
+            name: "LD D, d8",
+            len: 2,
+            cycles: 8,
+            execute: LDdd8,
+            jump: false,
+        };
         cpu.opcodes[0x18] = Opcode {
             name: "JR r8",
             len: 2,
             cycles: 12,
             execute: JRr8,
             jump: true,
+        };
+        cpu.opcodes[0x19] = Opcode {
+            name: "ADD HL, DE",
+            len: 1,
+            cycles: 8,
+            execute: ADDhlde,
+            jump: false,
         };
         cpu.opcodes[0x1C] = Opcode {
             name: "INC E",
@@ -823,6 +881,20 @@ impl<'a> Cpu<'a>{
             execute: LDca,
             jump: false,
         };
+        cpu.opcodes[0x5E] = Opcode {
+            name: "LD E, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDehl,
+            jump: false,
+        };
+        cpu.opcodes[0x5F] = Opcode {
+            name: "LD E, A",
+            len: 1,
+            cycles: 4,
+            execute: LDea,
+            jump: false,
+        };
         cpu.opcodes[0x60] = Opcode {
             name: "LD H, B",
             len: 1,
@@ -877,6 +949,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: LDal,
+            jump: false,
+        };
+        cpu.opcodes[0x87] = Opcode {
+            name: "ADD A,A",
+            len: 1,
+            cycles: 4,
+            execute: ADDaa,
             jump: false,
         };
         cpu.opcodes[0xA1] = Opcode {
@@ -955,6 +1034,13 @@ impl<'a> Cpu<'a>{
             cycles: 24,
             execute: CALLa16,
             jump: true,
+        };
+        cpu.opcodes[0xE1] = Opcode {
+            name: "POP HL",
+            len: 1,
+            cycles: 12,
+            execute: POPhl,
+            jump: false,
         };
         cpu.opcodes[0xE2] = Opcode {
             name: "AND d8",
