@@ -36,13 +36,13 @@ impl<'a> ROM<'a> {
         println!("Read Cartridge {} bytes", read_size);
 
         /* Patch boot rom in place */
-        let mut f = File::open("./DMG_ROM.bin".to_string())?;
+       /* let mut f = File::open("./DMG_ROM.bin".to_string())?;
         let read_size = f.read_to_end(&mut self.buffer)?;
         println!("Read bootROM : {} bytes", read_size);
         for i in 0..0x100 {
             println!("{:04X}: {:02X}", i, self.buffer[i]);
         }
-
+*/
 
         Ok(self)
     }
