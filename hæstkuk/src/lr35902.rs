@@ -142,12 +142,30 @@ pub fn NOP(_cpu: &mut Cpu) {
 }
 pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
     println!("XOR A");
 }
+pub fn ORc(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.C|cpu.regs.A;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("OR C");
+}
 pub fn DECc(cpu: &mut Cpu) {
-    println!("[[[[before C: {:02X}]]]]", cpu.regs.C);
     cpu.regs.C = cpu.regs.C.wrapping_sub(1);
-    println!("[[[[after C: {:02X}]]]]", cpu.regs.C);
     if cpu.regs.C == 0 {
         cpu.regs.set_FZ();
     } else {
@@ -232,7 +250,7 @@ pub fn DECd(cpu: &mut Cpu) {
 }
 pub fn DECbc(cpu: &mut Cpu) {
     let bc = cpu.regs.get_BC();
-    cpu.regs.set_BC(bc.wrapping_add(1));
+    cpu.regs.set_BC(bc.wrapping_sub(1));
     println!("DEC BC");
 }
 pub fn INCa(cpu: &mut Cpu) {
@@ -351,7 +369,7 @@ pub fn LDDhmla(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.mem.write8(hl, cpu.regs.A);
     cpu.regs.set_HL(hl.wrapping_sub(1));
-    println!("LD [HL], a")
+    println!("LD [{:04X}], a", hl);
 }
 pub fn LDcd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -434,6 +452,10 @@ pub fn RET(cpu: &mut Cpu) {
 pub fn DI(_cpu: &mut Cpu) {
     println!("DI")
 }
+pub fn EI(_cpu: &mut Cpu) {
+    println!("EI")
+}
+
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     println!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
@@ -723,6 +745,13 @@ impl<'a> Cpu<'a>{
             execute: XORa,
             jump: false,
         };
+        cpu.opcodes[0xB1] = Opcode {
+            name: "OR C",
+            len: 1,
+            cycles: 4,
+            execute: ORc,
+            jump: false,
+        };
         cpu.opcodes[0xE0] = Opcode {
             name: "LDH (a8),A",
             len: 2,
@@ -777,6 +806,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 12,
             execute: LDhaa8,
+            jump: false,
+        };
+        cpu.opcodes[0xFB] = Opcode {
+            name: "EI",
+            len: 1,
+            cycles: 4,
+            execute: EI,
             jump: false,
         };
         cpu.opcodes[0xFE] = Opcode {

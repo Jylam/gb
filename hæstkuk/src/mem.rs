@@ -43,8 +43,8 @@ impl<'a> Mem<'a>{
         v
     }
     pub fn write16(&mut self, addr: u16, v: u16)  {
-        self.write8(addr,  ((v&0xFF00)>>8) as u8);
-        self.write8(addr+1, (v&0xFF)       as u8);
+        self.write8(addr+1,  ((v&0xFF00)>>8) as u8);
+        self.write8(addr, (v&0xFF)       as u8);
     }
 
 #[allow(dead_code)]
