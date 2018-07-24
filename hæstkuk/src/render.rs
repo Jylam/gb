@@ -17,7 +17,7 @@ use lr35902::Cpu;
 
 const WINDOW_WIDTH : u32 = 160;
 const WINDOW_HEIGHT : u32 = 144;
-const SCALE : u32 = 8;
+const SCALE : u32 = 4;
 
 
 #[allow(dead_code)]

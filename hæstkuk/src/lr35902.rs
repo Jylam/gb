@@ -230,6 +230,11 @@ pub fn DECd(cpu: &mut Cpu) {
     //Z N H C
     println!("DEC D");
 }
+pub fn DECbc(cpu: &mut Cpu) {
+    let bc = cpu.regs.get_BC();
+    cpu.regs.set_BC(bc.wrapping_add(1));
+    println!("DEC BC");
+}
 pub fn INCa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(1);
     if cpu.regs.A == 0 {
@@ -498,6 +503,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: LDbd8,
+            jump: false,
+        };
+        cpu.opcodes[0x0B] = Opcode {
+            name: "DEC BC",
+            len: 1,
+            cycles: 4,
+            execute: DECbc,
             jump: false,
         };
         cpu.opcodes[0x0C] = Opcode {
