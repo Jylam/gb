@@ -33,14 +33,15 @@ impl<'a> ROM<'a> {
         self.size = metadata.len() as usize;
         let mut f = File::open(self.filename.to_mut())?;
         let read_size = f.read_to_end(&mut self.buffer)?;
-        println!("Read {} bytes", read_size);
+        println!("Read Cartridge {} bytes", read_size);
 
         /* Patch boot rom in place */
-        let metadata = try!(fs::metadata("./DMG_ROM.bin".to_string()));
-        let mut f = File::open(self.filename.to_mut())?;
+        let mut f = File::open("./DMG_ROM.bin".to_string())?;
         let read_size = f.read_to_end(&mut self.buffer)?;
-        println!("First byte of boot rom : {:02X}", self.buffer[0]);
-
+        println!("Read bootROM : {} bytes", read_size);
+        for i in &self.buffer {
+            println!("{:02X}", i);
+        }
 
 
         Ok(self)
