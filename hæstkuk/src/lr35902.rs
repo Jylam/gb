@@ -204,7 +204,7 @@ pub fn ORd8(cpu: &mut Cpu) {
     println!("OR imm8");
 }
 pub fn ANDc(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A|cpu.regs.C;
+    cpu.regs.A = cpu.regs.A&cpu.regs.C;
     if cpu.regs.A == 0 {
         cpu.regs.set_FZ();
     } else {
@@ -214,6 +214,18 @@ pub fn ANDc(cpu: &mut Cpu) {
     cpu.regs.set_FH();
     cpu.regs.unset_FC();
     println!("AND C");
+}
+pub fn ANDa(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.A&cpu.regs.A;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.set_FH();
+    cpu.regs.unset_FC();
+    println!("AND A");
 }
 pub fn ANDd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -648,6 +660,16 @@ pub fn JRnzr8(cpu: &mut Cpu) {
     }
     println!("JRNZ {:02X}", v)
 }
+pub fn JRzr8(cpu: &mut Cpu) {
+    let offset = cpu.regs.PC + 2;
+    let v:i8      = imm8(cpu) as i8;
+    if cpu.regs.get_FZ() == true {
+        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
+    } else {
+        cpu.regs.PC = offset;
+    }
+    println!("JRZ {:02X}", v)
+}
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     let next = cpu.regs.PC + 3;
@@ -901,6 +923,13 @@ impl<'a> Cpu<'a>{
             execute: DECh,
             jump: false,
         };
+        cpu.opcodes[0x28] = Opcode {
+            name: "JR Z, r8",
+            len: 2,
+            cycles: 12,
+            execute: JRzr8,
+            jump: true,
+        };
         cpu.opcodes[0x2A] = Opcode {
             name: "LDI A, (HL+)",
             len: 1,
@@ -1074,6 +1103,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: ANDc,
+            jump: false,
+        };
+        cpu.opcodes[0xA7] = Opcode {
+            name: "AND A",
+            len: 1,
+            cycles: 4,
+            execute: ANDa,
             jump: false,
         };
         cpu.opcodes[0xA9] = Opcode {
