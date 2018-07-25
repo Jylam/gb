@@ -33,6 +33,8 @@ impl<'a> Mem<'a>{
         //println!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0000..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
+            0xFF01 => {println!("WRITE DEBUG {:02X}", v);}
+            0xFF02 => {println!("WRITE DEBUG2 {:02X}", v);}
             0xFF40...0xFF54 => {println!("Unsupported write8 in LCD")},
             0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},
             _ => {self.ram[addr as usize] = v;},

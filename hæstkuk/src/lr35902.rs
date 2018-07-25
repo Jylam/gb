@@ -348,6 +348,11 @@ pub fn INChl(cpu: &mut Cpu) {
     cpu.regs.set_HL(hl.wrapping_add(1));
     println!("INC HL");
 }
+pub fn INCde(cpu: &mut Cpu) {
+    let de = cpu.regs.get_DE();
+    cpu.regs.set_DE(de.wrapping_add(1));
+    println!("INC DE");
+}
 pub fn INCa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(1);
     if cpu.regs.A == 0 {
@@ -431,10 +436,27 @@ pub fn RRCa(cpu: &mut Cpu) {
     println!("OR C");
 
 }
+pub fn LDaa16(cpu: &mut Cpu) {
+    let addr = addr16(cpu);
+    cpu.regs.A = cpu.mem.read8(addr);
+    println!("LD A, ({:04X})", addr);
+
+}
 pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
+}
+pub fn LDhla(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    cpu.mem.write8(hl, cpu.regs.A);
+    println!("LD {:04X}, A", hl);
+}
+pub fn LDhlpa(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    cpu.mem.write8(hl, cpu.regs.A);
+    cpu.regs.set_HL(hl.wrapping_add(1));
+    println!("LD {:04X}+, A", hl);
 }
 pub fn LDhld8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -583,10 +605,25 @@ pub fn POPhl(cpu: &mut Cpu) {
     cpu.regs.set_HL(sp);
     println!("POP HL");
 }
+pub fn POPaf(cpu: &mut Cpu) {
+    let sp = PopStack(cpu);
+    cpu.regs.set_AF(sp);
+    println!("POP AF");
+}
 pub fn PUSHde(cpu: &mut Cpu) {
     let v = cpu.regs.get_DE();
     PushStack(cpu, v);
     println!("PUSH DE");
+}
+pub fn PUSHaf(cpu: &mut Cpu) {
+    let v = cpu.regs.get_AF();
+    PushStack(cpu, v);
+    println!("PUSH AF");
+}
+pub fn PUSHhl(cpu: &mut Cpu) {
+    let v = cpu.regs.get_HL();
+    PushStack(cpu, v);
+    println!("PUSH HL");
 }
 
 pub fn RST28h(cpu: &mut Cpu) {
@@ -594,6 +631,12 @@ pub fn RST28h(cpu: &mut Cpu) {
     PushStack(cpu, PC);
     cpu.regs.PC = 0x28;
     println!("RST 28h")
+}
+pub fn RST38h(cpu: &mut Cpu) {
+    let PC = cpu.regs.PC;
+    PushStack(cpu, PC);
+    cpu.regs.PC = 0x38;
+    println!("RST 38h")
 }
 pub fn JRnzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
@@ -767,7 +810,13 @@ impl<'a> Cpu<'a>{
             execute: LDdea,
             jump: false,
         };
-
+        cpu.opcodes[0x13] = Opcode {
+            name: "INC DE",
+            len: 1,
+            cycles: 8,
+            execute: INCde,
+            jump: false,
+        };
         cpu.opcodes[0x14] = Opcode {
             name: "INC D",
             len: 1,
@@ -829,6 +878,13 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 13,
             execute: LDhld16,
+            jump: false,
+        };
+        cpu.opcodes[0x22] = Opcode {
+            name: "LD (HL+),A",
+            len: 1,
+            cycles: 8,
+            execute: LDhlpa,
             jump: false,
         };
         cpu.opcodes[0x23] = Opcode {
@@ -971,6 +1027,13 @@ impl<'a> Cpu<'a>{
             execute: LDhlb,
             jump: false,
         };
+        cpu.opcodes[0x77] = Opcode {
+            name: "LD (HL),A",
+            len: 1,
+            cycles: 8,
+            execute: LDhla,
+            jump: false,
+        };
         cpu.opcodes[0x78] = Opcode {
             name: "LD A, B",
             len: 1,
@@ -1055,6 +1118,13 @@ impl<'a> Cpu<'a>{
             execute: LDha8a,
             jump: false,
         };
+        cpu.opcodes[0xE5] = Opcode {
+            name: "PUSH HL",
+            len: 1,
+            cycles: 16,
+            execute: PUSHhl,
+            jump: false,
+        };
         cpu.opcodes[0xEA] = Opcode {
             name: "LD (a16),A",
             len: 3,
@@ -1132,11 +1202,32 @@ impl<'a> Cpu<'a>{
             execute: LDhaa8,
             jump: false,
         };
+        cpu.opcodes[0xF1] = Opcode {
+            name: "POP AF",
+            len: 1,
+            cycles: 12,
+            execute: POPaf,
+            jump: false,
+        };
+        cpu.opcodes[0xF5] = Opcode {
+            name: "PUSH AF",
+            len: 1,
+            cycles: 16,
+            execute: PUSHaf,
+            jump: false,
+        };
         cpu.opcodes[0xF6] = Opcode {
             name: "OR d8",
             len: 2,
             cycles: 8,
             execute: ORd8,
+            jump: false,
+        };
+        cpu.opcodes[0xFA] = Opcode {
+            name: "LD A, (a16)",
+            len: 3,
+            cycles: 16,
+            execute: LDaa16,
             jump: false,
         };
         cpu.opcodes[0xFB] = Opcode {
@@ -1152,6 +1243,13 @@ impl<'a> Cpu<'a>{
             cycles: 8,
             execute: CPd8,
             jump: false,
+        };
+        cpu.opcodes[0xFF] = Opcode {
+            name: "RST 38h",
+            len: 1,
+            cycles: 16,
+            execute: RST38h,
+            jump: true,
         };
         /************ Alternative (PREFIX) opcodes **************/
 
@@ -1206,7 +1304,7 @@ impl<'a> Cpu<'a>{
         println!("----------------------------------------");
         print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
-        //self.print_status();
+        self.print_status();
         //println!("----------------------------------------");
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
