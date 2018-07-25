@@ -1104,14 +1104,14 @@ impl<'a> Cpu<'a>{
             execute: POPhl,
             jump: false,
         };
-        cpu.opcodes[0xE2] = Opcode {
+        cpu.opcodes[0xE6] = Opcode {
             name: "AND d8",
             len: 2,
             cycles: 8,
             execute: ANDd8,
             jump: false,
         };
-        cpu.opcodes[0xE6] = Opcode {
+        cpu.opcodes[0xE2] = Opcode {
             name: "LD (C), A",
             len: 1,
             cycles: 8,
