@@ -627,6 +627,11 @@ pub fn PUSHde(cpu: &mut Cpu) {
     PushStack(cpu, v);
     println!("PUSH DE");
 }
+pub fn PUSHbc(cpu: &mut Cpu) {
+    let v = cpu.regs.get_BC();
+    PushStack(cpu, v);
+    println!("PUSH BC");
+}
 pub fn PUSHaf(cpu: &mut Cpu) {
     let v = cpu.regs.get_AF();
     PushStack(cpu, v);
@@ -660,6 +665,16 @@ pub fn JRnzr8(cpu: &mut Cpu) {
     }
     println!("JRNZ {:02X}", v)
 }
+pub fn JRcr8(cpu: &mut Cpu) {
+    let offset = cpu.regs.PC + 2;
+    let v:i8      = imm8(cpu) as i8;
+    if cpu.regs.get_FC() == true {
+        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
+    } else {
+        cpu.regs.PC = offset;
+    }
+    println!("JR C {:02X}", v)
+}
 pub fn JRzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v:i8      = imm8(cpu) as i8;
@@ -680,6 +695,14 @@ pub fn CALLa16(cpu: &mut Cpu) {
 pub fn RET(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
+    println!("RET (-> {:04X})", addr)
+}
+pub fn RETNZ(cpu: &mut Cpu) {
+    let mut addr = 0;
+    if cpu.regs.get_FZ() == true {
+        addr = PopStack(cpu);
+        cpu.regs.PC = addr;
+    }
     println!("RET (-> {:04X})", addr)
 }
 pub fn DI(_cpu: &mut Cpu) {
@@ -972,6 +995,13 @@ impl<'a> Cpu<'a>{
             execute: LDhld8,
             jump: false,
         };
+        cpu.opcodes[0x38] = Opcode {
+            name: "JR C r8",
+            len: 2,
+            cycles: 12,
+            execute: JRcr8,
+            jump: false,
+        };
         cpu.opcodes[0x3C] = Opcode {
             name: "INC A",
             len: 1,
@@ -1091,6 +1121,13 @@ impl<'a> Cpu<'a>{
             execute: LDal,
             jump: false,
         };
+        cpu.opcodes[0x7E] = Opcode {
+            name: "LD A, C",
+            len: 1,
+            cycles: 4,
+            execute: LDac,
+            jump: false,
+        };
         cpu.opcodes[0x87] = Opcode {
             name: "ADD A,A",
             len: 1,
@@ -1182,12 +1219,26 @@ impl<'a> Cpu<'a>{
             execute: DI,
             jump: false,
         };
+        cpu.opcodes[0xC0] = Opcode {
+            name: "RET NZ",
+            len: 1,
+            cycles: 20,
+            execute: RETNZ,
+            jump: true,
+        };
         cpu.opcodes[0xC3] = Opcode {
             name: "JP a16",
             len: 3,
             cycles: 16,
             execute: JPa16,
             jump: true,
+        };
+        cpu.opcodes[0xC5] = Opcode {
+            name: "PUSH BC",
+            len: 1,
+            cycles: 16,
+            execute: PUSHbc,
+            jump: false,
         };
         cpu.opcodes[0xC9] = Opcode {
             name: "RET",
