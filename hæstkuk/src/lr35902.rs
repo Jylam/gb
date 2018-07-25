@@ -1190,7 +1190,7 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn reset(&mut self) {
-        self.regs.PC = 0x0000
+        self.regs.PC = 0x0100
     }
 
     pub fn step(&mut self) -> u8 {
@@ -1203,7 +1203,7 @@ impl<'a> Cpu<'a>{
         } else {
             opcode = self.opcodes[code];
         }
-        //println!("----------------------------------------");
+        println!("----------------------------------------");
         print!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
         //self.print_status();
