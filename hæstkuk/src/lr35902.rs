@@ -617,6 +617,11 @@ pub fn POPhl(cpu: &mut Cpu) {
     cpu.regs.set_HL(sp);
     println!("POP HL");
 }
+pub fn POPbc(cpu: &mut Cpu) {
+    let sp = PopStack(cpu);
+    cpu.regs.set_BC(sp);
+    println!("POP BC");
+}
 pub fn POPaf(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
     cpu.regs.set_AF(sp);
@@ -1225,6 +1230,13 @@ impl<'a> Cpu<'a>{
             cycles: 20,
             execute: RETNZ,
             jump: true,
+        };
+        cpu.opcodes[0xC1] = Opcode {
+            name: "POP BC",
+            len: 1,
+            cycles: 12,
+            execute: POPbc,
+            jump: false,
         };
         cpu.opcodes[0xC3] = Opcode {
             name: "JP a16",

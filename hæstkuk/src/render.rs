@@ -83,7 +83,7 @@ impl<'a> Render<'a> {
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 
-        let mut offset: u32 = 0x0000-((160*144)*0);
+        let mut offset: u32 = 0xA700-((160*144)*0);
         for y in 0 .. (WINDOW_HEIGHT) {
             for x in 0 .. (WINDOW_WIDTH) {
                 if offset < 0xFFFF {
