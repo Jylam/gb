@@ -273,7 +273,7 @@ pub fn DECc(cpu: &mut Cpu) {
     } else {
         cpu.regs.unset_FZ();
     }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FN();
     // Z 0 H -
     //Z N H C
     println!("DEC C, F is {:b}", cpu.regs.F);
@@ -285,7 +285,7 @@ pub fn DECb(cpu: &mut Cpu) {
     } else {
         cpu.regs.unset_FZ();
     }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FN();
     // Z 0 H -
     //Z N H C
     println!("DEC B");
@@ -416,6 +416,7 @@ pub fn CPL(cpu: &mut Cpu) {
     cpu.regs.set_FN();
     cpu.regs.set_FH();
 
+    println!("CPL")
 }
 pub fn CPd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -427,6 +428,7 @@ pub fn CPd8(cpu: &mut Cpu) {
     if cpu.regs.A < imm {
         cpu.regs.set_FC();
     }
+    println!("CP {:02X}", imm)
 }
 
 pub fn RRCa(cpu: &mut Cpu) {
@@ -534,7 +536,7 @@ pub fn LDDhmla(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.mem.write8(hl, cpu.regs.A);
     cpu.regs.set_HL(hl.wrapping_sub(1));
-    println!("LD [{:04X}], a", hl);
+    println!("LD- [{:04X}], a", hl);
 }
 pub fn LDcd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -1372,6 +1374,9 @@ impl<'a> Cpu<'a>{
 
     pub fn readMem8(&mut self, addr: u16) -> u8 {
         self.mem.read8(addr)
+    }
+    pub fn writeMem8(&mut self, addr: u16, v: u8)  {
+        self.mem.write8(addr, v)
     }
 
     pub fn print_status(&mut self) {
