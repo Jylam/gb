@@ -515,7 +515,12 @@ pub fn LDlh(cpu: &mut Cpu) {
 }
 pub fn LDca(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.A;
-    println!("LD C, A")
+    println!("LD (C), A")
+}
+pub fn LDpca(cpu: &mut Cpu) {
+    let C = cpu.regs.C as u16;
+    cpu.mem.write8(0xFF00 + C, cpu.regs.A);
+    println!("LD (C), A")
 }
 pub fn LDded16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
@@ -733,7 +738,13 @@ pub fn SWAPa(cpu: &mut Cpu) {
 
     println!("SWAP A");
 }
-
+pub fn SET7hl(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+    let mut v =  cpu.mem.read8(hl);
+    v|=0b1000_0000;
+    cpu.mem.write8(hl, v);
+    println!("SET 7, HL")
+}
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     println!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
@@ -1279,7 +1290,7 @@ impl<'a> Cpu<'a>{
             name: "LD (C), A",
             len: 1,
             cycles: 8,
-            execute: LDca,
+            execute: LDpca,
             jump: false,
         };
         cpu.opcodes[0xE6] = Opcode {
@@ -1362,10 +1373,10 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.alt_opcodes[0xFE] = Opcode {
-            name: "SET 3, (HL)",
+            name: "SET 7, (HL)",
             len: 2,
             cycles: 8,
-            execute: SWAPa,
+            execute: SET7hl,
             jump: false,
         };
         cpu
@@ -1401,6 +1412,7 @@ impl<'a> Cpu<'a>{
         let opcode;
         if code == 0xCB {
             let code = self.mem.read8(self.regs.PC+1) as usize;
+            println!("Alternate opcode {:02X}", code);
             opcode = self.alt_opcodes[code];
         } else {
             opcode = self.opcodes[code];
