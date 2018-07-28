@@ -190,6 +190,19 @@ pub fn ORb(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("OR B");
 }
+pub fn ORa(cpu: &mut Cpu) {
+    let v = cpu.regs.A;
+    cpu.regs.A = cpu.regs.A|v;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("OR A");
+}
 pub fn ORd8(cpu: &mut Cpu) {
     let v = imm8(cpu);
     cpu.regs.A = cpu.regs.A|v;
@@ -241,8 +254,34 @@ pub fn ANDd8(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("AND {:02}", imm);
 }
+//FIXME TODO WHOOO, handle carry flag
+pub fn SUBad8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    if imm>cpu.regs.A {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+
+    cpu.regs.A = cpu.regs.A.wrapping_sub(imm);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    //      C - Set if carry from bit 7.
+    println!("SUB A, {:02X}", imm);
+}
 pub fn ADDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
+    if (imm as u16)+(cpu.regs.A as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
     cpu.regs.A = cpu.regs.A.wrapping_add(imm);
     if cpu.regs.A == 0 {
         cpu.regs.set_FZ();
@@ -470,6 +509,28 @@ pub fn CPd8(cpu: &mut Cpu) {
     println!("CP {:02X}", imm)
 }
 
+pub fn RRa(cpu: &mut Cpu) {
+
+    let c = cpu.regs.A&0b00000001;
+    cpu.regs.A = cpu.regs.A>>1;
+    if cpu.regs.get_FC() == true {
+        cpu.regs.A |= 1<<7;
+    }
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    println!("RR A");
+
+}
 pub fn RRCa(cpu: &mut Cpu) {
 
     if ((cpu.regs.A&0b10000000)>>7) == 1 {
@@ -713,6 +774,16 @@ pub fn RST38h(cpu: &mut Cpu) {
     cpu.regs.PC = 0x38;
     println!("RST 38h")
 }
+pub fn JRncr8(cpu: &mut Cpu) {
+    let offset = cpu.regs.PC + 2;
+    let v:i8      = imm8(cpu) as i8;
+    if cpu.regs.get_FC() == false {
+        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
+    } else {
+        cpu.regs.PC = offset;
+    }
+    println!("JRNC {:02X}", v)
+}
 pub fn JRnzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v:i8      = imm8(cpu) as i8;
@@ -756,6 +827,8 @@ pub fn CALLNZa16(cpu: &mut Cpu) {
         let next = cpu.regs.PC + 3;
         PushStack(cpu, next);
         cpu.regs.PC = addr;
+    } else {
+        cpu.regs.PC = cpu.regs.PC.wrapping_add(3);
     }
     println!("CALL {:04X}", addr)
 }
@@ -998,6 +1071,13 @@ impl<'a> Cpu<'a>{
             execute: DECe,
             jump: false,
         };
+        cpu.opcodes[0x1F] = Opcode {
+            name: "RRA",
+            len: 1,
+            cycles: 4,
+            execute: RRa,
+            jump: false,
+        };
         cpu.opcodes[0x20] = Opcode {
             name: "JR NZ, r8",
             len: 2,
@@ -1074,6 +1154,13 @@ impl<'a> Cpu<'a>{
             cycles: 4,
             execute: DECl,
             jump: false,
+        };
+        cpu.opcodes[0x30] = Opcode {
+            name: "JR NC, r8",
+            len: 2,
+            cycles: 12,
+            execute: JRncr8,
+            jump: true,
         };
         cpu.opcodes[0x31] = Opcode {
             name: "LD SP, d16",
@@ -1278,6 +1365,13 @@ impl<'a> Cpu<'a>{
             execute: ORc,
             jump: false,
         };
+        cpu.opcodes[0xB7] = Opcode {
+            name: "OR A",
+            len: 1,
+            cycles: 4,
+            execute: ORa,
+            jump: false,
+        };
         cpu.opcodes[0xD5] = Opcode {
             name: "PUSH DE",
             len: 1,
@@ -1375,6 +1469,13 @@ impl<'a> Cpu<'a>{
             cycles: 24,
             execute: CALLa16,
             jump: true,
+        };
+        cpu.opcodes[0xD6] = Opcode {
+            name: "SUB A,d8",
+            len: 2,
+            cycles: 8,
+            execute: SUBad8,
+            jump: false,
         };
         cpu.opcodes[0xE1] = Opcode {
             name: "POP HL",
