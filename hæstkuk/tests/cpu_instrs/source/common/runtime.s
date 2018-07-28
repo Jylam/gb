@@ -33,7 +33,7 @@
 ; A is preserved for jumped-to code.
 copy_to_wram_then_run:
      ld   b,a
-     
+
      ld   de,$C000
      ld   c,$10
 -    ldi  a,(hl)
@@ -43,7 +43,7 @@ copy_to_wram_then_run:
      inc  d
      dec  c
      jr   nz,-
-     
+
      ld   a,b
      jp   $C000
 
@@ -53,7 +53,7 @@ copy_to_wram_then_run:
           ; ensures minimal difference in how it behaves.
           ld   hl,$4000
           jp   copy_to_wram_then_run
-     
+
      .bank 1 slot 1
      .org $0 ; otherwise wla pads with lots of zeroes
           jp   std_reset
@@ -67,42 +67,43 @@ copy_to_wram_then_run:
 .include "printing.s"
 .include "numbers.s"
 .include "testing.s"
-     
+
 ; Sets up hardware and runs main
 std_reset:
 
      ; Init hardware
+     // c220 JYLAM
      di
      ld   sp,std_stack
-     
+
      ; Save DMG/CGB id
      ld   (gb_id),a
-     
+
      ; Init hardware
      .ifndef BUILD_GBS
           wreg TAC,$00
           wreg IF,$00
           wreg IE,$00
      .endif
-     
+
      wreg NR52,0    ; sound off
      wreg NR52,$80  ; sound on
      wreg NR51,$FF  ; mono
      wreg NR50,$77  ; volume
-     
+
      ; TODO: clear all memory?
-     
-     ld   hl,std_print
+
+     ld   hl,std_print ; C243 JYLAM
      call init_printing
      call init_testing
      call init_runtime
      call reset_crc ; in case init_runtime prints anything
-     
+
      delay_msec 250
-     
+
      ; Run user code
      call main
-     
+
      ; Default is to successful exit
      ld   a,0
      jp   exit
@@ -116,22 +117,22 @@ exit:
      pop  af
      jp   post_exit
 
-+    push af   
++    push af
      call print_newline
      call show_printing
      pop  af
-     
+
      ; Report exit status
      cp   1
-     
+
      ; 0: ""
      ret  c
-     
+
      ; 1: "Failed"
      jr   nz,+
      print_str "Failed",newline
      ret
-     
+
      ; n: "Failed #n"
 +    print_str "Failed #"
      call print_dec

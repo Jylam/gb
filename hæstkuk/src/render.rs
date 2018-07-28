@@ -15,9 +15,9 @@ use std::time::Duration;
 
 use lr35902::Cpu;
 
-const WINDOW_WIDTH : u32 = 160;
-const WINDOW_HEIGHT : u32 = 144;
-const SCALE : u32 = 4;
+const WINDOW_WIDTH : u32 = 256;//160;
+const WINDOW_HEIGHT : u32 = 410;//144;
+const SCALE : u32 = 3;
 
 
 #[allow(dead_code)]

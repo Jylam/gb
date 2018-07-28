@@ -239,7 +239,7 @@ pub fn ANDd8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.set_FH();
     cpu.regs.unset_FC();
-    println!("OR C");
+    println!("AND {:02}", imm);
 }
 pub fn ADDaa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.A);
@@ -365,6 +365,11 @@ pub fn INCde(cpu: &mut Cpu) {
     cpu.regs.set_DE(de.wrapping_add(1));
     println!("INC DE");
 }
+pub fn INCbc(cpu: &mut Cpu) {
+    let bc = cpu.regs.get_BC();
+    cpu.regs.set_BC(bc.wrapping_add(1));
+    println!("INC BC");
+}
 pub fn INCa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(1);
     if cpu.regs.A == 0 {
@@ -481,7 +486,7 @@ pub fn LDIahlp(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.A = cpu.mem.read8(hl);
     cpu.regs.set_HL(hl.wrapping_add(1));
-    println!("LD A, (HL+)")
+    println!("LD A, (HL+)  {:02X}<-({:04X})", cpu.regs.A, hl);
 }
 pub fn LDhhl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -566,7 +571,7 @@ pub fn LDbd8(cpu: &mut Cpu) {
 pub fn LDha8a(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
-    println!("LDH ({:02X}), A", imm)
+    println!("LDH (FF{:02X}), A", imm)
 }
 pub fn LDhaa8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -610,9 +615,10 @@ pub fn JPa16(cpu: &mut Cpu) {
     println!("JP {:04X}", addr)
 }
 pub fn JRr8(cpu: &mut Cpu) {
-    let offset = imm8(cpu) as u16;
-    cpu.regs.PC += offset;
-    println!("JR {:04X}", cpu.regs.PC)
+    let offset = cpu.regs.PC + 2;
+    let v      = imm8(cpu) as i16;
+    cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 };
+    println!("JR {:04X} (PC (after +{:}))", cpu.regs.PC, v)
 }
 pub fn JPhl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
@@ -702,6 +708,15 @@ pub fn CALLa16(cpu: &mut Cpu) {
     let next = cpu.regs.PC + 3;
     PushStack(cpu, next);
     cpu.regs.PC = addr;
+    println!("CALL {:04X}", addr)
+}
+pub fn CALLNZa16(cpu: &mut Cpu) {
+    let addr = addr16(cpu);
+    if cpu.regs.get_FZ() == true {
+        let next = cpu.regs.PC + 3;
+        PushStack(cpu, next);
+        cpu.regs.PC = addr;
+    }
     println!("CALL {:04X}", addr)
 }
 pub fn RET(cpu: &mut Cpu) {
@@ -808,6 +823,13 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 12,
             execute: LDbcd16,
+            jump: false,
+        };
+        cpu.opcodes[0x03] = Opcode {
+            name: "INC BC",
+            len: 1,
+            cycles: 8,
+            execute: INCbc,
             jump: false,
         };
         cpu.opcodes[0x05] = Opcode {
@@ -1258,6 +1280,13 @@ impl<'a> Cpu<'a>{
             execute: JPa16,
             jump: true,
         };
+        cpu.opcodes[0xC4] = Opcode {
+            name: "CALL NZ a16",
+            len: 3,
+            cycles: 24,
+            execute: CALLNZa16,
+            jump: true,
+        };
         cpu.opcodes[0xC5] = Opcode {
             name: "PUSH BC",
             len: 1,
@@ -1398,6 +1427,10 @@ impl<'a> Cpu<'a>{
         println!("B : {:02X}\tC : {:02X}", self.regs.B, self.regs.C);
         println!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
         println!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
+        println!("RST Vectors : ");
+/*        for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
+            println!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
+        }*/
         println!("==== END ====");
 //        self.mem.print_infos();
     }
