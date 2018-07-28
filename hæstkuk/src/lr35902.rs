@@ -241,6 +241,20 @@ pub fn ANDd8(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("AND {:02}", imm);
 }
+pub fn ADDad8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.A = cpu.regs.A.wrapping_add(imm);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    //      C - Set if carry from bit 7.
+    println!("ADD A, {:02X}", imm);
+}
 pub fn ADDaa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.A);
     if cpu.regs.A == 0 {
@@ -1339,6 +1353,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 16,
             execute: PUSHbc,
+            jump: false,
+        };
+        cpu.opcodes[0xC6] = Opcode {
+            name: "ADD A,d8",
+            len: 2,
+            cycles: 8,
+            execute: ADDad8,
             jump: false,
         };
         cpu.opcodes[0xC9] = Opcode {
