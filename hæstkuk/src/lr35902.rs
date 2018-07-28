@@ -382,6 +382,26 @@ pub fn INCa(cpu: &mut Cpu) {
     //Z N H C
     println!("INC A");
 }
+pub fn INCh(cpu: &mut Cpu) {
+    cpu.regs.H = cpu.regs.H.wrapping_add(1);
+    if cpu.regs.H == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    println!("INC H");
+}
+pub fn INCl(cpu: &mut Cpu) {
+    cpu.regs.L = cpu.regs.L.wrapping_add(1);
+    if cpu.regs.L == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    println!("INC L");
+}
 pub fn INCc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_add(1);
     if cpu.regs.C == 0 {
@@ -455,10 +475,16 @@ pub fn RRCa(cpu: &mut Cpu) {
     println!("OR C");
 
 }
+pub fn LDade(cpu: &mut Cpu) {
+    let addr = cpu.regs.get_DE();
+    cpu.regs.A = cpu.mem.read8(addr);
+    println!("LD A, (DE) ({:04X})", addr);
+
+}
 pub fn LDaa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     cpu.regs.A = cpu.mem.read8(addr);
-    println!("LD A, ({:04X})", addr);
+    println!("LD A, (a16) ({:04X})", addr);
 
 }
 pub fn LDhld16(cpu: &mut Cpu) {
@@ -937,6 +963,13 @@ impl<'a> Cpu<'a>{
             execute: ADDhlde,
             jump: false,
         };
+        cpu.opcodes[0x1A] = Opcode {
+            name: "LD A, (DE)",
+            len: 1,
+            cycles: 8,
+            execute: LDade,
+            jump: false,
+        };
         cpu.opcodes[0x1C] = Opcode {
             name: "INC E",
             len: 1,
@@ -979,6 +1012,13 @@ impl<'a> Cpu<'a>{
             execute: INChl,
             jump: false,
         };
+        cpu.opcodes[0x24] = Opcode {
+            name: "INC H",
+            len: 1,
+            cycles: 4,
+            execute: INCh,
+            jump: false,
+        };
         cpu.opcodes[0x25] = Opcode {
             name: "DEC H",
             len: 1,
@@ -998,6 +1038,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDIahlp,
+            jump: false,
+        };
+        cpu.opcodes[0x2C] = Opcode {
+            name: "INC L",
+            len: 1,
+            cycles: 4,
+            execute: INCl,
             jump: false,
         };
         cpu.opcodes[0x2D] = Opcode {
