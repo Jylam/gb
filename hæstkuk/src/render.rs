@@ -16,7 +16,7 @@ use std::time::Duration;
 use lr35902::Cpu;
 
 const WINDOW_WIDTH : u32 = 256;//160;
-const WINDOW_HEIGHT : u32 = 410;//144;
+const WINDOW_HEIGHT : u32 = 256;//144;
 const SCALE : u32 = 3;
 
 
@@ -86,7 +86,7 @@ impl<'a> Render<'a> {
         let mut offset: u32 = 0x0000-((160*144)*0);
         for y in 0 .. (WINDOW_HEIGHT) {
             for x in 0 .. (WINDOW_WIDTH) {
-                if offset < 0xFFFF {
+                if offset <= 0xFFFF {
                     let r = cpu.readMem8(offset as u16);
                     let color = Color::RGB(r, r, r);
                     surface.fill_rect(Rect::new((x * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();

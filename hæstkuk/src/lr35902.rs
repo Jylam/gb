@@ -203,6 +203,19 @@ pub fn ORa(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("OR A");
 }
+pub fn ORhl(cpu: &mut Cpu) {
+    let v = cpu.mem.read8(cpu.regs.get_HL());
+    cpu.regs.A = cpu.regs.A|v;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("OR (hl)");
+}
 pub fn ORd8(cpu: &mut Cpu) {
     let v = imm8(cpu);
     cpu.regs.A = cpu.regs.A|v;
@@ -254,7 +267,6 @@ pub fn ANDd8(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("AND {:02}", imm);
 }
-//FIXME TODO WHOOO, handle carry flag
 pub fn SUBad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     if imm>cpu.regs.A {
@@ -272,8 +284,29 @@ pub fn SUBad8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    //      C - Set if carry from bit 7.
     println!("SUB A, {:02X}", imm);
+}
+pub fn ADCad8(cpu: &mut Cpu) {
+    let mut c = 0;
+    if cpu.regs.get_FC() == true {
+        c=1;
+    }
+    let imm = imm8(cpu)+c;
+    if (imm as u16)+(cpu.regs.A as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    cpu.regs.A = cpu.regs.A.wrapping_add(imm);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    println!("ADC A, {:02X}", imm);
 }
 pub fn ADDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -291,10 +324,14 @@ pub fn ADDad8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    //      C - Set if carry from bit 7.
     println!("ADD A, {:02X}", imm);
 }
 pub fn ADDaa(cpu: &mut Cpu) {
+    if (cpu.regs.A as u16)+(cpu.regs.A as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.A);
     if cpu.regs.A == 0 {
         cpu.regs.set_FZ();
@@ -412,6 +449,11 @@ pub fn INChl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.set_HL(hl.wrapping_add(1));
     println!("INC HL");
+}
+pub fn DEC_hl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_sub(1));
+    println!("DEC (HL)");
 }
 pub fn INCde(cpu: &mut Cpu) {
     let de = cpu.regs.get_DE();
@@ -554,7 +596,11 @@ pub fn LDade(cpu: &mut Cpu) {
     let addr = cpu.regs.get_DE();
     cpu.regs.A = cpu.mem.read8(addr);
     println!("LD A, (DE) ({:04X})", addr);
-
+}
+pub fn LDlhl(cpu: &mut Cpu) {
+    let addr = cpu.regs.get_HL();
+    cpu.regs.L = cpu.mem.read8(addr);
+    println!("LD L, (HL) ({:04X})", addr);
 }
 pub fn LDaa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -837,13 +883,35 @@ pub fn RET(cpu: &mut Cpu) {
     cpu.regs.PC = addr;
     println!("RET (-> {:04X})", addr)
 }
+pub fn RETNC(cpu: &mut Cpu) {
+    if cpu.regs.get_FC() == true {
+        let addr = PopStack(cpu);
+        cpu.regs.PC = addr;
+        println!("RET NC (-> {:04X})", addr)
+    } else {
+        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
+        println!("RET NC (-> continue)")
+    }
+}
+pub fn RETZ(cpu: &mut Cpu) {
+    let mut addr = 0;
+    if cpu.regs.get_FZ() == false {
+        addr = PopStack(cpu);
+        cpu.regs.PC = addr;
+    } else {
+        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
+    }
+    println!("RET Z (-> {:04X})", addr)
+}
 pub fn RETNZ(cpu: &mut Cpu) {
     let mut addr = 0;
     if cpu.regs.get_FZ() == true {
         addr = PopStack(cpu);
         cpu.regs.PC = addr;
+    } else {
+        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
     }
-    println!("RET (-> {:04X})", addr)
+    println!("RET NZ (-> {:04X})", addr)
 }
 pub fn DI(_cpu: &mut Cpu) {
     println!("DI")
@@ -1176,6 +1244,13 @@ impl<'a> Cpu<'a>{
             execute: LDDhmla,
             jump: false,
         };
+        cpu.opcodes[0x35] = Opcode {
+            name: "DEC (hl)",
+            len: 1,
+            cycles: 12,
+            execute: DEC_hl,
+            jump: false,
+        };
         cpu.opcodes[0x36] = Opcode {
             name: "LD (HL), d8",
             len: 2,
@@ -1265,6 +1340,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: LDlh,
+            jump: false,
+        };
+        cpu.opcodes[0x6E] = Opcode {
+            name: "LD L, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDlhl,
             jump: false,
         };
         cpu.opcodes[0x70] = Opcode {
@@ -1365,6 +1447,13 @@ impl<'a> Cpu<'a>{
             execute: ORc,
             jump: false,
         };
+        cpu.opcodes[0xB6] = Opcode {
+            name: "OR [HL]",
+            len: 1,
+            cycles: 8,
+            execute: ORhl,
+            jump: false,
+        };
         cpu.opcodes[0xB7] = Opcode {
             name: "OR A",
             len: 1,
@@ -1456,6 +1545,13 @@ impl<'a> Cpu<'a>{
             execute: ADDad8,
             jump: false,
         };
+        cpu.opcodes[0xC8] = Opcode {
+            name: "RET Z",
+            len: 1,
+            cycles: 20,
+            execute: RETZ,
+            jump: true,
+        };
         cpu.opcodes[0xC9] = Opcode {
             name: "RET",
             len: 1,
@@ -1468,6 +1564,20 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 24,
             execute: CALLa16,
+            jump: true,
+        };
+        cpu.opcodes[0xCE] = Opcode {
+            name: "ADC d8",
+            len: 2,
+            cycles: 8,
+            execute: ADCad8,
+            jump: false,
+        };
+        cpu.opcodes[0xD0] = Opcode {
+            name: "RET NC",
+            len: 1,
+            cycles: 20,
+            execute: RETNC,
             jump: true,
         };
         cpu.opcodes[0xD6] = Opcode {
