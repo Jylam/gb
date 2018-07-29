@@ -45,7 +45,7 @@ impl<'a> Render<'a> {
             sdl_context: sdl_context,
             video_subsystem: video_subsystem,
             window: window,
-            buffer: vec![0x00; (BUF_WIDTH*BUF_WIDTH) as usize],
+            buffer: vec![0x00; (BUF_WIDTH*BUF_HEIGHT) as usize],
             phantom: PhantomData,
         };
         render
@@ -112,7 +112,7 @@ impl<'a> Render<'a> {
             print!("{:02X} ", v);
             x+=1;
             if x == 32 {
-                println!("");
+                println!(" BUF");
                 x = 0;
                 y+=1;
             }

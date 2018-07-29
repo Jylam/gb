@@ -354,9 +354,25 @@ pub fn ADDaa(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     //TODO
-    //      H - Set if carry from bit 3.
-    //      C - Set if carry from bit 7.
+    //      H - Half-Carry.
     println!("ADD A,A");
+}
+pub fn ADDac(cpu: &mut Cpu) {
+    if (cpu.regs.A as u16)+(cpu.regs.C as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.C);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    println!("ADD A,C");
 }
 pub fn ADDhlde(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -542,6 +558,18 @@ pub fn INCe(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     println!("INC E");
+}
+pub fn CPc(cpu: &mut Cpu) {
+    let c = cpu.regs.C;
+    cpu.regs.set_FN();
+    cpu.regs.unset_FZ();
+    if cpu.regs.A == c {
+        cpu.regs.set_FZ();
+    }
+    if cpu.regs.A < c {
+        cpu.regs.set_FC();
+    }
+    println!("CPD")
 }
 pub fn CPL(cpu: &mut Cpu) {
     let A = cpu.regs.A;
@@ -790,6 +818,13 @@ pub fn JPa16(cpu: &mut Cpu) {
     cpu.regs.PC = addr;
     println!("JP {:04X}", addr)
 }
+pub fn JPZa16(cpu: &mut Cpu) {
+    let addr = addr16(cpu);
+    if cpu.regs.get_FZ() == true {
+        cpu.regs.PC = addr;
+    }
+    println!("JP {:04X}", addr)
+}
 pub fn JRr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v      = imm8(cpu) as i16;
@@ -969,6 +1004,24 @@ pub fn SET7hl(cpu: &mut Cpu) {
     v|=0b1000_0000;
     cpu.mem.write8(hl, v);
     println!("SET 7, HL")
+}
+pub fn RLCa(cpu: &mut Cpu) {
+
+    let c = cpu.regs.A >> 7;
+    cpu.regs.A = (cpu.regs.A << 1) | c;
+
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
 }
 pub fn SRLa(cpu: &mut Cpu) {
 
@@ -1183,6 +1236,13 @@ impl<'a> Cpu<'a>{
             execute: LDbd8,
             jump: false,
         };
+        cpu.opcodes[0x07] = Opcode {
+            name: "RLCA",
+            len: 1,
+            cycles: 4,
+            execute: RLCa,
+            jump: false,
+        };
         cpu.opcodes[0x0B] = Opcode {
             name: "DEC BC",
             len: 1,
@@ -1376,14 +1436,14 @@ impl<'a> Cpu<'a>{
             name: "DEC L",
             len: 1,
             cycles: 4,
-            execute: CPL,
+            execute: DECl,
             jump: false,
         };
         cpu.opcodes[0x2F] = Opcode {
-            name: "DEC L",
+            name: "CPL",
             len: 1,
             cycles: 4,
-            execute: DECl,
+            execute: CPL,
             jump: false,
         };
         cpu.opcodes[0x30] = Opcode {
@@ -1575,6 +1635,13 @@ impl<'a> Cpu<'a>{
             execute: LDac,
             jump: false,
         };
+        cpu.opcodes[0x81] = Opcode {
+            name: "ADD A,C",
+            len: 1,
+            cycles: 4,
+            execute: ADDac,
+            jump: false,
+        };
         cpu.opcodes[0x87] = Opcode {
             name: "ADD A,A",
             len: 1,
@@ -1643,6 +1710,20 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: ORa,
+            jump: false,
+        };
+        cpu.opcodes[0xB9] = Opcode {
+            name: "CPC",
+            len: 1,
+            cycles: 4,
+            execute: CPc,
+            jump: false,
+        };
+        cpu.opcodes[0xCA] = Opcode {
+            name: "JP Z a16",
+            len: 3,
+            cycles: 16,
+            execute: JPZa16,
             jump: false,
         };
         cpu.opcodes[0xD5] = Opcode {

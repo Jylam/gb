@@ -53,7 +53,7 @@ fn main() {
             render.show_memory(&mut cpu);
             render.oam(&mut cpu);
             render.render_screen(&mut cpu);
-            refresh_count = 100;
+            refresh_count = 1000;
             cpu.writeMem8(0xFF44, y);
             y=y.wrapping_add(1);
         }
