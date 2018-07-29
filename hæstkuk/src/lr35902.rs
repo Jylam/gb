@@ -4,6 +4,7 @@
 use std::process;
 use mem;
 
+
 #[derive(Copy, Clone)]
 struct Opcode {
     name: &'static str,
@@ -165,6 +166,19 @@ pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
     println!("XOR A");
+}
+pub fn XOR_hl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    cpu.regs.A = cpu.regs.A^hl;
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("XOR A, [HL]");
 }
 pub fn ORc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.C|cpu.regs.A;
@@ -602,6 +616,16 @@ pub fn LDlhl(cpu: &mut Cpu) {
     cpu.regs.L = cpu.mem.read8(addr);
     println!("LD L, (HL) ({:04X})", addr);
 }
+pub fn LDbhl(cpu: &mut Cpu) {
+    let addr = cpu.regs.get_HL();
+    cpu.regs.B = cpu.mem.read8(addr);
+    println!("LD B, (HL) ({:04X})", addr);
+}
+pub fn LDchl(cpu: &mut Cpu) {
+    let addr = cpu.regs.get_HL();
+    cpu.regs.C = cpu.mem.read8(addr);
+    println!("LD C, (HL) ({:04X})", addr);
+}
 pub fn LDaa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     cpu.regs.A = cpu.mem.read8(addr);
@@ -612,6 +636,11 @@ pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     println!("LD HL, {:04X}", imm)
+}
+pub fn LDhd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.H = imm;
+    println!("LD H, {:04X}", imm)
 }
 pub fn LDhla(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -941,6 +970,133 @@ pub fn SET7hl(cpu: &mut Cpu) {
     cpu.mem.write8(hl, v);
     println!("SET 7, HL")
 }
+pub fn SRLa(cpu: &mut Cpu) {
+
+    let c = cpu.regs.A & 1;
+    cpu.regs.A = cpu.regs.A >> 1;
+
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+pub fn SRLb(cpu: &mut Cpu) {
+
+    let c = cpu.regs.B & 1;
+    cpu.regs.B = cpu.regs.B >> 1;
+
+    if cpu.regs.B == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+pub fn SRLc(cpu: &mut Cpu) {
+
+    let c = cpu.regs.C & 1;
+    cpu.regs.C = cpu.regs.C >> 1;
+
+    if cpu.regs.C == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+pub fn SRLd(cpu: &mut Cpu) {
+
+    let c = cpu.regs.D & 1;
+    cpu.regs.D = cpu.regs.D >> 1;
+
+    if cpu.regs.D == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+pub fn SRLe(cpu: &mut Cpu) {
+
+    let c = cpu.regs.E & 1;
+    cpu.regs.E = cpu.regs.E >> 1;
+
+    if cpu.regs.E == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+pub fn SRLh(cpu: &mut Cpu) {
+
+    let c = cpu.regs.H & 1;
+    cpu.regs.H = cpu.regs.H >> 1;
+
+    if cpu.regs.H == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+pub fn SRLl(cpu: &mut Cpu) {
+
+    let c = cpu.regs.L & 1;
+    cpu.regs.L = cpu.regs.L >> 1;
+
+    if cpu.regs.L == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    if c == 1 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+}
+
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     println!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
@@ -1188,6 +1344,13 @@ impl<'a> Cpu<'a>{
             execute: DECh,
             jump: false,
         };
+        cpu.opcodes[0x26] = Opcode {
+            name: "LD H, d8",
+            len: 2,
+            cycles: 8,
+            execute: LDhd8,
+            jump: false,
+        };
         cpu.opcodes[0x28] = Opcode {
             name: "JR Z, r8",
             len: 2,
@@ -1286,11 +1449,25 @@ impl<'a> Cpu<'a>{
             execute: LDad8,
             jump: false,
         };
+        cpu.opcodes[0x46] = Opcode {
+            name: "LD B, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDbhl,
+            jump: false,
+        };
         cpu.opcodes[0x47] = Opcode {
             name: "LD B, A",
             len: 1,
             cycles: 4,
             execute: LDba,
+            jump: false,
+        };
+        cpu.opcodes[0x4E] = Opcode {
+            name: "LD C, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDchl,
             jump: false,
         };
         cpu.opcodes[0x4F] = Opcode {
@@ -1424,6 +1601,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: XORc,
+            jump: false,
+        };
+        cpu.opcodes[0xAE] = Opcode {
+            name: "XOR A, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: XOR_hl,
             jump: false,
         };
         cpu.opcodes[0xAF] = Opcode {
@@ -1680,6 +1864,55 @@ impl<'a> Cpu<'a>{
             execute: SWAPa,
             jump: false,
         };
+        cpu.alt_opcodes[0x38] = Opcode {
+            name: "SRL B",
+            len: 2,
+            cycles: 8,
+            execute: SRLb,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x39] = Opcode {
+            name: "SRL C",
+            len: 2,
+            cycles: 8,
+            execute: SRLc,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x3A] = Opcode {
+            name: "SRL D",
+            len: 2,
+            cycles: 8,
+            execute: SRLd,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x3B] = Opcode {
+            name: "SRL E",
+            len: 2,
+            cycles: 8,
+            execute: SRLe,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x3C] = Opcode {
+            name: "SRL H",
+            len: 2,
+            cycles: 8,
+            execute: SRLh,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x3D] = Opcode {
+            name: "SRL L",
+            len: 2,
+            cycles: 8,
+            execute: SRLl,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x3F] = Opcode {
+            name: "SRL A",
+            len: 2,
+            cycles: 8,
+            execute: SRLa,
+            jump: false,
+        };
         cpu.alt_opcodes[0xFE] = Opcode {
             name: "SET 7, (HL)",
             len: 2,
@@ -1713,6 +1946,7 @@ impl<'a> Cpu<'a>{
         println!("==== END ====");
 //        self.mem.print_infos();
     }
+
 
     pub fn reset(&mut self) {
         self.regs.PC = 0x0100

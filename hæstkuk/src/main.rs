@@ -42,7 +42,6 @@ fn main() {
 
     render = render::Render::new(); // Open SDL window
 
-
     let mut y: u8 = 0;
 
     let mut refresh_count: u32 = 1;
@@ -53,6 +52,7 @@ fn main() {
             render.get_events();
             render.show_memory(&mut cpu);
             render.oam(&mut cpu);
+            render.render_screen(&mut cpu);
             refresh_count = 100;
             cpu.writeMem8(0xFF44, y);
             y=y.wrapping_add(1);

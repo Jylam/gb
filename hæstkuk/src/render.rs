@@ -19,12 +19,15 @@ const WINDOW_WIDTH : u32 = 256;//160;
 const WINDOW_HEIGHT : u32 = 256;//144;
 const SCALE : u32 = 3;
 
+const BUF_WIDTH: u32 = 256;
+const BUF_HEIGHT: u32 = 256;
 
 #[allow(dead_code)]
 pub struct Render<'a> {
     sdl_context: sdl2::Sdl,
     video_subsystem: sdl2::VideoSubsystem,
     window: sdl2::video::Window,
+    buffer: Vec<u8>,
     phantom: PhantomData<&'a u8>,
 }
 
@@ -42,6 +45,7 @@ impl<'a> Render<'a> {
             sdl_context: sdl_context,
             video_subsystem: video_subsystem,
             window: window,
+            buffer: vec![0x00; (BUF_WIDTH*BUF_WIDTH) as usize],
             phantom: PhantomData,
         };
         render
@@ -83,7 +87,7 @@ impl<'a> Render<'a> {
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 
-        let mut offset: u32 = 0x0000-((160*144)*0);
+        let mut offset: u32 = 0x0000;
         for y in 0 .. (WINDOW_HEIGHT) {
             for x in 0 .. (WINDOW_WIDTH) {
                 if offset <= 0xFFFF {
@@ -98,6 +102,21 @@ impl<'a> Render<'a> {
             }
         }
         surface.finish().unwrap();
+    }
+
+    pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
+        let mut x = 0;
+        let mut y = 0;
+        for i in 0x9800..=0x9BFF {
+            let v = cpu.readMem8(i as u16);
+            print!("{:02X} ", v);
+            x+=1;
+            if x == 32 {
+                println!("");
+                x = 0;
+                y+=1;
+            }
+        }
     }
 }
 
