@@ -8,6 +8,7 @@ mod lr35902;
 mod lcd;
 mod render;
 
+const VBLANK_FREQ_CYCLES : u32 = 17555;
 
 fn main() {
     let lcd: lcd::LCD;
@@ -43,10 +44,23 @@ fn main() {
     render = render::Render::new(); // Open SDL window
 
     let mut y: u8 = 0;
-
     let mut refresh_count: u32 = 1;
+    let mut vblank_counter: u32 = 1;
+
     cpu.reset();
+
     'running : loop {
+        vblank_counter-=1;
+        if vblank_counter == 0 {
+            vblank_counter = VBLANK_FREQ_CYCLES;
+            if cpu.interrupts_enabled() {
+                println!("VBLANK !!!");
+                cpu.irq_vblank();
+            } else {
+            }
+        }
+
+
         refresh_count-=1;
         if refresh_count == 0 {
             render.get_events();

@@ -73,7 +73,7 @@ impl<'a> Render<'a> {
             let y = cpu.readMem8(offset+1);
             let pattern_number = cpu.readMem8(offset+2);
             let flags = cpu.readMem8(offset+3);
-            if y!=0 {
+            if x!=0 {
                 println!("X: {:02X}", x);
                 println!("Y: {:02X}", y);
                 println!("Pattern Number: {:02X}", pattern_number);

@@ -27,6 +27,7 @@ pub struct Registers {
     L: u8,
     PC: u16,
     SP: u16,
+    I: bool,
 }
 #[allow(dead_code)]
 impl Registers {
@@ -1106,6 +1107,7 @@ pub fn RET(cpu: &mut Cpu) {
 pub fn RETI(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
+    EI(cpu);
     println!("RETI (-> {:04X})", addr)
 }
 pub fn RETNC(cpu: &mut Cpu) {
@@ -1138,13 +1140,14 @@ pub fn RETNZ(cpu: &mut Cpu) {
     }
     println!("RET NZ (-> {:04X})", addr)
 }
-pub fn DI(_cpu: &mut Cpu) {
+pub fn DI(cpu: &mut Cpu) {
+    cpu.regs.I = false;
     println!("DI")
 }
-pub fn EI(_cpu: &mut Cpu) {
+pub fn EI(cpu: &mut Cpu) {
+    cpu.regs.I = true;
     println!("EI")
 }
-
 
 pub fn SWAPa(cpu: &mut Cpu) {
     cpu.regs.A = ((cpu.regs.A&0xF0)>>4)|(cpu.regs.A<<4);
@@ -1339,6 +1342,7 @@ impl<'a> Cpu<'a>{
                 C: 0,
                 E: 0,
                 L: 0,
+                I: false,
                 PC: 0,
                 SP: 0,
             },
@@ -2275,6 +2279,16 @@ impl<'a> Cpu<'a>{
 //        self.mem.print_infos();
     }
 
+    pub fn interrupts_enabled(&mut self) -> bool {
+        self.regs.I
+    }
+
+    pub fn irq_vblank(&mut self) {
+        DI(self);
+        let addr = addr16(self);
+        PushStack(self, addr);
+        self.regs.PC = 0x0040;
+    }
 
     pub fn reset(&mut self) {
         self.regs.PC = 0x0100
