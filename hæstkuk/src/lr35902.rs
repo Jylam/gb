@@ -875,7 +875,7 @@ pub fn LDlh(cpu: &mut Cpu) {
 }
 pub fn LDca(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.A;
-    println!("LD (C), A")
+    println!("LD C, A")
 }
 pub fn LDpca(cpu: &mut Cpu) {
     let C = cpu.regs.C as u16;
