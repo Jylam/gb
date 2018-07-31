@@ -841,6 +841,11 @@ pub fn POPhl(cpu: &mut Cpu) {
     cpu.regs.set_HL(sp);
     println!("POP HL");
 }
+pub fn POPde(cpu: &mut Cpu) {
+    let de = PopStack(cpu);
+    cpu.regs.set_DE(de);
+    println!("POP DE");
+}
 pub fn POPbc(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
     cpu.regs.set_BC(sp);
@@ -946,6 +951,11 @@ pub fn RET(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
     println!("RET (-> {:04X})", addr)
+}
+pub fn RETI(cpu: &mut Cpu) {
+    let addr = PopStack(cpu);
+    cpu.regs.PC = addr;
+    println!("RETI (-> {:04X})", addr)
 }
 pub fn RETNC(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
@@ -1726,6 +1736,13 @@ impl<'a> Cpu<'a>{
             execute: JPZa16,
             jump: false,
         };
+        cpu.opcodes[0xD9] = Opcode {
+            name: "RETI",
+            len: 1,
+            cycles: 20,
+            execute: RETI,
+            jump: true,
+        };
         cpu.opcodes[0xD5] = Opcode {
             name: "PUSH DE",
             len: 1,
@@ -1844,6 +1861,13 @@ impl<'a> Cpu<'a>{
             cycles: 20,
             execute: RETNC,
             jump: true,
+        };
+        cpu.opcodes[0xD1] = Opcode {
+            name: "POP DE",
+            len: 1,
+            cycles: 12,
+            execute: POPde,
+            jump: false,
         };
         cpu.opcodes[0xD6] = Opcode {
             name: "SUB A,d8",
