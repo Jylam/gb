@@ -194,6 +194,18 @@ pub fn XOR_hl(cpu: &mut Cpu) {
     cpu.regs.unset_FC();
     println!("XOR A, [HL]");
 }
+pub fn ORd(cpu: &mut Cpu) {
+    cpu.regs.A = cpu.regs.D|cpu.regs.A;
+    if cpu.regs.D == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.unset_FH();
+    cpu.regs.unset_FC();
+    println!("OR D");
+}
 pub fn ORc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.C|cpu.regs.A;
     if cpu.regs.A == 0 {
@@ -854,6 +866,14 @@ pub fn LDae(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
     println!("LD A, E")
 }
+pub fn LDha(cpu: &mut Cpu) {
+    cpu.regs.H = cpu.regs.A;
+    println!("LD H, A")
+}
+pub fn LDla(cpu: &mut Cpu) {
+    cpu.regs.L = cpu.regs.A;
+    println!("LD L, A")
+}
 pub fn LDad(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
     println!("LD A, D")
@@ -1168,6 +1188,16 @@ pub fn SET7hl(cpu: &mut Cpu) {
     v|=0b1000_0000;
     cpu.mem.write8(hl, v);
     println!("SET 7, HL")
+}
+pub fn BIT6a(cpu: &mut Cpu) {
+    let v = cpu.regs.A&0b0100_0000;
+    if v == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.set_FH();
 }
 pub fn RLCa(cpu: &mut Cpu) {
 
@@ -1744,6 +1774,13 @@ impl<'a> Cpu<'a>{
             execute: LDhhl,
             jump: false,
         };
+        cpu.opcodes[0x67] = Opcode {
+            name: "LD H, A",
+            len: 1,
+            cycles: 4,
+            execute: LDha,
+            jump: false,
+        };
         cpu.opcodes[0x6C] = Opcode {
             name: "LD L, H",
             len: 1,
@@ -1756,6 +1793,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDlhl,
+            jump: false,
+        };
+        cpu.opcodes[0x6F] = Opcode {
+            name: "LD L, A",
+            len: 1,
+            cycles: 4,
+            execute: LDla,
             jump: false,
         };
         cpu.opcodes[0x70] = Opcode {
@@ -1879,6 +1923,13 @@ impl<'a> Cpu<'a>{
         };
         cpu.opcodes[0xB1] = Opcode {
             name: "OR C",
+            len: 1,
+            cycles: 4,
+            execute: ORc,
+            jump: false,
+        };
+        cpu.opcodes[0xB2] = Opcode {
+            name: "OR D",
             len: 1,
             cycles: 4,
             execute: ORc,
@@ -2187,6 +2238,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: RRl,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x77] = Opcode {
+            name: "BIT 6,A",
+            len: 2,
+            cycles: 8,
+            execute: BIT6a,
             jump: false,
         };
         cpu.alt_opcodes[0x37] = Opcode {
