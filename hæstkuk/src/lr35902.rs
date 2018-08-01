@@ -979,7 +979,7 @@ pub fn JPZa16(cpu: &mut Cpu) {
 }
 pub fn JRr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
-    let v      = imm8(cpu) as i16;
+    let v      = imm8(cpu) as i8;
     cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 };
     println!("JR {:04X} (PC (after +{:}))", cpu.regs.PC, v)
 }
