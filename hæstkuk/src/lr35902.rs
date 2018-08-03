@@ -2343,7 +2343,7 @@ impl<'a> Cpu<'a>{
 
     pub fn irq_vblank(&mut self) {
         DI(self);
-        let addr = addr16(self);
+        let addr = self.regs.PC;
         PushStack(self, addr);
         self.regs.PC = 0x0040;
     }
