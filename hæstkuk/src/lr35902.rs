@@ -326,6 +326,28 @@ pub fn SUBad8(cpu: &mut Cpu) {
     //      H - Set if carry from bit 3.
     println!("SUB A, {:02X}", imm);
 }
+pub fn ADCac(cpu: &mut Cpu) {
+    let mut c = 0;
+    if cpu.regs.get_FC() == true {
+        c=1;
+    }
+    let imm = cpu.regs.C+c;
+    if (imm as u16)+(cpu.regs.A as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    cpu.regs.A = cpu.regs.A.wrapping_add(imm);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    println!("ADC A, {:02X}", imm);
+}
 pub fn ADCad8(cpu: &mut Cpu) {
     let mut c = 0;
     if cpu.regs.get_FC() == true {
@@ -382,6 +404,23 @@ pub fn ADDaa(cpu: &mut Cpu) {
     //TODO
     //      H - Half-Carry.
     println!("ADD A,A");
+}
+pub fn ADDab(cpu: &mut Cpu) {
+    if (cpu.regs.A as u16)+(cpu.regs.B as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.B);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    println!("ADD A,B");
 }
 pub fn ADDac(cpu: &mut Cpu) {
     if (cpu.regs.A as u16)+(cpu.regs.C as u16) > 255 {
@@ -1865,6 +1904,13 @@ impl<'a> Cpu<'a>{
             execute: LDac,
             jump: false,
         };
+        cpu.opcodes[0x80] = Opcode {
+            name: "ADD A,B",
+            len: 1,
+            cycles: 4,
+            execute: ADDab,
+            jump: false,
+        };
         cpu.opcodes[0x81] = Opcode {
             name: "ADD A,C",
             len: 1,
@@ -1877,6 +1923,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: ADDaa,
+            jump: false,
+        };
+        cpu.opcodes[0x89] = Opcode {
+            name: "ADC A,C",
+            len: 1,
+            cycles: 4,
+            execute: ADCac,
             jump: false,
         };
         cpu.opcodes[0xA1] = Opcode {
