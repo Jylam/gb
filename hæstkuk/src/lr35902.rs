@@ -405,6 +405,23 @@ pub fn ADDaa(cpu: &mut Cpu) {
     //      H - Half-Carry.
     println!("ADD A,A");
 }
+pub fn ADDad(cpu: &mut Cpu) {
+    if (cpu.regs.A as u16)+(cpu.regs.D as u16) > 255 {
+        cpu.regs.set_FC();
+    } else {
+        cpu.regs.unset_FC();
+    }
+    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.D);
+    if cpu.regs.A == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 3.
+    println!("ADD A,D")
+}
 pub fn ADDab(cpu: &mut Cpu) {
     if (cpu.regs.A as u16)+(cpu.regs.B as u16) > 255 {
         cpu.regs.set_FC();
@@ -544,6 +561,11 @@ pub fn INChl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.set_HL(hl.wrapping_add(1));
     println!("INC HL");
+}
+pub fn INC_hl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_add(1));
+    println!("INC (HL)");
 }
 pub fn DEC_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
@@ -1228,6 +1250,26 @@ pub fn SET7hl(cpu: &mut Cpu) {
     cpu.mem.write8(hl, v);
     println!("SET 7, HL")
 }
+pub fn BIT0c(cpu: &mut Cpu) {
+    let v = cpu.regs.C&0b0000_0001;
+    if v == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.set_FH();
+}
+pub fn BIT5a(cpu: &mut Cpu) {
+    let v = cpu.regs.A&0b0010_0000;
+    if v == 0 {
+        cpu.regs.set_FZ();
+    } else {
+        cpu.regs.unset_FZ();
+    }
+    cpu.regs.unset_FN();
+    cpu.regs.set_FH();
+}
 pub fn BIT6a(cpu: &mut Cpu) {
     let v = cpu.regs.A&0b0100_0000;
     if v == 0 {
@@ -1701,6 +1743,13 @@ impl<'a> Cpu<'a>{
             execute: LDDhmla,
             jump: false,
         };
+        cpu.opcodes[0x34] = Opcode {
+            name: "INC (HL)",
+            len: 1,
+            cycles: 12,
+            execute: INC_hl,
+            jump: false,
+        };
         cpu.opcodes[0x35] = Opcode {
             name: "DEC (hl)",
             len: 1,
@@ -1916,6 +1965,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: ADDac,
+            jump: false,
+        };
+        cpu.opcodes[0x82] = Opcode {
+            name: "ADD A,D",
+            len: 1,
+            cycles: 4,
+            execute: ADDad,
             jump: false,
         };
         cpu.opcodes[0x87] = Opcode {
@@ -2291,6 +2347,20 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: RRl,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x41] = Opcode {
+            name: "BIT 0,C",
+            len: 2,
+            cycles: 8,
+            execute: BIT0c,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6F] = Opcode {
+            name: "BIT 5,A",
+            len: 2,
+            cycles: 8,
+            execute: BIT5a,
             jump: false,
         };
         cpu.alt_opcodes[0x77] = Opcode {
