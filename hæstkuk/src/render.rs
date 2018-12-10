@@ -17,7 +17,7 @@ use lr35902::Cpu;
 
 const WINDOW_WIDTH : u32 = 256;//160;
 const WINDOW_HEIGHT : u32 = 256;//144;
-const SCALE : u32 = 1;
+const SCALE : u32 = 3;
 
 const BUF_WIDTH: u32 = 256;
 const BUF_HEIGHT: u32 = 256;
@@ -111,16 +111,18 @@ impl<'a> Render<'a> {
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 
-        for i in 0x8000..=0x8FFF {
+        for mut i in 0x8000..=0x8FFF {
 
             //for i in 0x9800..=0x9BFF {
-            let v = cpu.readMem16(i as u16);
-
-
+            let b1 = cpu.readMem8(i as u16);
+            let b2 = cpu.readMem8(i+1 as u16);
+            i+=1;
             for _pixel in 0..=7 {
+                let _v1 = b1.wrapping_shr(7-_pixel)&0x01;
+                let _v2 = b2.wrapping_shr(7-_pixel)&0x01;
+                let _value = (_v1<<1)|_v2;
 
-                let _value = (v.wrapping_shr(14-(_pixel*2)))&0x03;
-                let color8 = (_value*64) as u8;
+                let color8 = ((_value)*64) as u8;
                 let color = Color::RGB(color8, color8, color8);
                 //println!("{:}x{:}->{:}", (x+_pixel) * SCALE , (y*SCALE), color8);
                 surface.fill_rect(Rect::new(((x+_pixel) * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
@@ -128,6 +130,7 @@ impl<'a> Render<'a> {
             y+=1;
             if(y>=WINDOW_HEIGHT) {
                 y=0;
+                x+=8;
             }
 
 
