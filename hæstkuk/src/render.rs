@@ -108,8 +108,11 @@ impl<'a> Render<'a> {
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
 <<<<<<< HEAD
+<<<<<<< HEAD
         let bg_display = cpu.mem.lcd.background_display();
         println!("BG Display: {}", bg_display);
+=======
+>>>>>>> parent of 99f7223... LCD registers read/write
 =======
 >>>>>>> parent of 99f7223... LCD registers read/write
     }

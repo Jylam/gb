@@ -67,6 +67,7 @@ impl<'a> LCD<'a> {
             }
         }
     }
+<<<<<<< HEAD
 
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
         let mut offset: u16 = 0xFE00;
@@ -144,6 +145,8 @@ impl<'a> LCD<'a> {
         surface.finish().unwrap();
 
     }
+=======
+>>>>>>> parent of 99f7223... LCD registers read/write
     pub fn read8(&self, addr: u16) -> u8 {
         match addr {
             _ => {println!("LCD read8 at {:04X}", addr); self.regs[(addr-0xFF40) as usize]}
