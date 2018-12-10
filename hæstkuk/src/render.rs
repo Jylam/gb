@@ -107,15 +107,23 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-        let bg_display = cpu.mem.lcd.background_display();
+        let operation = cpu.mem.lcd.operation();
+		let window_tile_table_address = cpu.mem.lcd.window_tile_table_address();
+		let window_display = cpu.mem.lcd.window_display();
+        let tile_pattern_table_address = cpu.mem.lcd.tile_pattern_table_address();
+        let background_tile_table_address = cpu.mem.lcd.background_tile_table_address();
+		let sprite_size = cpu.mem.lcd.sprite_size();
+        let color_0_transparency = cpu.mem.lcd.color_0_transparency();
+		let bg_display = cpu.mem.lcd.background_display();
+		println!("LCD Operation: {}", operation);
+    	println!("window_tile_table_address : {:04X}", window_tile_table_address);
+        println!("Window Display: {}", window_display);
+        println!("Tile Pattern Table Address : {:04X}", tile_pattern_table_address);
+        println!("Background Tile Table Address : {:04X}", background_tile_table_address);
+        println!("Sprite Size Double: {}", sprite_size);
+        println!("Color 0 Transparency: {}", color_0_transparency);
         println!("BG Display: {}", bg_display);
-=======
->>>>>>> parent of 99f7223... LCD registers read/write
-=======
->>>>>>> parent of 99f7223... LCD registers read/write
-    }
+		}
 
     pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
         let mut x = 0;
@@ -151,39 +159,5 @@ impl<'a> Render<'a> {
         surface.finish().unwrap();
 
     }
-    pub fn write8(&mut self, addr: u16, v: u8)  {
-        debug!("LCD Write8 {:02X} at {:04X}", v, addr);
-        match addr {
-            0..=15 => {self.regs[(addr) as usize] = v;}
-            _ => {error!("LCD Write8 range error")}
-        }
-    }
-
-    pub fn read8(&self, addr: u16) -> u8 {
-        match addr {
-            _ => {debug!("LCD read8 at {:04X}", addr); self.regs[addr as usize]}
-        }
-    }
-
-    pub fn update(&mut self) {
-        self.regs[(0x04)] = self.regs[(0x04)].wrapping_add(1);
-    }
-
-
-    pub fn background_display(&self) -> bool {
-        (self.regs[0x00]&1)==1
-    }
-
-    /*
-     FF40 -- LCDCONT [RW] LCD Control              | when set to 1 | when set to 0
-     Bit7  LCD operation                           | ON            | OFF
-     Bit6  Window Tile Table address               | 9C00-9FFF     | 9800-9BFF
-     Bit5  Window display                          | ON            | OFF
-     Bit4  Tile Pattern Table address              | 8000-8FFF     | 8800-97FF
-     Bit3  Background Tile Table address           | 9C00-9FFF     | 9800-9BFF
-     Bit2  Sprite size                             | 8x16          | 8x8
-     Bit1  Color #0 transparency in the window     | SOLID         | TRANSPARENT
-     Bit0  Background display                      | ON            | OFF
-     */
 
 }

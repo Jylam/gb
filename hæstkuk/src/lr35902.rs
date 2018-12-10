@@ -4,8 +4,6 @@
 
 use std::process;
 use mem;
-use log::Level;
-
 
 #[derive(Copy, Clone)]
 struct Opcode {
@@ -113,7 +111,7 @@ impl Registers {
 }
 
 pub struct Cpu<'a> {
-    mem: mem::Mem<'a>,
+    pub mem: mem::Mem<'a>,
     regs: Registers,
     total_cyles: u64,
     opcodes: Vec<Opcode>,
