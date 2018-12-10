@@ -45,13 +45,18 @@ impl<'a> Mem<'a>{
         v
     }
     pub fn write16(&mut self, addr: u16, v: u16)  {
-        self.write8(addr+1,  ((v&0xFF00)>>8) as u8);
-        self.write8(addr, (v&0xFF)       as u8);
-    }
+		match addr {
+			0x0000..=0x7FFF => {self.write8(addr+1,  ((v&0xFF00)>>8) as u8);
+				self.write8(addr, (v&0xFF)       as u8);}
+			0xFF40...0xFF54 => {error!("WRITE16 ON LCD !!!")},
+			_ => {self.write8(addr+1,  ((v&0xFF00)>>8) as u8);
+                  self.write8(addr, (v&0xFF)       as u8);}
+		}
+	}
 
 #[allow(dead_code)]
-    pub fn print_infos(&mut self) {
-        debug!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
-        debug!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
-    }
-}
+		pub fn print_infos(&mut self) {
+			debug!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
+			debug!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
+		}
+	}
