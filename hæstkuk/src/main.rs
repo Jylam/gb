@@ -9,7 +9,7 @@ mod lcd;
 mod render;
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
-const REFRESH_CYCLES : u32 = 1000;
+const REFRESH_CYCLES : u32 = 10;
 
 fn main() {
     let lcd: lcd::LCD;
@@ -65,8 +65,8 @@ fn main() {
         refresh_count-=1;
         if refresh_count == 0 {
             render.get_events();
-            render.show_memory(&mut cpu);
-            render.oam(&mut cpu);
+            //render.show_memory(&mut cpu);
+            //render.oam(&mut cpu);
             render.render_screen(&mut cpu);
             refresh_count = REFRESH_CYCLES;
             cpu.writeMem8(0xFF44, y);

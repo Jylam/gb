@@ -2440,6 +2440,9 @@ impl<'a> Cpu<'a>{
     pub fn readMem8(&mut self, addr: u16) -> u8 {
         self.mem.read8(addr)
     }
+    pub fn readMem16(&mut self, addr: u16) -> u16 {
+        self.mem.read16(addr)
+    }
     pub fn writeMem8(&mut self, addr: u16, v: u8)  {
         self.mem.write8(addr, v)
     }

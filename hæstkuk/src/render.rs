@@ -17,7 +17,7 @@ use lr35902::Cpu;
 
 const WINDOW_WIDTH : u32 = 256;//160;
 const WINDOW_HEIGHT : u32 = 256;//144;
-const SCALE : u32 = 3;
+const SCALE : u32 = 1;
 
 const BUF_WIDTH: u32 = 256;
 const BUF_HEIGHT: u32 = 256;
@@ -36,7 +36,7 @@ impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem  = sdl_context.video().unwrap();
-        let window = video_subsystem.window("rust-sdl2 demo: No Renderer", WINDOW_WIDTH*SCALE, WINDOW_HEIGHT*SCALE)
+        let window = video_subsystem.window("Hæstkuk dev", WINDOW_WIDTH*SCALE, WINDOW_HEIGHT*SCALE)
             .position_centered()
             .build()
             .unwrap();
@@ -107,17 +107,33 @@ impl<'a> Render<'a> {
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let mut x = 0;
         let mut y = 0;
-        for i in 0x9800..=0x9BFF {
-            let v = cpu.readMem8(i as u16);
-            print!("{:02X} ", v);
-            x+=1;
-            if x == 32 {
-                println!(" BUF");
-                x = 0;
-                y+=1;
+
+        let pump = &self.sdl_context.event_pump().unwrap();
+        let mut surface = self.window.surface(pump).unwrap();
+
+        for i in 0x8000..=0x8FFF {
+
+            //for i in 0x9800..=0x9BFF {
+            let v = cpu.readMem16(i as u16);
+
+
+            for _pixel in 0..=7 {
+
+                let _value = (v.wrapping_shr(14-(_pixel*2)))&0x03;
+                let color8 = (_value*64) as u8;
+                let color = Color::RGB(color8, color8, color8);
+                //println!("{:}x{:}->{:}", (x+_pixel) * SCALE , (y*SCALE), color8);
+                surface.fill_rect(Rect::new(((x+_pixel) * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
             }
+            y+=1;
+            if(y>=WINDOW_HEIGHT) {
+                y=0;
+            }
+
+
+
+        }
+        surface.finish().unwrap();
+
         }
     }
-}
-
-
