@@ -105,15 +105,17 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
+    }
+
+    pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
         let mut x = 0;
         let mut y = 0;
 
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 
-        for mut i in 0x8000..=0x8FFF {
+        for mut i in 0x8000..=0x97FF {
 
-            //for i in 0x9800..=0x9BFF {
             let b1 = cpu.readMem8(i as u16);
             let b2 = cpu.readMem8(i+1 as u16);
             i+=1;
@@ -128,7 +130,7 @@ impl<'a> Render<'a> {
                 surface.fill_rect(Rect::new(((x+_pixel) * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
             }
             y+=1;
-            if(y>=WINDOW_HEIGHT) {
+            if y>=WINDOW_HEIGHT {
                 y=0;
                 x+=8;
             }
@@ -138,5 +140,5 @@ impl<'a> Render<'a> {
         }
         surface.finish().unwrap();
 
-        }
     }
+}

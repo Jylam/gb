@@ -20,23 +20,23 @@ impl<'a> Mem<'a>{
         }
     }
     pub fn read8(&mut self, addr: u16) -> u8 {
-        //println!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
+        //debug!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
         self.lcd.update();
         match addr {
             0x0000..=0x7FFF => self.rom.buffer[addr as usize],
             //0xFF40...0xFF54 => self.lcd.read8(addr),
-            0xFF00 ... 0xFF7F => { println!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
+            0xFF00 ... 0xFF7F => { debug!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
             _ => {self.ram[addr as usize]},
         }
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
-        println!(">>> Writing {:02X} at {:04X}", v, addr);
+        debug!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0000..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
-            0xFF01 => {println!("WRITE DEBUG {:02X}", v);}
-            0xFF02 => {println!("WRITE DEBUG2 {:02X}", v);}
+            0xFF01 => {debug!("WRITE DEBUG {:02X}", v);}
+            0xFF02 => {debug!("WRITE DEBUG2 {:02X}", v);}
             //0xFF40...0xFF54 => {println!("Unsupported write8({:04X}, {:02X}) in LCD", addr, v)},
-            //0xFF00 ... 0xFF7F => { println!("Unsupported write8 in Hardware area {:04X}", addr);},
+            //0xFF00 ... 0xFF7F => { debug!("Unsupported write8 in Hardware area {:04X}", addr);},
             _ => {self.ram[addr as usize] = v;},
         }
     }
@@ -51,7 +51,7 @@ impl<'a> Mem<'a>{
 
 #[allow(dead_code)]
     pub fn print_infos(&mut self) {
-        println!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
-        println!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
+        debug!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
+        debug!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
     }
 }

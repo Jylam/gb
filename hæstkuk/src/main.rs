@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 use std::io;
 use std::env;
 use std::process;
@@ -9,9 +12,11 @@ mod lcd;
 mod render;
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
-const REFRESH_CYCLES : u32 = 10;
+const REFRESH_CYCLES : u32 = 1000;
 
 fn main() {
+    env_logger::init();
+
     let lcd: lcd::LCD;
     let rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
@@ -67,7 +72,8 @@ fn main() {
             render.get_events();
             //render.show_memory(&mut cpu);
             //render.oam(&mut cpu);
-            render.render_screen(&mut cpu);
+            render.display_tile_pattern_tables(&mut cpu);
+            //render.render_screen(&mut cpu);
             refresh_count = REFRESH_CYCLES;
             cpu.writeMem8(0xFF44, y);
             y=y.wrapping_add(1);

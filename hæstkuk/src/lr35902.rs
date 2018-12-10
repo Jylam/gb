@@ -1,8 +1,10 @@
 // Sharp LR35902 CPU emulator
 #![allow(non_snake_case)]
 #![allow(dead_code)]
+
 use std::process;
 use mem;
+use log::Level;
 
 
 #[derive(Copy, Clone)]
@@ -142,7 +144,7 @@ pub fn ALTUNK(cpu: &mut Cpu) {
     process::exit(3);
 }
 pub fn NOP(_cpu: &mut Cpu) {
-    println!("NOP")
+    debug!("NOP")
 }
 pub fn XORd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -155,7 +157,7 @@ pub fn XORd8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("XOR {:02X}", imm);
+    debug!("XOR {:02X}", imm);
 }
 pub fn XORc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.C;
@@ -167,7 +169,7 @@ pub fn XORc(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("XOR C");
+    debug!("XOR C");
 }
 pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
@@ -179,7 +181,7 @@ pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("XOR A");
+    debug!("XOR A");
 }
 pub fn XOR_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
@@ -192,7 +194,7 @@ pub fn XOR_hl(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("XOR A, [HL]");
+    debug!("XOR A, [HL]");
 }
 pub fn ORd(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.D|cpu.regs.A;
@@ -204,7 +206,7 @@ pub fn ORd(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("OR D");
+    debug!("OR D");
 }
 pub fn ORc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.C|cpu.regs.A;
@@ -216,7 +218,7 @@ pub fn ORc(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("OR C");
+    debug!("OR C");
 }
 pub fn ORb(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B|cpu.regs.A;
@@ -228,7 +230,7 @@ pub fn ORb(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("OR B");
+    debug!("OR B");
 }
 pub fn ORa(cpu: &mut Cpu) {
     let v = cpu.regs.A;
@@ -241,7 +243,7 @@ pub fn ORa(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("OR A");
+    debug!("OR A");
 }
 pub fn ORhl(cpu: &mut Cpu) {
     let v = cpu.mem.read8(cpu.regs.get_HL());
@@ -254,7 +256,7 @@ pub fn ORhl(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("OR (hl)");
+    debug!("OR (hl)");
 }
 pub fn ORd8(cpu: &mut Cpu) {
     let v = imm8(cpu);
@@ -267,7 +269,7 @@ pub fn ORd8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
-    println!("OR imm8");
+    debug!("OR imm8");
 }
 pub fn ANDc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A&cpu.regs.C;
@@ -279,7 +281,7 @@ pub fn ANDc(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.set_FH();
     cpu.regs.unset_FC();
-    println!("AND C");
+    debug!("AND C");
 }
 pub fn ANDa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A&cpu.regs.A;
@@ -291,7 +293,7 @@ pub fn ANDa(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.set_FH();
     cpu.regs.unset_FC();
-    println!("AND A");
+    debug!("AND A");
 }
 pub fn ANDd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -305,7 +307,7 @@ pub fn ANDd8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     cpu.regs.set_FH();
     cpu.regs.unset_FC();
-    println!("AND {:02}", imm);
+    debug!("AND {:02}", imm);
 }
 pub fn SUBad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -324,7 +326,7 @@ pub fn SUBad8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("SUB A, {:02X}", imm);
+    debug!("SUB A, {:02X}", imm);
 }
 pub fn ADCac(cpu: &mut Cpu) {
     let mut c = 0;
@@ -346,7 +348,7 @@ pub fn ADCac(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("ADC A, {:02X}", imm);
+    debug!("ADC A, {:02X}", imm);
 }
 pub fn ADCad8(cpu: &mut Cpu) {
     let mut c = 0;
@@ -368,7 +370,7 @@ pub fn ADCad8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("ADC A, {:02X}", imm);
+    debug!("ADC A, {:02X}", imm);
 }
 pub fn ADDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -386,7 +388,7 @@ pub fn ADDad8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("ADD A, {:02X}", imm);
+    debug!("ADD A, {:02X}", imm);
 }
 pub fn ADDaa(cpu: &mut Cpu) {
     if (cpu.regs.A as u16)+(cpu.regs.A as u16) > 255 {
@@ -403,7 +405,7 @@ pub fn ADDaa(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Half-Carry.
-    println!("ADD A,A");
+    debug!("ADD A,A");
 }
 pub fn ADDad(cpu: &mut Cpu) {
     if (cpu.regs.A as u16)+(cpu.regs.D as u16) > 255 {
@@ -420,7 +422,7 @@ pub fn ADDad(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("ADD A,D")
+    debug!("ADD A,D")
 }
 pub fn ADDab(cpu: &mut Cpu) {
     if (cpu.regs.A as u16)+(cpu.regs.B as u16) > 255 {
@@ -437,7 +439,7 @@ pub fn ADDab(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("ADD A,B");
+    debug!("ADD A,B");
 }
 pub fn ADDac(cpu: &mut Cpu) {
     if (cpu.regs.A as u16)+(cpu.regs.C as u16) > 255 {
@@ -454,7 +456,7 @@ pub fn ADDac(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
-    println!("ADD A,C");
+    debug!("ADD A,C");
 }
 pub fn ADDhlde(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -466,7 +468,7 @@ pub fn ADDhlde(cpu: &mut Cpu) {
     //TODO
     //      H - Set if carry from bit 11.
     //      C - Set if carry from bit 15.
-    println!("ADD HL,DE");
+    debug!("ADD HL,DE");
 }
 pub fn DECc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_sub(1);
@@ -478,7 +480,7 @@ pub fn DECc(cpu: &mut Cpu) {
     cpu.regs.set_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC C, F is {:b}", cpu.regs.F);
+    debug!("DEC C, F is {:b}", cpu.regs.F);
 }
 pub fn DECb(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.B.wrapping_sub(1);
@@ -490,7 +492,7 @@ pub fn DECb(cpu: &mut Cpu) {
     cpu.regs.set_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC B");
+    debug!("DEC B");
 }
 pub fn DECh(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.H.wrapping_sub(1);
@@ -502,7 +504,7 @@ pub fn DECh(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC H");
+    debug!("DEC H");
 }
 pub fn DECa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_sub(1);
@@ -514,7 +516,7 @@ pub fn DECa(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC A");
+    debug!("DEC A");
 }
 pub fn DECe(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.E.wrapping_sub(1);
@@ -526,7 +528,7 @@ pub fn DECe(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC E");
+    debug!("DEC E");
 }
 pub fn DECl(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.L.wrapping_sub(1);
@@ -538,7 +540,7 @@ pub fn DECl(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC D");
+    debug!("DEC D");
 }
 pub fn DECd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_sub(1);
@@ -550,37 +552,37 @@ pub fn DECd(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("DEC D");
+    debug!("DEC D");
 }
 pub fn DECbc(cpu: &mut Cpu) {
     let bc = cpu.regs.get_BC();
     cpu.regs.set_BC(bc.wrapping_sub(1));
-    println!("DEC BC");
+    debug!("DEC BC");
 }
 pub fn INChl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.set_HL(hl.wrapping_add(1));
-    println!("INC HL");
+    debug!("INC HL");
 }
 pub fn INC_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_add(1));
-    println!("INC (HL)");
+    debug!("INC (HL)");
 }
 pub fn DEC_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_sub(1));
-    println!("DEC (HL)");
+    debug!("DEC (HL)");
 }
 pub fn INCde(cpu: &mut Cpu) {
     let de = cpu.regs.get_DE();
     cpu.regs.set_DE(de.wrapping_add(1));
-    println!("INC DE");
+    debug!("INC DE");
 }
 pub fn INCbc(cpu: &mut Cpu) {
     let bc = cpu.regs.get_BC();
     cpu.regs.set_BC(bc.wrapping_add(1));
-    println!("INC BC");
+    debug!("INC BC");
 }
 pub fn INCa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(1);
@@ -592,7 +594,7 @@ pub fn INCa(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("INC A");
+    debug!("INC A");
 }
 pub fn INCh(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.H.wrapping_add(1);
@@ -602,7 +604,7 @@ pub fn INCh(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
-    println!("INC H");
+    debug!("INC H");
 }
 pub fn INCl(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.L.wrapping_add(1);
@@ -612,7 +614,7 @@ pub fn INCl(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
-    println!("INC L");
+    debug!("INC L");
 }
 pub fn INCc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_add(1);
@@ -622,7 +624,7 @@ pub fn INCc(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
-    println!("INC C");
+    debug!("INC C");
 }
 pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_add(1);
@@ -634,7 +636,7 @@ pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     // Z 0 H -
     //Z N H C
-    println!("INC D");
+    debug!("INC D");
 }
 pub fn INCe(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.E.wrapping_add(1);
@@ -644,7 +646,7 @@ pub fn INCe(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
-    println!("INC E");
+    debug!("INC E");
 }
 pub fn CPc(cpu: &mut Cpu) {
     let c = cpu.regs.C;
@@ -656,7 +658,7 @@ pub fn CPc(cpu: &mut Cpu) {
     if cpu.regs.A < c {
         cpu.regs.set_FC();
     }
-    println!("CPD")
+    debug!("CPD")
 }
 pub fn CPL(cpu: &mut Cpu) {
     let A = cpu.regs.A;
@@ -665,7 +667,7 @@ pub fn CPL(cpu: &mut Cpu) {
     cpu.regs.set_FN();
     cpu.regs.set_FH();
 
-    println!("CPL")
+    debug!("CPL")
 }
 pub fn CPd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -677,7 +679,7 @@ pub fn CPd8(cpu: &mut Cpu) {
     if cpu.regs.A < imm {
         cpu.regs.set_FC();
     }
-    println!("CP {:02X}", imm)
+    debug!("CP {:02X}", imm)
 }
 
 pub fn RRb(cpu: &mut Cpu) {
@@ -698,7 +700,7 @@ pub fn RRb(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR B");
+    debug!("RR B");
 }
 pub fn RRc(cpu: &mut Cpu) {
     let c = cpu.regs.A&0b00000001;
@@ -718,7 +720,7 @@ pub fn RRc(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR C");
+    debug!("RR C");
 
 }
 pub fn RRd(cpu: &mut Cpu) {
@@ -739,7 +741,7 @@ pub fn RRd(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR D");
+    debug!("RR D");
 
 }
 pub fn RRe(cpu: &mut Cpu) {
@@ -760,7 +762,7 @@ pub fn RRe(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR E");
+    debug!("RR E");
 
 }
 pub fn RRh(cpu: &mut Cpu) {
@@ -781,7 +783,7 @@ pub fn RRh(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR H");
+    debug!("RR H");
 
 }
 pub fn RRl(cpu: &mut Cpu) {
@@ -803,7 +805,7 @@ pub fn RRl(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR L");
+    debug!("RR L");
 
 }
 pub fn RRa(cpu: &mut Cpu) {
@@ -825,7 +827,7 @@ pub fn RRa(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("RR A");
+    debug!("RR A");
 
 }
 pub fn RRCa(cpu: &mut Cpu) {
@@ -844,283 +846,283 @@ pub fn RRCa(cpu: &mut Cpu) {
     }
     cpu.regs.unset_FN();
     cpu.regs.unset_FH();
-    println!("OR C");
+    debug!("OR C");
 
 }
 pub fn LDade(cpu: &mut Cpu) {
     let addr = cpu.regs.get_DE();
     cpu.regs.A = cpu.mem.read8(addr);
-    println!("LD A, (DE) ({:04X})", addr);
+    debug!("LD A, (DE) ({:04X})", addr);
 }
 pub fn LDlhl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
     cpu.regs.L = cpu.mem.read8(addr);
-    println!("LD L, (HL) ({:04X})", addr);
+    debug!("LD L, (HL) ({:04X})", addr);
 }
 pub fn LDbhl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
     cpu.regs.B = cpu.mem.read8(addr);
-    println!("LD B, (HL) ({:04X})", addr);
+    debug!("LD B, (HL) ({:04X})", addr);
 }
 pub fn LDchl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
     cpu.regs.C = cpu.mem.read8(addr);
-    println!("LD C, (HL) ({:04X})", addr);
+    debug!("LD C, (HL) ({:04X})", addr);
 }
 pub fn LDaa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     cpu.regs.A = cpu.mem.read8(addr);
-    println!("LD A, (a16) ({:04X})", addr);
+    debug!("LD A, (a16) ({:04X})", addr);
 
 }
 pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
-    println!("LD HL, {:04X}", imm)
+    debug!("LD HL, {:04X}", imm)
 }
 pub fn LDhd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.H = imm;
-    println!("LD H, {:04X}", imm)
+    debug!("LD H, {:04X}", imm)
 }
 pub fn LDhla(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.mem.write8(hl, cpu.regs.A);
-    println!("LD {:04X}, A", hl);
+    debug!("LD {:04X}, A", hl);
 }
 pub fn LDhlpa(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.mem.write8(hl, cpu.regs.A);
     cpu.regs.set_HL(hl.wrapping_add(1));
-    println!("LD {:04X}+, A", hl);
+    debug!("LD {:04X}+, A", hl);
 }
 pub fn LDhld8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.mem.write8(cpu.regs.get_HL(), imm);
-    println!("LD (HL), {:02X}", imm)
+    debug!("LD (HL), {:02X}", imm)
 }
 pub fn LDIahlp(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.A = cpu.mem.read8(hl);
     cpu.regs.set_HL(hl.wrapping_add(1));
-    println!("LD A, (HL+)  {:02X}<-({:04X})", cpu.regs.A, hl);
+    debug!("LD A, (HL+)  {:02X}<-({:04X})", cpu.regs.A, hl);
 }
 pub fn LDhhl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.H = cpu.mem.read8(hl);
-    println!("LD H, (HL)")
+    debug!("LD H, (HL)")
 }
 pub fn LDhlb(cpu: &mut Cpu) {
     let B = cpu.regs.B;
     cpu.regs.set_HL(B as u16);
-    println!("LD (HL), B")
+    debug!("LD (HL), B")
 }
 pub fn LDdea(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
-    println!("LD (DE), A")
+    debug!("LD (DE), A")
 }
 pub fn LDda(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.A;
-    println!("LD D, A")
+    debug!("LD D, A")
 }
 pub fn LDae(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
-    println!("LD A, E")
+    debug!("LD A, E")
 }
 pub fn LDha(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.A;
-    println!("LD H, A")
+    debug!("LD H, A")
 }
 pub fn LDla(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.A;
-    println!("LD L, A")
+    debug!("LD L, A")
 }
 pub fn LDad(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
-    println!("LD A, D")
+    debug!("LD A, D")
 }
 pub fn LDab(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B;
-    println!("LD A, B")
+    debug!("LD A, B")
 }
 pub fn LDac(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.C;
-    println!("LD A, C")
+    debug!("LD A, C")
 }
 pub fn LDhb(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.B;
-    println!("LD H, B")
+    debug!("LD H, B")
 }
 pub fn LDlh(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.H;
-    println!("LD L, H")
+    debug!("LD L, H")
 }
 pub fn LDca(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.A;
-    println!("LD C, A")
+    debug!("LD C, A")
 }
 pub fn LDpca(cpu: &mut Cpu) {
     let C = cpu.regs.C as u16;
     cpu.mem.write8(0xFF00 + C, cpu.regs.A);
-    println!("LD (C), A")
+    debug!("LD (C), A")
 }
 pub fn LDded16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_DE(imm);
-    println!("LD DE, {:04X}", imm)
+    debug!("LD DE, {:04X}", imm)
 }
 pub fn LDbcd16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_BC(imm);
-    println!("LD BC, {:04X}", imm)
+    debug!("LD BC, {:04X}", imm)
 }
 pub fn LDspd16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_SP(imm);
-    println!("LD SP, {:04X}", imm)
+    debug!("LD SP, {:04X}", imm)
 }
 pub fn LDDhmla(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.mem.write8(hl, cpu.regs.A);
     cpu.regs.set_HL(hl.wrapping_sub(1));
-    println!("LD- [{:04X}], a", hl);
+    debug!("LD- [{:04X}], a", hl);
 }
 pub fn LDcd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.C = imm;
-    println!("LD C, {:02X}", imm)
+    debug!("LD C, {:02X}", imm)
 }
 pub fn LDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.A = imm;
-    println!("LD A, {:02X}", imm)
+    debug!("LD A, {:02X}", imm)
 }
 pub fn LDdd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.D = imm;
-    println!("LD D, {:02X}", imm)
+    debug!("LD D, {:02X}", imm)
 }
 pub fn LDbd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.B = imm;
-    println!("LD B, {:02X}", imm)
+    debug!("LD B, {:02X}", imm)
 }
 pub fn LDha8a(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
-    println!("LDH (FF{:02X}), A", imm)
+    debug!("LDH (FF{:02X}), A", imm)
 }
 pub fn LDhaa8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.A = cpu.mem.read8(0xFF00+imm as u16);
-    println!("LDH A, ({:02X})", imm)
+    debug!("LDH A, ({:02X})", imm)
 }
 pub fn LDa16a(cpu: &mut Cpu) {
     let imm = addr16(cpu);
     cpu.mem.write8(imm, cpu.regs.A);
-    println!("LD ({:04X}), A", imm)
+    debug!("LD ({:04X}), A", imm)
 }
 pub fn LDal(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.L;
-    println!("LDH A, L")
+    debug!("LDH A, L")
 }
 pub fn LDba(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.A;
-    println!("LD B, A")
+    debug!("LD B, A")
 }
 pub fn LDea(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.A;
-    println!("LD E, A")
+    debug!("LD E, A")
 }
 pub fn LDah(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.H;
-    println!("LDH A, H")
+    debug!("LDH A, H")
 }
 pub fn LDehl(cpu: &mut Cpu) {
     let m = cpu.mem.read8(cpu.regs.get_HL());
     cpu.regs.E = m;
-    println!("LD E, {:04X}", m);
+    debug!("LD E, {:04X}", m);
 }
 pub fn LDdhl(cpu: &mut Cpu) {
     let m = cpu.mem.read8(cpu.regs.get_HL());
     cpu.regs.D = m;
-    println!("LD D, {:04X}", m);
+    debug!("LD D, {:04X}", m);
 }
 pub fn JPa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     cpu.regs.PC = addr;
-    println!("JP {:04X}", addr)
+    debug!("JP {:04X}", addr)
 }
 pub fn JPZa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     if cpu.regs.get_FZ() == true {
         cpu.regs.PC = addr;
     }
-    println!("JP {:04X}", addr)
+    debug!("JP {:04X}", addr)
 }
 pub fn JRr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v      = imm8(cpu) as i8;
     cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 };
-    println!("JR {:04X} (PC (after +{:}))", cpu.regs.PC, v)
+    debug!("JR {:04X} (PC (after +{:}))", cpu.regs.PC, v)
 }
 pub fn JPhl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
     cpu.regs.PC = addr;
-    println!("JP ({:04X})", addr)
+    debug!("JP ({:04X})", addr)
 }
 pub fn POPhl(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
     cpu.regs.set_HL(sp);
-    println!("POP HL");
+    debug!("POP HL");
 }
 pub fn POPde(cpu: &mut Cpu) {
     let de = PopStack(cpu);
     cpu.regs.set_DE(de);
-    println!("POP DE");
+    debug!("POP DE");
 }
 pub fn POPbc(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
     cpu.regs.set_BC(sp);
-    println!("POP BC");
+    debug!("POP BC");
 }
 pub fn POPaf(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
     cpu.regs.set_AF(sp);
-    println!("POP AF");
+    debug!("POP AF");
 }
 pub fn PUSHde(cpu: &mut Cpu) {
     let v = cpu.regs.get_DE();
     PushStack(cpu, v);
-    println!("PUSH DE");
+    debug!("PUSH DE");
 }
 pub fn PUSHbc(cpu: &mut Cpu) {
     let v = cpu.regs.get_BC();
     PushStack(cpu, v);
-    println!("PUSH BC");
+    debug!("PUSH BC");
 }
 pub fn PUSHaf(cpu: &mut Cpu) {
     let v = cpu.regs.get_AF();
     PushStack(cpu, v);
-    println!("PUSH AF");
+    debug!("PUSH AF");
 }
 pub fn PUSHhl(cpu: &mut Cpu) {
     let v = cpu.regs.get_HL();
     PushStack(cpu, v);
-    println!("PUSH HL");
+    debug!("PUSH HL");
 }
 
 pub fn RST28h(cpu: &mut Cpu) {
     let PC = cpu.regs.PC;
     PushStack(cpu, PC);
     cpu.regs.PC = 0x28;
-    println!("RST 28h")
+    debug!("RST 28h")
 }
 pub fn RST38h(cpu: &mut Cpu) {
     let PC = cpu.regs.PC;
     PushStack(cpu, PC);
     cpu.regs.PC = 0x38;
-    println!("RST 38h")
+    debug!("RST 38h")
 }
 pub fn JRncr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
@@ -1130,7 +1132,7 @@ pub fn JRncr8(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = offset;
     }
-    println!("JRNC {:02X}", v)
+    debug!("JRNC {:02X}", v)
 }
 pub fn JRnzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
@@ -1140,7 +1142,7 @@ pub fn JRnzr8(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = offset;
     }
-    println!("JRNZ {:02X}", v)
+    debug!("JRNZ {:02X}", v)
 }
 pub fn JRcr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
@@ -1150,7 +1152,7 @@ pub fn JRcr8(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = offset;
     }
-    println!("JR C {:02X}", v)
+    debug!("JR C {:02X}", v)
 }
 pub fn JRzr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
@@ -1160,14 +1162,14 @@ pub fn JRzr8(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = offset;
     }
-    println!("JRZ {:02X}", v)
+    debug!("JRZ {:02X}", v)
 }
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     let next = cpu.regs.PC + 3;
     PushStack(cpu, next);
     cpu.regs.PC = addr;
-    println!("CALL {:04X}", addr)
+    debug!("CALL {:04X}", addr)
 }
 pub fn CALLNZa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -1178,27 +1180,27 @@ pub fn CALLNZa16(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = cpu.regs.PC.wrapping_add(3);
     }
-    println!("CALL {:04X}", addr)
+    debug!("CALL {:04X}", addr)
 }
 pub fn RET(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
-    println!("RET (-> {:04X})", addr)
+    debug!("RET (-> {:04X})", addr)
 }
 pub fn RETI(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
     EI(cpu);
-    println!("RETI (-> {:04X})", addr)
+    debug!("RETI (-> {:04X})", addr)
 }
 pub fn RETNC(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         let addr = PopStack(cpu);
         cpu.regs.PC = addr;
-        println!("RET NC (-> {:04X})", addr)
+        debug!("RET NC (-> {:04X})", addr)
     } else {
         cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
-        println!("RET NC (-> continue)")
+        debug!("RET NC (-> continue)")
     }
 }
 pub fn RETZ(cpu: &mut Cpu) {
@@ -1209,7 +1211,7 @@ pub fn RETZ(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
     }
-    println!("RET Z (-> {:04X})", addr)
+    debug!("RET Z (-> {:04X})", addr)
 }
 pub fn RETNZ(cpu: &mut Cpu) {
     let mut addr = 0;
@@ -1219,15 +1221,15 @@ pub fn RETNZ(cpu: &mut Cpu) {
     } else {
         cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
     }
-    println!("RET NZ (-> {:04X})", addr)
+    debug!("RET NZ (-> {:04X})", addr)
 }
 pub fn DI(cpu: &mut Cpu) {
     cpu.regs.I = false;
-    println!("DI")
+    debug!("DI")
 }
 pub fn EI(cpu: &mut Cpu) {
     cpu.regs.I = true;
-    println!("EI")
+    debug!("EI")
 }
 
 pub fn SWAPa(cpu: &mut Cpu) {
@@ -1241,14 +1243,14 @@ pub fn SWAPa(cpu: &mut Cpu) {
     cpu.regs.unset_FH();
     cpu.regs.unset_FC();
 
-    println!("SWAP A");
+    debug!("SWAP A");
 }
 pub fn SET7hl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     let mut v =  cpu.mem.read8(hl);
     v|=0b1000_0000;
     cpu.mem.write8(hl, v);
-    println!("SET 7, HL")
+    debug!("SET 7, HL")
 }
 pub fn BIT0c(cpu: &mut Cpu) {
     let v = cpu.regs.C&0b0000_0001;
@@ -1427,14 +1429,14 @@ pub fn SRLl(cpu: &mut Cpu) {
 
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
-    println!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
+    debug!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
     cpu.mem.write16(cpu.regs.SP, v);
     cpu.regs.SP -= 2
 }
 pub fn PopStack(cpu: &mut Cpu) -> u16 {
     cpu.regs.SP += 2;
     let addr = cpu.mem.read16(cpu.regs.SP);
-    println!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
+    debug!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
     addr
 }
 
@@ -2448,18 +2450,18 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn print_status(&mut self) {
-        println!("==== CPU ====");
-        println!("PC: {:04X}", self.regs.get_PC());
-        println!("SP: {:04X}", self.regs.get_SP());
-        println!("A : {:02X}\tF : {:02X}", self.regs.A, self.regs.F);
-        println!("B : {:02X}\tC : {:02X}", self.regs.B, self.regs.C);
-        println!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
-        println!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
-        println!("RST Vectors : ");
+        debug!("==== CPU ====");
+        debug!("PC: {:04X}", self.regs.get_PC());
+        debug!("SP: {:04X}", self.regs.get_SP());
+        debug!("A : {:02X}\tF : {:02X}", self.regs.A, self.regs.F);
+        debug!("B : {:02X}\tC : {:02X}", self.regs.B, self.regs.C);
+        debug!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
+        debug!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
+        debug!("RST Vectors : ");
 /*        for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
-            println!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
+            debug!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
         }*/
-        println!("==== END ====");
+        debug!("==== END ====");
 //        self.mem.print_infos();
     }
 
@@ -2484,16 +2486,16 @@ impl<'a> Cpu<'a>{
         let opcode;
         if code == 0xCB {
             let code = self.mem.read8(self.regs.PC+1) as usize;
-            println!("Alternate opcode {:02X}", code);
+            debug!("Alternate opcode {:02X}", code);
             opcode = self.alt_opcodes[code];
         } else {
             opcode = self.opcodes[code];
         }
-        println!("----------------------------------------");
-        print!("{:04X}: {:02X} -> ", self.regs.PC, code);
+        debug!("----------------------------------------");
+        debug!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
         self.print_status();
-        //println!("----------------------------------------");
+        //debug!("----------------------------------------");
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
