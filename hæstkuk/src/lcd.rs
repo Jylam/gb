@@ -144,17 +144,9 @@ impl<'a> LCD<'a> {
         surface.finish().unwrap();
 
     }
-    pub fn write8(&mut self, addr: u16, v: u8)  {
-        debug!("LCD Write8 {:02X} at {:04X}", v, addr);
-        match addr {
-            0..=15 => {self.regs[(addr) as usize] = v;}
-            _ => {error!("LCD Write8 range error")}
-        }
-    }
-
     pub fn read8(&self, addr: u16) -> u8 {
         match addr {
-            _ => {debug!("LCD read8 at {:04X}", addr); self.regs[addr as usize]}
+            _ => {println!("LCD read8 at {:04X}", addr); self.regs[(addr-0xFF40) as usize]}
         }
     }
 

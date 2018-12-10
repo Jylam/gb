@@ -107,8 +107,11 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
+<<<<<<< HEAD
         let bg_display = cpu.mem.lcd.background_display();
         println!("BG Display: {}", bg_display);
+=======
+>>>>>>> parent of 99f7223... LCD registers read/write
     }
 
     pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
@@ -133,12 +136,13 @@ impl<'a> Render<'a> {
                 //println!("{:}x{:}->{:}", (x+_pixel) * SCALE , (y*SCALE), color8);
                 surface.fill_rect(Rect::new(((x+_pixel) * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
             }
-
             y+=1;
             if y>=WINDOW_HEIGHT {
                 y=0;
                 x+=8;
             }
+
+
 
         }
         surface.finish().unwrap();
