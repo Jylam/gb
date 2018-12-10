@@ -132,11 +132,10 @@ impl<'a> Render<'a> {
 		let pump = &self.sdl_context.event_pump().unwrap();
 		let mut surface = self.window.surface(pump).unwrap();
 
-		for mut i in 0x8000..=0x97FF {
+		for mut i in (0x8000..=0x97FF).step_by(2) {
 
 			let b1 = cpu.readMem8(i as u16);
 			let b2 = cpu.readMem8(i+1 as u16);
-			i+=1;
 			for _pixel in 0..=7 {
 				let _v1 = b1.wrapping_shr(7-_pixel)&0x01;
 				let _v2 = b2.wrapping_shr(7-_pixel)&0x01;
