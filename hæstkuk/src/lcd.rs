@@ -73,6 +73,24 @@ impl<'a> LCD<'a>{
 	pub fn background_display(&self) -> bool {
 		!((self.regs[0x00]&1)==0)
 	}
+	pub fn scroll_x(&self) -> u8 {
+		self.regs[0x03]
+	}
+	pub fn scroll_y(&self) -> u8 {
+		self.regs[0x02]
+	}
+	pub fn curline(&self) -> u8 {
+		self.regs[0x04]
+	}
+	pub fn cmpline(&self) -> u8 {
+		self.regs[0x05]
+	}
+	pub fn win_pos_y(&self) -> u8 {
+		self.regs[0x0A]
+	}
+	pub fn win_pos_x(&self) -> u8 {
+		self.regs[0x0B]
+	}
 
 	/*
 	   FF40 -- LCDCONT [RW] LCD Control              | when set to 1 | when set to 0

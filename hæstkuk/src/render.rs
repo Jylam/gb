@@ -123,6 +123,18 @@ impl<'a> Render<'a> {
 		println!("Sprite Size Double: {}", sprite_size);
 		println!("Color 0 Transparency: {}", color_0_transparency);
 		println!("BG Display: {}", bg_display);
+
+		println!("Scroll : {}x{}", cpu.mem.lcd.scroll_x(), cpu.mem.lcd.scroll_y());
+		println!("Curline : {}", cpu.mem.lcd.curline());
+		println!("Win Position : {}x{}", cpu.mem.lcd.win_pos_x(), cpu.mem.lcd.win_pos_y());
+
+		let pump = &self.sdl_context.event_pump().unwrap();
+		let mut surface = self.window.surface(pump).unwrap();
+
+		cpu.mem.display(background_tile_table_address, 1024);
+
+
+		surface.finish().unwrap();
 	}
 
 	pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
