@@ -1429,10 +1429,11 @@ pub fn SRLl(cpu: &mut Cpu) {
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     debug!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
     cpu.mem.write16(cpu.regs.SP, v);
-    cpu.regs.SP -= 2
+
+	cpu.regs.SP.wrapping_sub(2);
 }
 pub fn PopStack(cpu: &mut Cpu) -> u16 {
-    cpu.regs.SP += 2;
+	cpu.regs.SP.wrapping_add(2);
     let addr = cpu.mem.read16(cpu.regs.SP);
     debug!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
     addr
