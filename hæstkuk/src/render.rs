@@ -28,6 +28,7 @@ pub struct Render<'a> {
     video_subsystem: sdl2::VideoSubsystem,
     window: sdl2::video::Window,
     buffer: Vec<u8>,
+    lcd_regs: Vec<u8>,
     phantom: PhantomData<&'a u8>,
 }
 
@@ -46,6 +47,7 @@ impl<'a> Render<'a> {
             video_subsystem: video_subsystem,
             window: window,
             buffer: vec![0x00; (BUF_WIDTH*BUF_HEIGHT) as usize],
+            lcd_regs: vec![0x00; 0x15],
             phantom: PhantomData,
         };
         render
@@ -105,8 +107,8 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
-
-
+        let bg_display = cpu.mem.lcd.background_display();
+        println!("BG Display: {}", bg_display);
     }
 
     pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
@@ -142,4 +144,39 @@ impl<'a> Render<'a> {
         surface.finish().unwrap();
 
     }
+    pub fn write8(&mut self, addr: u16, v: u8)  {
+        debug!("LCD Write8 {:02X} at {:04X}", v, addr);
+        match addr {
+            0..=15 => {self.regs[(addr) as usize] = v;}
+            _ => {error!("LCD Write8 range error")}
+        }
+    }
+
+    pub fn read8(&self, addr: u16) -> u8 {
+        match addr {
+            _ => {debug!("LCD read8 at {:04X}", addr); self.regs[addr as usize]}
+        }
+    }
+
+    pub fn update(&mut self) {
+        self.regs[(0x04)] = self.regs[(0x04)].wrapping_add(1);
+    }
+
+
+    pub fn background_display(&self) -> bool {
+        (self.regs[0x00]&1)==1
+    }
+
+    /*
+     FF40 -- LCDCONT [RW] LCD Control              | when set to 1 | when set to 0
+     Bit7  LCD operation                           | ON            | OFF
+     Bit6  Window Tile Table address               | 9C00-9FFF     | 9800-9BFF
+     Bit5  Window display                          | ON            | OFF
+     Bit4  Tile Pattern Table address              | 8000-8FFF     | 8800-97FF
+     Bit3  Background Tile Table address           | 9C00-9FFF     | 9800-9BFF
+     Bit2  Sprite size                             | 8x16          | 8x8
+     Bit1  Color #0 transparency in the window     | SOLID         | TRANSPARENT
+     Bit0  Background display                      | ON            | OFF
+     */
+
 }
