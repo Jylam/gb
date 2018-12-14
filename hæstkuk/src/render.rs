@@ -111,7 +111,7 @@ impl<'a> Render<'a> {
         let window_tile_table_address = cpu.mem.lcd.window_tile_table_address();
         let window_display = cpu.mem.lcd.window_display();
         let tile_pattern_table_address = cpu.mem.lcd.tile_pattern_table_address();
-        let background_tile_table_address = cpu.mem.lcd.background_tile_table_address();
+        let background_tile_table_address = cpu.mem.lcd.background_tile_table_address() as u32;
         let sprite_size = cpu.mem.lcd.sprite_size();
         let color_0_transparency = cpu.mem.lcd.color_0_transparency();
         let bg_display = cpu.mem.lcd.background_display();
@@ -128,36 +128,52 @@ impl<'a> Render<'a> {
         println!("Curline : {}", cpu.mem.lcd.curline());
         println!("Win Position : {}x{}", cpu.mem.lcd.win_pos_x(), cpu.mem.lcd.win_pos_y());
 
-        let mut _x = 0;
-        let mut _y = 0;
+        let pump = &self.sdl_context.event_pump().unwrap();
+        let mut surface = self.window.surface(pump).unwrap();
 
         /* Background */
-        if bg_display {
-            for i in (background_tile_table_address..=(background_tile_table_address+0x03FF)).step_by(1) {
-                let tile = cpu.mem.read8(i);
-                print!("{:02X} ", cpu.mem.read8(i));
-                _x+=1;
-                if (_x%32)==0 {
-                    println!("");
-                    _y+=1;
-                    _x=0;
-                }
+        if true { //bg_display {
+            for _y in 0..32 {
+                for _x in 0..32 {
+                    for _line in 0..8 {
+                        for _pixel in 0..8 {
+                            let tile_address = background_tile_table_address + _x + (_y*32);
+                            let tile_num     = 140;//cpu.readMem8((tile_address) as u16) as u16;
 
-            }
-        }
+                            let pixel_address = (tile_pattern_table_address+tile_num+(_line*2)) as u16;
+                            let b1 = cpu.readMem8(pixel_address);
+                            let b2 = cpu.readMem8(pixel_address+1);
+//                            println!("x: {} y: {} tileaddress {} tilenum {}, pixel address {}", _x, _y, tile_address, tile_num, pixel_address);
+                                let _v1 = b1.wrapping_shr((7u16-_pixel) as u32)&0x01;
+                            let _v2 = b2.wrapping_shr((7u16-_pixel) as u32)&0x01;
+                            let _value = (_v1<<1)|_v2;
 
-        /* Window */
-        if window_display {
-            for i in (window_tile_table_address..=(window_tile_table_address+0x03FF)).step_by(1) {
-                let tile = cpu.mem.read8(i);
-                print!("{:02X} ", cpu.mem.read8(i));
-                _x+=1;
-                if (_x%32)==0 {
-                    println!("");
-                    _y+=1;
-                    _x=0;
+                            let color8 = ((_value)*64) as u8;
+                            let color = Color::RGB(color8, color8, color8);
+
+                            surface.fill_rect(
+                                Rect::new(
+                                    ((((_x * 8) as u32)+(_pixel as u32)) * SCALE) as i32,
+                                    ((((_y * 8)as u32)+(_line as u32)) * SCALE) as i32,
+                                    SCALE, SCALE), color).unwrap();
+                        }
+                    }
                 }
             }
+            surface.finish().unwrap();
+
+            /*
+               for i in (background_tile_table_address..(background_tile_table_address+0x03FF)).step_by(1) {
+               let tile = cpu.mem.read8(i);
+               print!("{:02X} ", cpu.mem.read8(i));
+               _x+=1;
+               if (_x%32)==0 {
+               println!("");
+               _y+=1;
+               _x=0;
+               }
+
+               }*/
         }
 
         //let pump = &self.sdl_context.event_pump().unwrap();
@@ -167,40 +183,36 @@ impl<'a> Render<'a> {
 
 
         //surface.finish().unwrap();
-    }
-
-    pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
-        let mut x = 0;
-        let mut y = 0;
-
-        let pump = &self.sdl_context.event_pump().unwrap();
-        let mut surface = self.window.surface(pump).unwrap();
-
-        for i in (0x8000..=0x97FF).step_by(2) {
-
-            let b1 = cpu.readMem8(i as u16);
-            let b2 = cpu.readMem8(i+1 as u16);
-            for _pixel in 0..=7 {
-                let _v1 = b1.wrapping_shr(7-_pixel)&0x01;
-                let _v2 = b2.wrapping_shr(7-_pixel)&0x01;
-                let _value = (_v1<<1)|_v2;
-
-                let color8 = ((_value)*64) as u8;
-                let color = Color::RGB(color8, color8, color8);
-                //println!("{:}x{:}->{:}", (x+_pixel) * SCALE , (y*SCALE), color8);
-                surface.fill_rect(Rect::new(((x+_pixel) * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
-            }
-            y+=1;
-            if y>=WINDOW_HEIGHT {
-                y=0;
-                x+=8;
-            }
-
-
-
         }
-        surface.finish().unwrap();
+
+        pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
+            let mut x = 0;
+            let mut y = 0;
+
+            let pump = &self.sdl_context.event_pump().unwrap();
+            let mut surface = self.window.surface(pump).unwrap();
+
+            for i in (0x8000..=0x97FF).step_by(2) {
+
+                let b1 = cpu.readMem8(i as u16);
+                let b2 = cpu.readMem8(i+1 as u16);
+                for _pixel in 0..=7 {
+                    let _v1 = b1.wrapping_shr(7-_pixel)&0x01;
+                    let _v2 = b2.wrapping_shr(7-_pixel)&0x01;
+                    let _value = (_v1<<1)|_v2;
+
+                    let color8 = ((_value)*64) as u8;
+                    let color = Color::RGB(color8, color8, color8);
+                    //println!("{:}x{:}->{:}", (x+_pixel) * SCALE , (y*SCALE), color8);
+                    surface.fill_rect(Rect::new(((x+_pixel) * SCALE) as i32, (y * SCALE) as i32, SCALE, SCALE), color).unwrap();
+                }
+                y+=1;
+                if y>=WINDOW_HEIGHT {
+                    y=0;
+                    x+=8;
+                }
+            }
+            surface.finish().unwrap();
+        }
 
     }
-
-}
