@@ -131,20 +131,21 @@ impl<'a> Render<'a> {
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 
+        /* Background and Window patterns are drawn line by line */
         /* Background */
-        if true { //bg_display {
+        if bg_display {
             for _y in 0..32 {
                 for _x in 0..32 {
                     for _line in 0..8 {
                         for _pixel in 0..8 {
                             let tile_address = background_tile_table_address + _x + (_y*32);
-                            let tile_num     = 140;//cpu.readMem8((tile_address) as u16) as u16;
+                            let tile_num     = cpu.readMem8((tile_address) as u16) as u16;
 
-                            let pixel_address = (tile_pattern_table_address+tile_num+(_line*2)) as u16;
+                            let pixel_address = (tile_pattern_table_address+(tile_num*16)+(_line*2)) as u16;
                             let b1 = cpu.readMem8(pixel_address);
                             let b2 = cpu.readMem8(pixel_address+1);
-//                            println!("x: {} y: {} tileaddress {} tilenum {}, pixel address {}", _x, _y, tile_address, tile_num, pixel_address);
-                                let _v1 = b1.wrapping_shr((7u16-_pixel) as u32)&0x01;
+
+                            let _v1 = b1.wrapping_shr((7u16-_pixel) as u32)&0x01;
                             let _v2 = b2.wrapping_shr((7u16-_pixel) as u32)&0x01;
                             let _value = (_v1<<1)|_v2;
 
@@ -153,36 +154,46 @@ impl<'a> Render<'a> {
 
                             surface.fill_rect(
                                 Rect::new(
-                                    ((((_x * 8) as u32)+(_pixel as u32)) * SCALE) as i32,
-                                    ((((_y * 8)as u32)+(_line as u32)) * SCALE) as i32,
+                                    ((((_x * 8) as u32)+ (_pixel as u32)) * SCALE) as i32,
+                                    ((((_y * 8) as u32)+ (_line as u32 )) * SCALE) as i32,
                                     SCALE, SCALE), color).unwrap();
                         }
                     }
                 }
             }
+        }
+        if window_display {
+            for _y in 0..32 {
+                for _x in 0..32 {
+                    for _line in 0..8 {
+                        for _pixel in 0..8 {
+                            let tile_address = window_tile_table_address + _x + (_y*32);
+                            let tile_num     = cpu.readMem8((tile_address) as u16) as u16;
+
+                            let pixel_address = (tile_pattern_table_address+(tile_num*16)+(_line*2)) as u16;
+                            let b1 = cpu.readMem8(pixel_address);
+                            let b2 = cpu.readMem8(pixel_address+1);
+
+                            let _v1 = b1.wrapping_shr((7u16-_pixel) as u32)&0x01;
+                            let _v2 = b2.wrapping_shr((7u16-_pixel) as u32)&0x01;
+                            let _value = (_v1<<1)|_v2;
+
+                            let color8 = ((_value)*64) as u8;
+                            let color = Color::RGB(color8, color8, color8);
+
+                            surface.fill_rect(
+                                Rect::new(
+                                    ((((_x * 8) as u32)+ (_pixel as u32)) * SCALE) as i32,
+                                    ((((_y * 8) as u32)+ (_line as u32 )) * SCALE) as i32,
+                                    SCALE, SCALE), color).unwrap();
+                        }
+                    }
+                }
+            }
+
+        }
             surface.finish().unwrap();
 
-            /*
-               for i in (background_tile_table_address..(background_tile_table_address+0x03FF)).step_by(1) {
-               let tile = cpu.mem.read8(i);
-               print!("{:02X} ", cpu.mem.read8(i));
-               _x+=1;
-               if (_x%32)==0 {
-               println!("");
-               _y+=1;
-               _x=0;
-               }
-
-               }*/
-        }
-
-        //let pump = &self.sdl_context.event_pump().unwrap();
-        //let mut surface = self.window.surface(pump).unwrap();
-
-        //cpu.mem.display(background_tile_table_address, 1024);
-
-
-        //surface.finish().unwrap();
         }
 
         pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
@@ -212,7 +223,7 @@ impl<'a> Render<'a> {
                     x+=8;
                 }
             }
-            surface.finish().unwrap();
+                        surface.finish().unwrap();
         }
 
     }
