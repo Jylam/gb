@@ -54,8 +54,6 @@ fn main() {
     let mut vblank_counter: u32 = 1;
 
     cpu.reset();
-    cpu.step();
-    process::exit(1);
 
     'running : loop {
         vblank_counter-=1;

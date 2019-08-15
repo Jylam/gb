@@ -23,7 +23,7 @@ impl<'a> Mem<'a>{
         //debug!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
         self.lcd.update();
         match addr {
-            0x0000..=0x7FFF => {println!("ROM READING {:02X}", self.rom.buffer[addr as usize]); self.rom.buffer[addr as usize]},
+            0x0000..=0x7FFF => {self.rom.buffer[addr as usize]},
             0xFF40...0xFF54 => self.lcd.read8(addr-0xFF40),
             0xFF00 ... 0xFF7F => { debug!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
             _ => {self.ram[addr as usize]},
