@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-//use std::process;
+use std::process;
 use mem;
 
 #[derive(Copy, Clone)]
@@ -177,6 +177,18 @@ impl<'a> Cpu<'a>{
         let v = self.readMem8(addr);
         v
     }
+    pub fn fetch8(&mut self) -> u8 {
+        let pc = self.regs.get_PC();
+        let v = self.readMem8(pc);
+        self.regs.set_PC(pc+1);
+        v
+    }
+    pub fn fetch16(&mut self) -> u16 {
+        let pc = self.regs.get_PC();
+        let v = self.readMem16(pc);
+        self.regs.set_PC(pc+2);
+        v
+    }
 
     pub fn print_status(&mut self) {
         debug!("==== CPU ====");
@@ -210,24 +222,34 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn step(&mut self) -> u8 {
-        let code = self.mem.read8(self.regs.PC) as usize;
-        let (length, cur_cycle_count) = match code {
-            0x00 => { (1, 1) },
-            0x21 => {let v = self.imm16(); self.regs.set_HL(v); (3, 1)},
-            0x31 => {let sp = self.imm16(); self.regs.SP = sp; (3, 1)},
-            0x32 => {self.mem.write8(self.regs.HLd(), self.regs.A); (1, 1)}
-            0xAF => {let A  = self.regs.A; self.alu_xor(A); (1, 1)},
-            _    => { (0, 1) }
-        };
-        let cur_pc = self.regs.get_PC();
-        self.regs.set_PC(cur_pc + length);
+        let code = self.fetch8() as usize;
 
         debug!("----------------------------------------");
-        debug!("{:04X}: {:02X} -> ", self.regs.PC, code);
+        debug!("{:04X}: {:02X} -> ", self.regs.PC-1, code);
+
+        let cur_cycle_count = match code {
+            0x00 => { 1 },
+            0x0E => { let v = self.fetch8(); self.regs.C = v; 1 },
+            0x20 => { if !self.regs.get_FZ() { self.jr(); 1 } else { self.regs.PC += 1; 1}},
+            0x21 => { let v = self.fetch16(); self.regs.set_HL(v); 1},
+            0x31 => { let sp = self.fetch16(); self.regs.SP = sp; 1},
+            0x32 => { self.mem.write8(self.regs.HLd(), self.regs.A); 1}
+            0xAF => { let A  = self.regs.A; self.alu_xor(A); 1},
+            0xCB => { self.step_CB() },
+            _    => { process::exit(0x0100); 1 }
+        };
         self.print_status();
         debug!("----------------------------------------");
         self.total_cyles = self.total_cyles + cur_cycle_count as u64;
         1
+    }
+
+    pub fn step_CB(&mut self) -> u8 {
+        let code = self.fetch8() as usize;
+        match code {
+                0x7C => {let h = self.regs.H; self.alu_bit(h, 7); 1}
+            _    => { process::exit(0x0100); 1 }
+        }
     }
 
 
@@ -238,5 +260,17 @@ impl<'a> Cpu<'a>{
         self.regs.set_FH(false);
         self.regs.set_FN(false);
         self.regs.A = r;
+    }
+    fn alu_bit(&mut self, a: u8, b: u8) {
+        let r = a & (1 << (b as u32)) == 0;
+        self.regs.set_FN(false);
+        self.regs.set_FH(true);
+        self.regs.set_FZ(r);
+    }
+
+    fn jr(&mut self) {
+        let n = self.fetch8() as i8;
+        let pc = ((self.regs.get_PC() as u32 as i32) + (n as i32)) as u16;
+        self.regs.set_PC(pc);
     }
 }
