@@ -115,7 +115,7 @@ impl<'a> Render<'a> {
         let sprite_size = cpu.mem.lcd.sprite_size();
         let color_0_transparency = cpu.mem.lcd.color_0_transparency();
         let bg_display = cpu.mem.lcd.background_display();
-        println!("LCD Operation: {}", operation);
+        /*println!("LCD Operation: {}", operation);
         println!("window_tile_table_address : {:04X}", window_tile_table_address);
         println!("Window Display: {}", window_display);
         println!("Tile Pattern Table Address : {:04X}", tile_pattern_table_address);
@@ -127,7 +127,7 @@ impl<'a> Render<'a> {
         println!("Scroll : {}x{}", cpu.mem.lcd.scroll_x(), cpu.mem.lcd.scroll_y());
         println!("Curline : {}", cpu.mem.lcd.curline());
         println!("Win Position : {}x{}", cpu.mem.lcd.win_pos_x(), cpu.mem.lcd.win_pos_y());
-
+*/
         let pump = &self.sdl_context.event_pump().unwrap();
         let mut surface = self.window.surface(pump).unwrap();
 

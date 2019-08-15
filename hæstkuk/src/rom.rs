@@ -36,11 +36,16 @@ impl<'a> ROM<'a> {
         println!("Read Cartridge {} bytes", read_size);
 
         /* Patch boot rom in place */
+        /* FIXME, should be a separate bank */
+        println!("Patching boot rom");
         let mut f = File::open("./DMG_ROM.bin".to_string())?;
-        let read_size = f.read_to_end(&mut self.buffer)?;
+        let mut data = Vec::new();
+
+        let read_size = f.read_to_end(&mut data)?;
+        self.buffer.write(&data).unwrap();
         println!("Read bootROM : {} bytes", read_size);
         for i in 0..0x100 {
-            println!("{:04X}: {:02X}", i, self.buffer[i]);
+            self.buffer[i] = data[i];
         }
 
         Ok(self)
@@ -94,6 +99,7 @@ impl<'a> ROM<'a> {
     pub fn print_infos(&self) {
         /* Print informations about the loaded ROM */
         // FIXME self.validate_checkchum();
+
         println!("ROM Size:\t {:?}",         self.get_size());
         println!("ROM Name:\t '{}'",         self.get_name());
         println!("RAM Size:\t {}kB",         self.get_ram_size_kb());

@@ -207,7 +207,7 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn reset(&mut self) {
-        self.regs.PC = 0x0100
+        self.regs.PC = 0x0000
     }
 
     pub fn step(&mut self) -> u8 {
