@@ -70,7 +70,7 @@ fn main() {
         refresh_count-=1;
         if refresh_count == 0 {
             render.get_events();
-            //render.show_memory(&mut cpu);
+            render.show_memory(&mut cpu);
             //render.oam(&mut cpu);
             render.render_screen(&mut cpu);
             //render.display_tile_pattern_tables(&mut cpu);
