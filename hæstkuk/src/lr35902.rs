@@ -10,11 +10,9 @@ struct Opcode {
     name: &'static str,
     len: u16,
     cycles: u32,
-    execute: fn(&mut Cpu),
     jump: bool,
 }
 
-#[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub struct Registers {
     A: u8,
@@ -29,7 +27,7 @@ pub struct Registers {
     SP: u16,
     I: bool,
 }
-#[allow(dead_code)]
+
 impl Registers {
     fn get_AF(self) -> u16 {
         ((self.A as u16)<<8) | ((self.F as u16)&0xFF)
@@ -116,6 +114,7 @@ impl Registers {
 
 }
 
+#[derive(Clone)]
 pub struct Cpu<'a> {
     pub mem: mem::Mem<'a>,
     regs: Registers,
@@ -466,7 +465,7 @@ pub fn readMem16(&mut self, addr: u16) -> u16 {
             0xE5 => { self.PushStack(self.regs.get_HL()); 4 },
             0xE6 => { let v = self.fetch8(); self.alu_and(v); 2 },
             0xE7 => { self.PushStack(self.regs.PC); self.regs.PC = 0x20; 4 },
-            0xE8 => { self.regs.set_SP(self.alu_add16imm(self.regs.get_SP())); 4 },
+            0xE8 => { let s = self.alu_add16imm(self.regs.get_SP()); self.regs.set_SP(s); 4 },
             0xE9 => { self.regs.PC = self.regs.get_HL(); 1 },
             0xEA => { let a = self.fetch16(); self.mem.write8(a, self.regs.A); 4 },
             0xEE => { let v = self.fetch8(); self.alu_xor(v); 2 },
