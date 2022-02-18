@@ -468,6 +468,17 @@ pub fn ADDhlde(cpu: &mut Cpu) {
     //      C - Set if carry from bit 15.
     debug!("ADD HL,DE");
 }
+pub fn ADDhlhl(cpu: &mut Cpu) {
+    let hl = cpu.regs.get_HL();
+
+    cpu.regs.set_HL(hl.wrapping_add(hl));
+
+    cpu.regs.unset_FN();
+    //TODO
+    //      H - Set if carry from bit 11.
+    //      C - Set if carry from bit 15.
+    debug!("ADD HL,HL");
+}
 pub fn DECc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_sub(1);
     if cpu.regs.C == 0 {
@@ -561,6 +572,11 @@ pub fn INChl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.set_HL(hl.wrapping_add(1));
     debug!("INC HL");
+}
+pub fn INCsp(cpu: &mut Cpu) {
+    let sp = cpu.regs.get_SP();
+    cpu.regs.set_SP(sp.wrapping_add(1));
+    debug!("INC SP");
 }
 pub fn INC_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
@@ -914,6 +930,16 @@ pub fn LDhlb(cpu: &mut Cpu) {
     let B = cpu.regs.B;
     cpu.regs.set_HL(B as u16);
     debug!("LD (HL), B")
+}
+pub fn LDhlc(cpu: &mut Cpu) {
+    let C = cpu.regs.C;
+    cpu.regs.set_HL(C as u16);
+    debug!("LD (HL), C")
+}
+pub fn LDhld(cpu: &mut Cpu) {
+    let D = cpu.regs.D;
+    cpu.regs.set_HL(D as u16);
+    debug!("LD (HL), D")
 }
 pub fn LDdea(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
@@ -1694,6 +1720,13 @@ impl<'a> Cpu<'a>{
             execute: JRzr8,
             jump: true,
         };
+        cpu.opcodes[0x29] = Opcode {
+            name: "ADD HL, HL",
+            len: 1,
+            cycles: 8,
+            execute: ADDhlhl,
+            jump: false,
+        };
         cpu.opcodes[0x2A] = Opcode {
             name: "LDI A, (HL+)",
             len: 1,
@@ -1741,6 +1774,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDDhmla,
+            jump: false,
+        };
+        cpu.opcodes[0x33] = Opcode {
+            name: "INC SP",
+            len: 1,
+            cycles: 8,
+            execute: INCsp,
             jump: false,
         };
         cpu.opcodes[0x34] = Opcode {
@@ -1895,6 +1935,20 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDhlb,
+            jump: false,
+        };
+        cpu.opcodes[0x71] = Opcode {
+            name: "LD (HL),C",
+            len: 1,
+            cycles: 8,
+            execute: LDhlc,
+            jump: false,
+        };
+        cpu.opcodes[0x72] = Opcode {
+            name: "LD (HL),D",
+            len: 1,
+            cycles: 8,
+            execute: LDhld,
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
