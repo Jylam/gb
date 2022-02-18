@@ -2510,9 +2510,9 @@ impl<'a> Cpu<'a>{
         debug!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
         debug!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
         debug!("RST Vectors : ");
-/*        for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
+        for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
             debug!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
-        }*/
+        }
         debug!("==== END ====");
 //        self.mem.print_infos();
     }
@@ -2547,7 +2547,7 @@ impl<'a> Cpu<'a>{
         debug!("{:04X}: {:02X} -> ", self.regs.PC, code);
         (opcode.execute)(self);
         self.print_status();
-        //debug!("----------------------------------------");
+
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
@@ -2555,7 +2555,7 @@ impl<'a> Cpu<'a>{
 
         if self.mem.read8(0xFF02) == 0x81 {
             let c = self.mem.read8(0xFF01);
-            println!("SERIAL got {}", c);
+            println!("SERIAL got {}", c as char);
             self.mem.write8(0xff02, 0x0);
         }
 

@@ -35,8 +35,6 @@ impl<'a> Mem<'a>{
         debug!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0000..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
-            0xFF01 => {debug!("WRITE DEBUG {:02X}", v);}
-            0xFF02 => {debug!("WRITE DEBUG2 {:02X}", v);}
             0xFF40..=0xFF54 => {self.lcd.write8(addr-0xFF40, v)},
             //0xFF00 ... 0xFF7F => { debug!("Unsupported write8 in Hardware area {:04X}", addr);},
             _ => {self.ram[addr as usize] = v;},
