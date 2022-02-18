@@ -55,7 +55,7 @@ fn main() {
 
     cpu.reset();
 
-    'running : loop {
+    loop {
         vblank_counter-=1;
         if vblank_counter == 0 {
             vblank_counter = VBLANK_FREQ_CYCLES;
@@ -79,5 +79,6 @@ fn main() {
             y=y.wrapping_add(1);
         }
         cpu.step();
+
     }
 }

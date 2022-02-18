@@ -1,10 +1,12 @@
+#![allow(unused_variables)]
+#![allow(dead_code)]
 use rom;
 use lcd;
 
 // Memory controller
 #[derive(Clone, Debug, Default)]
 pub struct Mem<'a> {
-    size: u16,
+    _size: u16,
     rom:  rom::ROM<'a>,
     ram: Vec<u8>,
     pub lcd:  lcd::LCD<'a>,
@@ -13,7 +15,7 @@ pub struct Mem<'a> {
 impl<'a> Mem<'a>{
     pub fn new(arom: rom::ROM<'a>, alcd: lcd::LCD<'a>) -> Mem<'a> {
         Mem{
-            size: 0xFFFF,
+            _size: 0xFFFF,
             rom: arom,
             ram: vec![0x00; 65536],
             lcd: alcd,
@@ -24,8 +26,8 @@ impl<'a> Mem<'a>{
         self.lcd.update();
         match addr {
             0x0000..=0x7FFF => self.rom.buffer[addr as usize],
-            0xFF40...0xFF54 => self.lcd.read8(addr-0xFF40),
-            0xFF00 ... 0xFF7F => { debug!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
+            0xFF40..=0xFF54 => self.lcd.read8(addr-0xFF40),
+            0xFF03..=0xFF7F => { debug!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
             _ => {self.ram[addr as usize]},
         }
     }
@@ -35,7 +37,7 @@ impl<'a> Mem<'a>{
             0x0000..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             0xFF01 => {debug!("WRITE DEBUG {:02X}", v);}
             0xFF02 => {debug!("WRITE DEBUG2 {:02X}", v);}
-            0xFF40...0xFF54 => {self.lcd.write8(addr-0xFF40, v)},
+            0xFF40..=0xFF54 => {self.lcd.write8(addr-0xFF40, v)},
             //0xFF00 ... 0xFF7F => { debug!("Unsupported write8 in Hardware area {:04X}", addr);},
             _ => {self.ram[addr as usize] = v;},
         }
@@ -48,7 +50,7 @@ impl<'a> Mem<'a>{
 		match addr {
 			0x0000..=0x7FFF => {self.write8(addr+1,  ((v&0xFF00)>>8) as u8);
 				self.write8(addr, (v&0xFF)       as u8);}
-			0xFF40...0xFF54 => {error!("WRITE16 ON LCD !!!")},
+			0xFF40..=0xFF54 => {error!("WRITE16 ON LCD !!!")},
 			_ => {self.write8(addr+1,  ((v&0xFF00)>>8) as u8);
                   self.write8(addr, (v&0xFF)       as u8);}
 		}

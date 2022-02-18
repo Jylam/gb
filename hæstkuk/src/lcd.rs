@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::marker::PhantomData;
 
 
@@ -67,7 +68,7 @@ impl<'a> LCD<'a>{
 		!((self.regs[0x00]&(1<<2))==0)
 	}
 	pub fn color_0_transparency(&self) -> bool {
-		((self.regs[0x00]&(1<<1))==0)
+		(self.regs[0x00]&(1<<1))==0
 	}
 
 	pub fn background_display(&self) -> bool {

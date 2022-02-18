@@ -1429,10 +1429,10 @@ pub fn SRLl(cpu: &mut Cpu) {
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     debug!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
     cpu.mem.write16(cpu.regs.SP, v);
-	cpu.regs.SP.wrapping_sub(2);
+	cpu.regs.SP = cpu.regs.SP.wrapping_sub(2);
 }
 pub fn PopStack(cpu: &mut Cpu) -> u16 {
-	cpu.regs.SP.wrapping_add(2);
+	cpu.regs.SP = cpu.regs.SP.wrapping_add(2);
     let addr = cpu.mem.read16(cpu.regs.SP);
     debug!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
     addr
@@ -2498,6 +2498,14 @@ impl<'a> Cpu<'a>{
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
         }
+
+        if self.mem.read8(0xFF02) == 0x81 {
+            let c = self.mem.read8(0xFF01);
+            println!("SERIAL got {}", c);
+            self.mem.write8(0xff02, 0x0);
+        }
+
+
         opcode.cycles as u8
     }
 
