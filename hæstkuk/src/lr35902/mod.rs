@@ -1471,17 +1471,17 @@ impl<'a> Cpu<'a>{
         let mut cpu: Cpu;
         cpu = Cpu{
             regs: Registers {
-                A: 0,
+                A: 1,
                 B: 0,
                 D: 0,
-                H: 0,
-                F: 0,
+                H: 1,
+                F: 0xB0,
                 C: 0,
-                E: 0,
-                L: 0,
+                E: 0xD8,
+                L: 0x4D,
                 I: false,
                 PC: 0,
-                SP: 0,
+                SP: 0xFFFE,
             },
             mem: mem,
             total_cyles: 0,
@@ -2503,12 +2503,9 @@ impl<'a> Cpu<'a>{
 
     pub fn print_status(&mut self) {
         debug!("==== CPU ====");
-        debug!("PC: {:04X}", self.regs.get_PC());
-        debug!("SP: {:04X}", self.regs.get_SP());
-        debug!("A : {:02X}\tF : {:02X}", self.regs.A, self.regs.F);
-        debug!("B : {:02X}\tC : {:02X}", self.regs.B, self.regs.C);
-        debug!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
-        debug!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
+        debug!("A : {:02X}\tB : {:02X}\tC : {:02X}\tD : {:02X}", self.regs.A, self.regs.B, self.regs.C, self.regs.D);
+        debug!("E : {:02X}\tF : {:02X}\tH : {:02X}\tL : {:02X}", self.regs.E, self.regs.F, self.regs.H, self.regs.L);
+        debug!("PC: {:04X} SP: {:04X}", self.regs.get_PC(), self.regs.get_SP());
         //debug!("RST Vectors : ");
         //for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
         //    debug!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
@@ -2535,6 +2532,10 @@ impl<'a> Cpu<'a>{
     pub fn step(&mut self) -> u8 {
         let code = self.mem.read8(self.regs.PC) as usize;
 
+        //for i in 0..8 {
+        //    print!("{:02X} ", self.mem.read8(self.regs.PC+i));
+        //}
+        //println!("");
         let opcode;
         if code == 0xCB {
             let code = self.mem.read8(self.regs.PC+1) as usize;
@@ -2544,7 +2545,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         debug!("----------------------------------------");
-        debug!("{:04X}: {:02X} -> ", self.regs.PC, code);
+        debug!("Cycle: {:010} {:04X}: {:02X} -> ", self.total_cyles, self.regs.PC, code);
         //println!("PC {:04X} opcode {:02X} ", self.regs.PC, code);
         (opcode.execute)(self);
         self.print_status();

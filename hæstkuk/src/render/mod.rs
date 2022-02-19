@@ -88,6 +88,36 @@ impl<'a> Render<'a> {
     }
 
     pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
+        println!("TILES ------------------------------------------");
+        let mut offset = 0;
+        for j in (0x8000..0x8FFF).step_by(16) {
+            for i in 0..8 {
+                let a = cpu.readMem8(j + offset);
+                let b = cpu.readMem8(j + offset+1);
+
+                let p1 = (((a&0b10000000)>>6) | (b&0b10000000)>>7);
+                let p2 = (((a&0b01000000)>>5) | (b&0b01000000)>>6);
+                let p3 = (((a&0b00100000)>>4) | (b&0b00100000)>>5);
+                let p4 = (((a&0b00010000)>>3) | (b&0b00010000)>>4);
+                let p5 = (((a&0b00001000)>>2) | (b&0b00001000)>>3);
+                let p6 = (((a&0b00000100)>>1) | (b&0b00000100)>>2);
+                let p7 = (((a&0b00000010)>>0) | (b&0b00000010)>>1);
+                let p8 = (((a&0b00000001)<<1) | (b&0b00000001)>>0);
+
+                println!("{}{}{}{}{}{}{}{}", vtoc(p1), vtoc(p2), vtoc(p3), vtoc(p4), vtoc(p5), vtoc(p6), vtoc(p7), vtoc(p8));
+                offset+=2;
+            }
+        println!("");
+        }
+    pub fn vtoc(v: u8)->char {
+        match v {
+            0 => {'#'}
+            1 => {'+'}
+            2 => {'.'}
+            3 => {' '}
+            _ => {println!("GOT {}", v); '?'}
+        }
+    }
 
     }
 }

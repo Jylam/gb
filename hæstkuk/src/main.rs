@@ -16,7 +16,7 @@ extern crate minifb;
 use minifb::{Key, Window, WindowOptions};
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
-const REFRESH_CYCLES : u32 = 1000;
+const REFRESH_CYCLES : u32 = 100000;
 
 fn main() {
     env_logger::init();
@@ -72,7 +72,8 @@ fn main() {
 
         refresh_count-=1;
         if refresh_count == 0 {
-            render.show_memory(&mut cpu);
+            //render.show_memory(&mut cpu);
+           render.display_tile_pattern_tables (&mut cpu);
             //render.oam(&mut cpu);
             render.render_screen(&mut cpu);
             //render.display_tile_pattern_tables(&mut cpu);
