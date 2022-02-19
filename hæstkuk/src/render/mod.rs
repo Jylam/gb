@@ -87,34 +87,58 @@ impl<'a> Render<'a> {
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
     }
 
+
+    pub fn put_pixel8(&mut self, x: usize, y: usize, c: u8) {
+        self.buffer[x+y*self.width] = (((c as u32*64)<<16) |
+                                      (( c as u32*64)<<8) |
+                                      (( c as u32*64))) as u32;
+
+    }
     pub fn display_tile_pattern_tables(&mut self, cpu: &mut Cpu<'a> ) {
         println!("TILES ------------------------------------------");
         let mut offset = 0;
+        let mut x = 0;
+        let mut y = 0;
         for j in (0x8000..0x8FFF).step_by(16) {
             for i in 0..8 {
                 let a = cpu.readMem8(j + offset);
                 let b = cpu.readMem8(j + offset+1);
 
-                let p1 = (((a&0b10000000)>>6) | (b&0b10000000)>>7);
-                let p2 = (((a&0b01000000)>>5) | (b&0b01000000)>>6);
-                let p3 = (((a&0b00100000)>>4) | (b&0b00100000)>>5);
-                let p4 = (((a&0b00010000)>>3) | (b&0b00010000)>>4);
-                let p5 = (((a&0b00001000)>>2) | (b&0b00001000)>>3);
-                let p6 = (((a&0b00000100)>>1) | (b&0b00000100)>>2);
-                let p7 = (((a&0b00000010)>>0) | (b&0b00000010)>>1);
-                let p8 = (((a&0b00000001)<<1) | (b&0b00000001)>>0);
+                let p1 = ((a&0b10000000)>>6) | (b&0b10000000)>>7;
+                let p2 = ((a&0b01000000)>>5) | (b&0b01000000)>>6;
+                let p3 = ((a&0b00100000)>>4) | (b&0b00100000)>>5;
+                let p4 = ((a&0b00010000)>>3) | (b&0b00010000)>>4;
+                let p5 = ((a&0b00001000)>>2) | (b&0b00001000)>>3;
+                let p6 = ((a&0b00000100)>>1) | (b&0b00000100)>>2;
+                let p7 = ((a&0b00000010)>>0) | (b&0b00000010)>>1;
+                let p8 = ((a&0b00000001)<<1) | (b&0b00000001)>>0;
 
                 println!("{}{}{}{}{}{}{}{}", vtoc(p1), vtoc(p2), vtoc(p3), vtoc(p4), vtoc(p5), vtoc(p6), vtoc(p7), vtoc(p8));
                 offset+=2;
+
+                self.put_pixel8(x,   y, p1);
+                self.put_pixel8(x+1, y, p2);
+                self.put_pixel8(x+2, y, p3);
+                self.put_pixel8(x+3, y, p4);
+                self.put_pixel8(x+4, y, p5);
+                self.put_pixel8(x+5, y, p6);
+                self.put_pixel8(x+6, y, p7);
+                self.put_pixel8(x+7, y, p8);
+                if y < 247 {
+                y = y+1;
+                }
+
             }
         println!("");
+        self.window.update_with_buffer(&self.buffer, self.width, self.height)
+            .unwrap();
         }
     pub fn vtoc(v: u8)->char {
         match v {
-            0 => {'#'}
-            1 => {'+'}
-            2 => {'.'}
-            3 => {' '}
+            0 => {' '}
+            1 => {'-'}
+            2 => {'+'}
+            3 => {'#'}
             _ => {println!("GOT {}", v); '?'}
         }
     }

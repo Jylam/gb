@@ -75,7 +75,7 @@ fn main() {
             //render.show_memory(&mut cpu);
            render.display_tile_pattern_tables (&mut cpu);
             //render.oam(&mut cpu);
-            render.render_screen(&mut cpu);
+            //render.render_screen(&mut cpu);
             //render.display_tile_pattern_tables(&mut cpu);
             refresh_count = REFRESH_CYCLES;
             cpu.writeMem8(0xFF44, y);
