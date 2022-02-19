@@ -2545,6 +2545,7 @@ impl<'a> Cpu<'a>{
         }
         debug!("----------------------------------------");
         debug!("{:04X}: {:02X} -> ", self.regs.PC, code);
+        //println!("PC {:04X} opcode {:02X} ", self.regs.PC, code);
         (opcode.execute)(self);
         self.print_status();
 

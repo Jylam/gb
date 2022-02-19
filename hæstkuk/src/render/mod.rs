@@ -16,16 +16,15 @@ use std::time::Duration;
 
 use lr35902::Cpu;
 
-const WINDOW_WIDTH : u32 = 256;//160;
-const WINDOW_HEIGHT : u32 = 256;//144;
 const SCALE : u32 = 3;
 
-const BUF_WIDTH: u32 = 256;
-const BUF_HEIGHT: u32 = 256;
 
 #[allow(dead_code)]
 pub struct Render<'a> {
-    buffer: Vec<u8>,
+    window: Window,
+    width: usize,
+    height: usize,
+    buffer: Vec<u32>,
     lcd_regs: Vec<u8>,
     phantom: PhantomData<&'a u8>,
 }
@@ -33,14 +32,29 @@ pub struct Render<'a> {
 
 impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
+        let mut window = Window::new(
+            "Test - ESC to exit",
+            256,
+            256,
+            WindowOptions::default(),
+            )
+            .unwrap_or_else(|e| {
+                panic!("{}", e);
+            });
+        window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         let render = Render {
-            buffer: vec![0x00; (BUF_WIDTH*BUF_HEIGHT) as usize],
+            window: window,
+            width: 256,
+            height: 256,
+            buffer: vec![0x00; 256*256],
             lcd_regs: vec![0x00; 0x15],
             phantom: PhantomData,
         };
         render
+
     }
-    pub fn get_events(&mut self) {
+    pub fn get_events(&mut self) -> bool {
+        self.window.is_key_down(Key::Escape)
     }
 
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
@@ -61,6 +75,13 @@ impl<'a> Render<'a> {
     }
 
     pub fn show_memory(&mut self, cpu: &mut Cpu<'a> ) {
+
+        for i in 0..0xFFFF {
+            let b = cpu.readMem8(i);
+            self.buffer[i as usize] = (b as u32)+((b as u32)<<8)+((b as u32)<<16);
+        }
+        self.window.update_with_buffer(&self.buffer, self.width, self.height)
+            .unwrap();
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {

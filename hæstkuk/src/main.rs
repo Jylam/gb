@@ -11,6 +11,10 @@ mod lr35902;
 mod lcd;
 mod render;
 
+
+extern crate minifb;
+use minifb::{Key, Window, WindowOptions};
+
 const VBLANK_FREQ_CYCLES : u32 = 17555;
 const REFRESH_CYCLES : u32 = 1000;
 
@@ -23,7 +27,7 @@ fn main() {
     let mem: mem::Mem;
     let mut render: render::Render;
 
-    println!("Hestkuk.");
+    println!("Hæstkuk.");
 
     /* Parse arguments */
     let args: Vec<String> = env::args().collect();
@@ -60,7 +64,6 @@ fn main() {
         if vblank_counter == 0 {
             vblank_counter = VBLANK_FREQ_CYCLES;
             if cpu.interrupts_enabled() {
-                println!("VBLANK !!!");
                 cpu.irq_vblank();
             } else {
             }
@@ -69,8 +72,7 @@ fn main() {
 
         refresh_count-=1;
         if refresh_count == 0 {
-            render.get_events();
-            //render.show_memory(&mut cpu);
+            render.show_memory(&mut cpu);
             //render.oam(&mut cpu);
             render.render_screen(&mut cpu);
             //render.display_tile_pattern_tables(&mut cpu);
@@ -79,6 +81,12 @@ fn main() {
             y=y.wrapping_add(1);
         }
         cpu.step();
+
+
+        if render.get_events() {
+            println!("EXIT");
+            break;
+        }
 
     }
 }
