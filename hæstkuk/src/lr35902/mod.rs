@@ -2509,10 +2509,10 @@ impl<'a> Cpu<'a>{
         debug!("B : {:02X}\tC : {:02X}", self.regs.B, self.regs.C);
         debug!("D : {:02X}\tE : {:02X}", self.regs.D, self.regs.E);
         debug!("H : {:02X}\tL : {:02X}", self.regs.H, self.regs.L);
-        debug!("RST Vectors : ");
-        for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
-            debug!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
-        }
+        //debug!("RST Vectors : ");
+        //for i in vec![0x00,0x08,0x10,0x18,0x20,0x28,0x30,0x38].iter() {
+        //    debug!("0x00{:02X}:  {:02X} {:02X}", i, self.mem.read8(*i as u16), self.mem.read8((i+1) as u16));
+        //}
         debug!("==== END ====");
 //        self.mem.print_infos();
     }

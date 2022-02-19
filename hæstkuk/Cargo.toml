@@ -7,5 +7,3 @@ authors = ["Jylam <jylam@lnxscene.org>"]
     log = "0.4"
     env_logger = "0.6"
     minifb="*"
-    [dependencies.sdl2]
-        git = "https://github.com/AngryLawyer/rust-sdl2"

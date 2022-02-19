@@ -3,6 +3,12 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(dead_code)]
+
+extern crate minifb;
+use minifb::{Key, Window, WindowOptions};
+
+
+
 use std::marker::PhantomData;
 use std::process;
 
