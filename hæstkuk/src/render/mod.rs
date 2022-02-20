@@ -6,8 +6,7 @@
 
 extern crate minifb;
 use minifb::{Key, Window, WindowOptions};
-
-
+use std::thread::sleep;
 
 use std::marker::PhantomData;
 use std::process;
@@ -33,7 +32,7 @@ pub struct Render<'a> {
 impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
         let mut window = Window::new(
-            "Test - ESC to exit",
+            "Tiles - ESC to exit",
             256,
             256,
             WindowOptions::default(),
@@ -95,7 +94,11 @@ impl<'a> Render<'a> {
 
     }
 
-    pub fn get_tile(&mut self, cpu: &mut Cpu<'a>, addr: u16) -> Vec<u8> {
+    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8) -> Vec<u8> {
+        self.get_tile_at_addr(cpu, 0x8000+((id as usize)*16) as u16)
+    }
+
+    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16) -> Vec<u8> {
         let mut ret = vec![0; 8*8];
         let mut offset = addr;
         for i in 0..8 {
@@ -140,7 +143,7 @@ impl<'a> Render<'a> {
         let mut y = 0;
 
         for j in (0x8000..0x8FFF).step_by(16) {
-            let tile = self.get_tile(cpu, j);
+            let tile = self.get_tile_at_addr(cpu, j);
             self.display_tile(x, y, tile);
             x = x+8;
             if x > 200 {
@@ -151,7 +154,28 @@ impl<'a> Render<'a> {
 
         self.window.update_with_buffer(&self.buffer, self.width, self.height)
             .unwrap();
+        //sleep(Duration::from_secs(5));
     }
+
+    pub fn display_background_map(&mut self, cpu: &mut Cpu<'a> ) {
+        let mut x = 0;
+        let mut y = 0;
+
+        for offset in 0x9800..0x9BFF {
+            let id = cpu.readMem8(offset);
+            let tile = self.get_tile_by_id(cpu, id);
+            self.display_tile(x, y, tile);
+
+            x+=8;
+            if x>=255 {
+                x = 0;
+                y += 8;
+            }
+        }
+        self.window.update_with_buffer(&self.buffer, self.width, self.height)
+            .unwrap();
+    }
+
     pub fn vtoc(v: u8)->char {
         match v {
             0 => {' '}

@@ -73,7 +73,10 @@ fn main() {
         refresh_count-=1;
         if refresh_count == 0 {
             //render.show_memory(&mut cpu);
-           render.display_tile_pattern_tables (&mut cpu);
+           // render.display_tile_pattern_tables (&mut cpu);
+            render.display_background_map(&mut cpu);
+
+
             //render.oam(&mut cpu);
             //render.render_screen(&mut cpu);
             //render.display_tile_pattern_tables(&mut cpu);
