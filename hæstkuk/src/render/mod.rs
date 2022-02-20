@@ -21,9 +21,11 @@ const SCALE : u32 = 3;
 #[allow(dead_code)]
 pub struct Render<'a> {
     window: Window,
+    tiles: Window,
     width: usize,
     height: usize,
-    buffer: Vec<u32>,
+    buffer_bg: Vec<u32>,
+    buffer_tiles: Vec<u32>,
     lcd_regs: Vec<u8>,
     phantom: PhantomData<&'a u8>,
 }
@@ -31,7 +33,16 @@ pub struct Render<'a> {
 
 impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
-        let mut window = Window::new(
+        let window = Window::new(
+            "BGMap - ESC to exit",
+            256,
+            256,
+            WindowOptions::default(),
+            )
+            .unwrap_or_else(|e| {
+                panic!("{}", e);
+            });
+        let tiles = Window::new(
             "Tiles - ESC to exit",
             256,
             256,
@@ -40,12 +51,14 @@ impl<'a> Render<'a> {
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
-        window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        //window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         let render = Render {
             window: window,
+            tiles: tiles,
             width: 256,
             height: 256,
-            buffer: vec![0x00; 256*256],
+            buffer_bg:    vec![0x00; 256*256],
+            buffer_tiles: vec![0x00; 256*256],
             lcd_regs: vec![0x00; 0x15],
             phantom: PhantomData,
         };
@@ -74,12 +87,12 @@ impl<'a> Render<'a> {
     }
 
     pub fn show_memory(&mut self, cpu: &mut Cpu<'a> ) {
-
+        let mut buffer = vec![0x0 as u32, (self.width*self.height) as u32];
         for i in 0..0xFFFF {
             let b = cpu.readMem8(i);
-            self.buffer[i as usize] = (b as u32)+((b as u32)<<8)+((b as u32)<<16);
+            buffer[i as usize] = (b as u32)+((b as u32)<<8)+((b as u32)<<16);
         }
-        self.window.update_with_buffer(&self.buffer, self.width, self.height)
+        self.window.update_with_buffer(&buffer, self.width, self.height)
             .unwrap();
     }
 
@@ -87,8 +100,8 @@ impl<'a> Render<'a> {
     }
 
 
-    pub fn put_pixel8(&mut self, x: usize, y: usize, c: u8) {
-        self.buffer[x+y*self.width] = (((c as u32*64)<<16) |
+    pub fn put_pixel8(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, c: u8) {
+        buf[x+y*self.width] = (((c as u32*64)<<16) |
                                       (( c as u32*64)<<8) |
                                       (( c as u32*64))) as u32;
 
@@ -129,11 +142,11 @@ impl<'a> Render<'a> {
         ret
     }
 
-    pub fn display_tile(&mut self, x: usize, y: usize, buf: Vec<u8>) {
+    pub fn display_tile(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, buft: Vec<u8>) {
 
         for ty in 0..8 {
             for tx in 0..8 {
-                self.put_pixel8(x+tx, y+ty, buf[tx+ty*8]);
+                self.put_pixel8(buf, x+tx, y+ty, buft[tx+ty*8]);
             }
         }
     }
@@ -142,9 +155,10 @@ impl<'a> Render<'a> {
         let mut x = 0;
         let mut y = 0;
 
+        let mut buffer = vec![0x00; self.width*self.height];
         for j in (0x8000..0x8FFF).step_by(16) {
             let tile = self.get_tile_at_addr(cpu, j);
-            self.display_tile(x, y, tile);
+            self.display_tile(&mut buffer, x, y, tile);
             x = x+8;
             if x > 200 {
                 x = 0;
@@ -152,19 +166,19 @@ impl<'a> Render<'a> {
             }
         }
 
-        self.window.update_with_buffer(&self.buffer, self.width, self.height)
+        self.tiles.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
-        //sleep(Duration::from_secs(5));
     }
 
-    pub fn display_background_map(&mut self, cpu: &mut Cpu<'a> ) {
+    pub fn display_BG_map(&mut self, cpu: &mut Cpu<'a> ) {
         let mut x = 0;
         let mut y = 0;
 
+        let mut buffer = vec![0x00; self.width*self.height];
         for offset in 0x9800..0x9BFF {
             let id = cpu.readMem8(offset);
             let tile = self.get_tile_by_id(cpu, id);
-            self.display_tile(x, y, tile);
+            self.display_tile(&mut buffer, x, y, tile);
 
             x+=8;
             if x>=255 {
@@ -172,17 +186,27 @@ impl<'a> Render<'a> {
                 y += 8;
             }
         }
-        self.window.update_with_buffer(&self.buffer, self.width, self.height)
+        self.window.update_with_buffer(&mut buffer, self.width, self.height)
+            .unwrap();
+    }
+    pub fn display_WIN_map(&mut self, cpu: &mut Cpu<'a> ) {
+        let mut x = 0;
+        let mut y = 0;
+
+        let mut buffer = vec![0x00; self.width*self.height];
+        for offset in 0x9C00..0x9FFF {
+            let id = cpu.readMem8(offset);
+            let tile = self.get_tile_by_id(cpu, id);
+            self.display_tile(&mut buffer, x, y, tile);
+
+            x+=8;
+            if x>=255 {
+                x = 0;
+                y += 8;
+            }
+        }
+        self.window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
 
-    pub fn vtoc(v: u8)->char {
-        match v {
-            0 => {' '}
-            1 => {'-'}
-            2 => {'+'}
-            3 => {'#'}
-            _ => {println!("GOT {}", v); '?'}
-        }
-    }
 }
