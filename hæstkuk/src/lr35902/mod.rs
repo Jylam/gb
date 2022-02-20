@@ -340,8 +340,13 @@ pub fn SUBad8(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
-    //TODO
     //      H - Set if carry from bit 3.
+    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
+
     debug!("SUB A, {:02X}", imm);
 }
 pub fn ADCac(cpu: &mut Cpu) {
@@ -364,6 +369,11 @@ pub fn ADCac(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
+    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     debug!("ADC A, {:02X}", imm);
 }
 pub fn ADCad8(cpu: &mut Cpu) {
@@ -386,6 +396,11 @@ pub fn ADCad8(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
+    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     debug!("ADC A, {:02X}", imm);
 }
 pub fn ADDad8(cpu: &mut Cpu) {
@@ -402,6 +417,11 @@ pub fn ADDad8(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
+    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     //TODO
     //      H - Set if carry from bit 3.
     debug!("ADD A, {:02X}", imm);
@@ -419,6 +439,16 @@ pub fn ADDaa(cpu: &mut Cpu) {
         cpu.regs.unset_FZ();
     }
     cpu.regs.unset_FN();
+    if ((cpu.regs.A & 0xf) + (cpu.regs.A & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
+    if ((cpu.regs.A & 0xf) + (cpu.regs.A & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     //TODO
     //      H - Half-Carry.
     debug!("ADD A,A");
@@ -438,6 +468,11 @@ pub fn ADDad(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
+    if ((cpu.regs.A & 0xf) + (cpu.regs.D & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     debug!("ADD A,D")
 }
 pub fn ADDab(cpu: &mut Cpu) {
@@ -455,6 +490,11 @@ pub fn ADDab(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
+    if ((cpu.regs.A & 0xf) + (cpu.regs.B & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     debug!("ADD A,B");
 }
 pub fn ADDac(cpu: &mut Cpu) {
@@ -472,6 +512,11 @@ pub fn ADDac(cpu: &mut Cpu) {
     cpu.regs.unset_FN();
     //TODO
     //      H - Set if carry from bit 3.
+    if ((cpu.regs.A & 0xf) + (cpu.regs.C & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     debug!("ADD A,C");
 }
 pub fn ADDhlde(cpu: &mut Cpu) {
@@ -484,6 +529,11 @@ pub fn ADDhlde(cpu: &mut Cpu) {
     //TODO
     //      H - Set if carry from bit 11.
     //      C - Set if carry from bit 15.
+    if ((cpu.regs.get_HL() & 0xf) + (cpu.regs.get_DE() & 0xf) + cpu.regs.get_FC() as u16) > 0xf {
+        cpu.regs.set_FH();
+    } else {
+        cpu.regs.set_FH();
+    }
     debug!("ADD HL,DE");
 }
 pub fn ADDhlbc(cpu: &mut Cpu) {
