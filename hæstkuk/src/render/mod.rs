@@ -66,7 +66,7 @@ impl<'a> Render<'a> {
 
     }
     pub fn get_events(&mut self) -> bool {
-        self.window.is_key_down(Key::Escape)
+        self.window.is_key_down(Key::Escape) || self.tiles.is_key_down(Key::Escape)
     }
 
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
