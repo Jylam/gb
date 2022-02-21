@@ -326,6 +326,13 @@ pub fn alu_add16(cpu: &mut Cpu, b: u16) {
 }
 
 
+pub fn alu_cp(cpu: &mut Cpu, b: u8) {
+    let r = cpu.regs.A;
+    alu_sub(cpu, b, false);
+    cpu.regs.A = r;
+}
+
+
 pub fn ADCac(cpu: &mut Cpu) {
     alu_add(cpu, cpu.regs.C, true);
     debug!("ADC A, C {:02X}", cpu.regs.C);
@@ -470,33 +477,23 @@ pub fn INCe(cpu: &mut Cpu) {
     debug!("INC E");
 }
 pub fn CPc(cpu: &mut Cpu) {
-    let c = cpu.regs.C;
-    cpu.regs.set_FN(true);
-    cpu.regs.set_FZ(cpu.regs.A == c);
-    cpu.regs.set_FC(cpu.regs.A < c);
+    alu_cp(cpu, cpu.regs.C);
     debug!("CP C")
 }
 pub fn CPa(cpu: &mut Cpu) {
-    let a = cpu.regs.A;
-    cpu.regs.set_FN(true);
-    cpu.regs.set_FZ(cpu.regs.A == a);
-    cpu.regs.set_FC(cpu.regs.A < a);
+    alu_cp(cpu, cpu.regs.A);
     debug!("CP A")
 }
 pub fn CPL(cpu: &mut Cpu) {
     let A = cpu.regs.A;
     cpu.regs.A = !A;
-
     cpu.regs.set_FN(true);
     cpu.regs.set_FH(true);
-
     debug!("CPL")
 }
 pub fn CPd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    cpu.regs.set_FN(true);
-    cpu.regs.set_FZ(cpu.regs.A == imm);
-    cpu.regs.set_FC(cpu.regs.A < imm);
+    alu_cp(cpu, imm);
     debug!("CP {:02X}", imm)
 }
 
