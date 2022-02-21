@@ -152,7 +152,6 @@ pub fn ALTUNK(cpu: &mut Cpu) {
     process::exit(3);
 }
 pub fn alu_sub(cpu: &mut Cpu, b: u8, carry: bool) {
-
     let c = if carry && cpu.regs.get_FC() { 1 } else { 0 };
     let a = cpu.regs.A;
     let r = a.wrapping_sub(b).wrapping_sub(c);
@@ -262,6 +261,12 @@ fn alu_srl(cpu: &mut Cpu, a: u8) -> u8 {
     let r = (a >> 1) | (a & 0x80);
     alu_srflagupdate(cpu, r, c);
     r
+}
+fn alu_rl(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x80 == 0x80;
+    let r = (a << 1) | (if cpu.regs.get_FC() { 1 } else { 0 });
+    alu_srflagupdate(cpu, r, c);
+    return r
 }
 
 
@@ -957,6 +962,16 @@ pub fn SET7hl(cpu: &mut Cpu) {
     cpu.mem.write8(hl, v);
     debug!("SET 7, HL")
 }
+pub fn RLc(cpu: &mut Cpu) {
+    cpu.regs.C = alu_rl(cpu, cpu.regs.C);
+}
+pub fn RLa(cpu: &mut Cpu) {
+    cpu.regs.A = alu_rl(cpu, cpu.regs.A);
+}
+pub fn RLA(cpu: &mut Cpu) {
+    cpu.regs.A = alu_rl(cpu, cpu.regs.A);
+    cpu.regs.set_FZ(false);
+}
 pub fn BIT0c(cpu: &mut Cpu) {
     let v = cpu.regs.C&0b0000_0001;
     cpu.regs.set_FZ(v==0);
@@ -1200,6 +1215,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: LDdd8,
+            jump: false,
+        };
+        cpu.opcodes[0x17] = Opcode {
+            name: "RLA",
+            len: 1,
+            cycles: 4,
+            execute: RLA,
             jump: false,
         };
         cpu.opcodes[0x18] = Opcode {
@@ -1990,6 +2012,20 @@ impl<'a> Cpu<'a>{
 
 
         /************ Alternative (PREFIX) opcodes **************/
+        cpu.alt_opcodes[0x11] = Opcode {
+            name: "RL C",
+            len: 2,
+            cycles: 8,
+            execute: RLc,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x17] = Opcode {
+            name: "RL A",
+            len: 2,
+            cycles: 8,
+            execute: RLa,
+            jump: false,
+        };
         cpu.alt_opcodes[0x18] = Opcode {
             name: "RR B",
             len: 2,
