@@ -21,11 +21,11 @@ struct Opcode {
 pub struct Registers {
     A: u8,
     B: u8,
-    D: u8,
-    H: u8,
-    F: u8,
     C: u8,
+    D: u8,
     E: u8,
+    F: u8,
+    H: u8,
     L: u8,
     PC: u16,
     SP: u16,
@@ -73,42 +73,49 @@ impl Registers {
     fn set_PC(&mut self, v: u16) {
         self.PC = v;
     }
-    fn set_FZ(&mut self) {
-        self.F |= 0b1000_0000;
-    }
-    fn unset_FZ(&mut self) {
-        self.F &= 0b0111_1111;
+    fn set_FZ(&mut self, v: bool) {
+        if v {
+            self.F |= 0b1000_0000;
+        } else {
+            self.F &= 0b0111_1111;
+        }
     }
     fn get_FZ(&mut self) -> bool{
         (((self.F&(0b1000_0000))>>7)==1) as bool
     }
-    fn set_FN(&mut self) {
-        self.F |= 0b0100_0000
-    }
-    fn unset_FN(&mut self) {
-        self.F &= 0b1011_1111
+    fn set_FN(&mut self, v: bool) {
+        if v {
+            self.F |= 0b0100_0000
+        }  else {
+            self.F &= 0b1011_1111
+        }
     }
     fn get_FN(&mut self) -> bool{
         (((self.F&(0b0100_0000))>>6)==1) as bool
     }
-    fn set_FH(&mut self) {
-        self.F |= 0b0010_0000
-    }
-    fn unset_FH(&mut self) {
-        self.F &= 0b1101_1111
+    fn set_FH(&mut self, v: bool) {
+        if v {
+            self.F |= 0b0010_0000
+        } else {
+            self.F &= 0b1101_1111
+
+        }
     }
     fn get_FH(&mut self) -> bool{
         (((self.F&(0b0010_0000))>>5)==1) as bool
     }
-    fn set_FC(&mut self) {
-        self.F |= 0b0001_0000
-    }
-    fn unset_FC(&mut self) {
-        self.F &= 0b1110_1111
+    fn set_FC(&mut self, v: bool) {
+        if v {
+            self.F |= 0b0001_0000
+        } else {
+            self.F &= 0b1110_1111
+        }
     }
     fn get_FC(&mut self) -> bool{
         (((self.F&(0b0001_0000))>>4)==1) as bool
     }
+
+
 
 }
 
@@ -151,228 +158,167 @@ pub fn NOP(_cpu: &mut Cpu) {
 pub fn XORd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.A = cpu.regs.A^imm;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("XOR {:02X}", imm);
 }
 pub fn XORc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.C;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+        cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("XOR C");
 }
 pub fn XORa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A^cpu.regs.A;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+        cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("XOR A");
 }
 pub fn XOR_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     cpu.regs.A = cpu.regs.A^hl;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("XOR A, [HL]");
 }
 pub fn ORd(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.D|cpu.regs.A;
-    if cpu.regs.D == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.D == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("OR D");
 }
 pub fn ORc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.C|cpu.regs.A;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("OR C");
 }
 pub fn ORb(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.B|cpu.regs.A;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("OR B");
 }
 pub fn ORa(cpu: &mut Cpu) {
     let v = cpu.regs.A;
     cpu.regs.A = cpu.regs.A|v;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("OR A");
 }
 pub fn ORhl(cpu: &mut Cpu) {
     let v = cpu.mem.read8(cpu.regs.get_HL());
     cpu.regs.A = cpu.regs.A|v;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("OR (hl)");
 }
 pub fn ORd8(cpu: &mut Cpu) {
     let v = imm8(cpu);
     cpu.regs.A = cpu.regs.A|v;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
     debug!("OR imm8");
 }
 pub fn ANDc(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A&cpu.regs.C;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
+    cpu.regs.set_FC(false);
     debug!("AND C");
 }
 pub fn ANDa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A&cpu.regs.A;
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
+    cpu.regs.set_FC(false);
     debug!("AND A");
 }
 pub fn ANDhl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     cpu.regs.A = cpu.regs.A&hl;
-
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
+    cpu.regs.set_FC(false);
     debug!("AND A");
 }
 pub fn ANDd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.A = cpu.regs.A & imm;
-
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
+    cpu.regs.set_FC(false);
     debug!("AND {:02}", imm);
 }
 pub fn SUBad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    if imm>cpu.regs.A {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-
+    cpu.regs.set_FC(imm>cpu.regs.A);
     cpu.regs.A = cpu.regs.A.wrapping_sub(imm);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     //      H - Set if carry from bit 3.
     if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     } else {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     }
 
     debug!("SUB A, {:02X}", imm);
 }
+
+pub fn alu_sub(cpu: &mut Cpu, b: u8) {
+
+    let c = if cpu.regs.get_FC() { 1 } else { 0 };
+    let a = cpu.regs.A;
+    let r = a.wrapping_add(b).wrapping_add(c);
+    cpu.regs.set_FZ(r == 0);
+    cpu.regs.set_FH((a & 0xF) + (b & 0xF) + c > 0xF);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FC((a as u16) + (b as u16) + (c as u16) > 0xFF);
+    cpu.regs.A = r;
+}
+
 pub fn ADCac(cpu: &mut Cpu) {
     let mut c = 0;
     if cpu.regs.get_FC() == true {
         c=1;
     }
     let imm = cpu.regs.C+c;
-    if (imm as u16)+(cpu.regs.A as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+
+    cpu.regs.set_FC((imm as u16)+(cpu.regs.A as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(imm);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 3.
     if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     } else {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     }
     debug!("ADC A, {:02X}", imm);
 }
@@ -382,141 +328,76 @@ pub fn ADCad8(cpu: &mut Cpu) {
         c=1;
     }
     let imm = imm8(cpu)+c;
-    if (imm as u16)+(cpu.regs.A as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FC((imm as u16)+(cpu.regs.A as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(imm);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 3.
     if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     } else {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     }
     debug!("ADC A, {:02X}", imm);
 }
 pub fn ADDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    if (imm as u16)+(cpu.regs.A as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FC((imm as u16)+(cpu.regs.A as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(imm);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     } else {
-        cpu.regs.set_FH();
+        cpu.regs.set_FH(true);
     }
     //TODO
     //      H - Set if carry from bit 3.
     debug!("ADD A, {:02X}", imm);
 }
 pub fn ADDaa(cpu: &mut Cpu) {
-    if (cpu.regs.A as u16)+(cpu.regs.A as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+        cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.A as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.A);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    if ((cpu.regs.A & 0xf) + (cpu.regs.A & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
-    } else {
-        cpu.regs.set_FH();
-    }
-    if ((cpu.regs.A & 0xf) + (cpu.regs.A & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
-    } else {
-        cpu.regs.set_FH();
-    }
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    let fc = cpu.regs.get_FC();
+    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.A & 0xf) + fc as u8) > 0xf);
     //TODO
     //      H - Half-Carry.
     debug!("ADD A,A");
 }
 pub fn ADDad(cpu: &mut Cpu) {
-    if (cpu.regs.A as u16)+(cpu.regs.D as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.D as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.D);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 3.
-    if ((cpu.regs.A & 0xf) + (cpu.regs.D & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
-    } else {
-        cpu.regs.set_FH();
-    }
+    let fc = cpu.regs.get_FC();
+    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.D & 0xf) + fc as u8) > 0xf);
     debug!("ADD A,D")
 }
 pub fn ADDab(cpu: &mut Cpu) {
-    if (cpu.regs.A as u16)+(cpu.regs.B as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.B as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.B);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 3.
-    if ((cpu.regs.A & 0xf) + (cpu.regs.B & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
-    } else {
-        cpu.regs.set_FH();
-    }
+    let fc = cpu.regs.get_FC();
+    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.B & 0xf) + fc as u8) > 0xf);
     debug!("ADD A,B");
 }
 pub fn ADDac(cpu: &mut Cpu) {
-    if (cpu.regs.A as u16)+(cpu.regs.C as u16) > 255 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.C as u16) > 255);
     cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.C);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 3.
-    if ((cpu.regs.A & 0xf) + (cpu.regs.C & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH();
-    } else {
-        cpu.regs.set_FH();
-    }
+    let fc = cpu.regs.get_FC();
+    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.C & 0xf) + fc as u8) > 0xf);
     debug!("ADD A,C");
 }
 pub fn ADDhlde(cpu: &mut Cpu) {
@@ -525,15 +406,12 @@ pub fn ADDhlde(cpu: &mut Cpu) {
 
     cpu.regs.set_HL(hl.wrapping_add(de));
 
-    cpu.regs.unset_FN();
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 11.
     //      C - Set if carry from bit 15.
-    if ((cpu.regs.get_HL() & 0xf) + (cpu.regs.get_DE() & 0xf) + cpu.regs.get_FC() as u16) > 0xf {
-        cpu.regs.set_FH();
-    } else {
-        cpu.regs.set_FH();
-    }
+    let fc = cpu.regs.get_FC();
+    cpu.regs.set_FH(((cpu.regs.get_HL() & 0xf) + (cpu.regs.get_DE() & 0xf) + fc as u16) > 0xf);
     debug!("ADD HL,DE");
 }
 pub fn ADDhlbc(cpu: &mut Cpu) {
@@ -542,7 +420,7 @@ pub fn ADDhlbc(cpu: &mut Cpu) {
 
     cpu.regs.set_HL(hl.wrapping_add(bc));
 
-    cpu.regs.unset_FN();
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 11.
     //      C - Set if carry from bit 15.
@@ -553,7 +431,7 @@ pub fn ADDhlhl(cpu: &mut Cpu) {
 
     cpu.regs.set_HL(hl.wrapping_add(hl));
 
-    cpu.regs.unset_FN();
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 11.
     //      C - Set if carry from bit 15.
@@ -565,7 +443,7 @@ pub fn ADDhlsp(cpu: &mut Cpu) {
 
     cpu.regs.set_HL(hl.wrapping_add(sp));
 
-    cpu.regs.unset_FN();
+    cpu.regs.set_FN(false);
     //TODO
     //      H - Set if carry from bit 11.
     //      C - Set if carry from bit 15.
@@ -573,84 +451,56 @@ pub fn ADDhlsp(cpu: &mut Cpu) {
 }
 pub fn DECc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_sub(1);
-    if cpu.regs.C == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.set_FN();
+    cpu.regs.set_FZ(cpu.regs.C == 0);
+    cpu.regs.set_FN(true);
     // Z 0 H -
     //Z N H C
     debug!("DEC C, F is {:b}", cpu.regs.F);
 }
 pub fn DECb(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.B.wrapping_sub(1);
-    if cpu.regs.B == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.set_FN();
+    cpu.regs.set_FZ(cpu.regs.B == 0);
+    cpu.regs.set_FN(true);
     // Z 0 H -
     //Z N H C
     debug!("DEC B");
 }
 pub fn DECh(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.H.wrapping_sub(1);
-    if cpu.regs.H == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.H == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("DEC H");
 }
 pub fn DECa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_sub(1);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("DEC A");
 }
 pub fn DECe(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.E.wrapping_sub(1);
-    if cpu.regs.E == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.E == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("DEC E");
 }
 pub fn DECl(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.L.wrapping_sub(1);
-    if cpu.regs.L == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.L == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("DEC D");
 }
 pub fn DECd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_sub(1);
-    if cpu.regs.D == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.D == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("DEC D");
@@ -697,111 +547,72 @@ pub fn INCbc(cpu: &mut Cpu) {
 }
 pub fn INCa(cpu: &mut Cpu) {
     cpu.regs.A = cpu.regs.A.wrapping_add(1);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("INC A");
 }
 pub fn INCh(cpu: &mut Cpu) {
     cpu.regs.H = cpu.regs.H.wrapping_add(1);
-    if cpu.regs.H == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.H == 0);
+    cpu.regs.set_FN(false);
     debug!("INC H");
 }
 pub fn INCl(cpu: &mut Cpu) {
     cpu.regs.L = cpu.regs.L.wrapping_add(1);
-    if cpu.regs.L == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.L == 0);
+    cpu.regs.set_FN(false);
     debug!("INC L");
 }
 pub fn INCc(cpu: &mut Cpu) {
     cpu.regs.C = cpu.regs.C.wrapping_add(1);
-    if cpu.regs.C == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.C == 0);
+    cpu.regs.set_FN(false);
     debug!("INC C");
 }
 pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.D = cpu.regs.D.wrapping_add(1);
-    if cpu.regs.D == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.D == 0);
+    cpu.regs.set_FN(false);
     // Z 0 H -
     //Z N H C
     debug!("INC D");
 }
 pub fn INCe(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.E.wrapping_add(1);
-    if cpu.regs.E == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
+    cpu.regs.set_FZ(cpu.regs.E == 0);
+    cpu.regs.set_FN(false);
     debug!("INC E");
 }
 pub fn CPc(cpu: &mut Cpu) {
     let c = cpu.regs.C;
-    cpu.regs.set_FN();
-    cpu.regs.unset_FZ();
-    if cpu.regs.A == c {
-        cpu.regs.set_FZ();
-    }
-    if cpu.regs.A < c {
-        cpu.regs.set_FC();
-    }
+    cpu.regs.set_FN(true);
+    cpu.regs.set_FZ(cpu.regs.A == c);
+    cpu.regs.set_FC(cpu.regs.A < c);
     debug!("CP C")
 }
 pub fn CPa(cpu: &mut Cpu) {
     let a = cpu.regs.A;
-    cpu.regs.set_FN();
-    cpu.regs.unset_FZ();
-    if cpu.regs.A == a {
-        cpu.regs.set_FZ();
-    }
-    if cpu.regs.A < a {
-        cpu.regs.set_FC();
-    }
+    cpu.regs.set_FN(true);
+    cpu.regs.set_FZ(cpu.regs.A == a);
+    cpu.regs.set_FC(cpu.regs.A < a);
     debug!("CP A")
 }
 pub fn CPL(cpu: &mut Cpu) {
     let A = cpu.regs.A;
     cpu.regs.A = !A;
 
-    cpu.regs.set_FN();
-    cpu.regs.set_FH();
+    cpu.regs.set_FN(true);
+    cpu.regs.set_FH(true);
 
     debug!("CPL")
 }
 pub fn CPd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    cpu.regs.set_FN();
-    cpu.regs.unset_FZ();
-    if cpu.regs.A == imm {
-        cpu.regs.set_FZ();
-    }
-    if cpu.regs.A < imm {
-        cpu.regs.set_FC();
-    }
+    cpu.regs.set_FN(true);
+    cpu.regs.set_FZ(cpu.regs.A == imm);
+    cpu.regs.set_FC(cpu.regs.A < imm);
     debug!("CP {:02X}", imm)
 }
 
@@ -811,18 +622,10 @@ pub fn RRb(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.B |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.B == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.B == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR B");
 }
 pub fn RRc(cpu: &mut Cpu) {
@@ -831,18 +634,10 @@ pub fn RRc(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.C |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.C == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.C == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR C");
 
 }
@@ -852,18 +647,10 @@ pub fn RRd(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.D |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.D == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.D == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR D");
 
 }
@@ -873,18 +660,10 @@ pub fn RRe(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.E |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.E == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.E == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR E");
 
 }
@@ -894,18 +673,10 @@ pub fn RRh(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.H |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.H == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.H == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR H");
 
 }
@@ -916,18 +687,10 @@ pub fn RRl(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.L |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.L == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.L == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR L");
 
 }
@@ -938,37 +701,20 @@ pub fn RRa(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
         cpu.regs.A |= 1<<7;
     }
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FC(c==1);
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("RR A");
 
 }
 pub fn RRCa(cpu: &mut Cpu) {
 
-    if ((cpu.regs.A&0b10000000)>>7) == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FC(((cpu.regs.A&0b10000000)>>7) == 1);
     cpu.regs.A = cpu.regs.A>>1;
-
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
     debug!("OR C");
 
 }
@@ -1371,14 +1117,10 @@ pub fn EI(cpu: &mut Cpu) {
 
 pub fn SWAPa(cpu: &mut Cpu) {
     cpu.regs.A = ((cpu.regs.A&0xF0)>>4)|(cpu.regs.A<<4);
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    cpu.regs.unset_FC();
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(false);
 
     debug!("SWAP A");
 }
@@ -1391,51 +1133,31 @@ pub fn SET7hl(cpu: &mut Cpu) {
 }
 pub fn BIT0c(cpu: &mut Cpu) {
     let v = cpu.regs.C&0b0000_0001;
-    if v == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
+    cpu.regs.set_FZ(v==0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
 }
 pub fn BIT5a(cpu: &mut Cpu) {
     let v = cpu.regs.A&0b0010_0000;
-    if v == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
+    cpu.regs.set_FZ(v==0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
 }
 pub fn BIT6a(cpu: &mut Cpu) {
     let v = cpu.regs.A&0b0100_0000;
-    if v == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.set_FH();
+    cpu.regs.set_FZ(v==0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
 }
 pub fn RLCa(cpu: &mut Cpu) {
 
     let c = cpu.regs.A >> 7;
     cpu.regs.A = (cpu.regs.A << 1) | c;
 
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(c==1);
 }
 
 pub fn RES0A(cpu: &mut Cpu) {
@@ -1453,136 +1175,80 @@ pub fn SRLa(cpu: &mut Cpu) {
     let c = cpu.regs.A & 1;
     cpu.regs.A = cpu.regs.A >> 1;
 
-    if cpu.regs.A == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+        cpu.regs.set_FZ(cpu.regs.A == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+        cpu.regs.set_FC(c==1);
 }
 pub fn SRLb(cpu: &mut Cpu) {
 
     let c = cpu.regs.B & 1;
     cpu.regs.B = cpu.regs.B >> 1;
 
-    if cpu.regs.B == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+        cpu.regs.set_FZ(cpu.regs.B == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+        cpu.regs.set_FC(c==1);
 }
 pub fn SRLc(cpu: &mut Cpu) {
 
     let c = cpu.regs.C & 1;
     cpu.regs.C = cpu.regs.C >> 1;
 
-    if cpu.regs.C == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+        cpu.regs.set_FZ(cpu.regs.C == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+        cpu.regs.set_FC(c==1);
 }
 pub fn SRLd(cpu: &mut Cpu) {
 
     let c = cpu.regs.D & 1;
     cpu.regs.D = cpu.regs.D >> 1;
 
-    if cpu.regs.D == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+        cpu.regs.set_FZ(cpu.regs.D == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+        cpu.regs.set_FC(c==1);
 }
 pub fn SRLe(cpu: &mut Cpu) {
 
     let c = cpu.regs.E & 1;
     cpu.regs.E = cpu.regs.E >> 1;
 
-    if cpu.regs.E == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FZ(cpu.regs.E == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+        cpu.regs.set_FC(c==1);
 }
 pub fn SRLh(cpu: &mut Cpu) {
 
     let c = cpu.regs.H & 1;
     cpu.regs.H = cpu.regs.H >> 1;
 
-    if cpu.regs.H == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FZ(cpu.regs.H == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(c==1);
 }
 pub fn SRLl(cpu: &mut Cpu) {
 
     let c = cpu.regs.L & 1;
     cpu.regs.L = cpu.regs.L >> 1;
 
-    if cpu.regs.L == 0 {
-        cpu.regs.set_FZ();
-    } else {
-        cpu.regs.unset_FZ();
-    }
-    cpu.regs.unset_FN();
-    cpu.regs.unset_FH();
-    if c == 1 {
-        cpu.regs.set_FC();
-    } else {
-        cpu.regs.unset_FC();
-    }
+    cpu.regs.set_FZ(cpu.regs.L == 0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FC(c==1);
 }
 
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
     debug!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
     cpu.mem.write16(cpu.regs.SP, v);
-	cpu.regs.SP = cpu.regs.SP.wrapping_sub(2);
+    cpu.regs.SP = cpu.regs.SP.wrapping_sub(2);
 }
 pub fn PopStack(cpu: &mut Cpu) -> u16 {
-	cpu.regs.SP = cpu.regs.SP.wrapping_add(2);
+    cpu.regs.SP = cpu.regs.SP.wrapping_add(2);
     let addr = cpu.mem.read16(cpu.regs.SP);
     debug!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
     addr
@@ -1617,14 +1283,14 @@ impl<'a> Cpu<'a>{
                     execute: UNK,
                     jump: false,
                 }; 256],
-            alt_opcodes:
-                vec![Opcode{
-                    name: "ALT UNK",
-                    len: 1,
-                    cycles: 4,
-                    execute: ALTUNK,
-                    jump: false,
-                }; 256]
+                alt_opcodes:
+                    vec![Opcode{
+                        name: "ALT UNK",
+                        len: 1,
+                        cycles: 4,
+                        execute: ALTUNK,
+                        jump: false,
+                    }; 256]
 
         };
         cpu.opcodes[0] = Opcode {
