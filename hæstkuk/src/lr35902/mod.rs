@@ -964,6 +964,12 @@ pub fn BIT6a(cpu: &mut Cpu) {
     cpu.regs.set_FN(false);
     cpu.regs.set_FH(true);
 }
+pub fn BIT7h(cpu: &mut Cpu) {
+    let v = cpu.regs.A&0b1000_0000;
+    cpu.regs.set_FZ(v==0);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
+}
 pub fn RLCa(cpu: &mut Cpu) {
 
     let c = cpu.regs.A >> 7;
@@ -2020,6 +2026,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: BIT6a,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7C] = Opcode {
+            name: "BIT 7,H",
+            len: 2,
+            cycles: 8,
+            execute: BIT7h,
             jump: false,
         };
         cpu.alt_opcodes[0x37] = Opcode {
