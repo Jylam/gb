@@ -3,8 +3,6 @@
 #![allow(dead_code)]
 
 use std::process;
-use std::thread::sleep;
-use std::time::Duration;
 use mem;
 
 #[derive(Copy, Clone)]
@@ -501,7 +499,6 @@ pub fn CPhl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     alu_cp(cpu, hl);
     debug!("CP HL");
-    let imm = imm8(cpu);
 }
 pub fn CPL(cpu: &mut Cpu) {
     let A = cpu.regs.A;

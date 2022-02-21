@@ -13,7 +13,6 @@ mod render;
 
 
 extern crate minifb;
-use minifb::{Key, Window, WindowOptions};
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
 const REFRESH_CYCLES : u32 = 10000;
