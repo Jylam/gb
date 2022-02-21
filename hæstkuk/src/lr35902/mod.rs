@@ -252,6 +252,20 @@ fn alu_srflagupdate(cpu: &mut Cpu, r: u8, c: bool) {
 }
 
 
+fn alu_sra(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x01 == 0x01;
+    let r = a >> 1;
+    alu_srflagupdate(cpu, r, c);
+    r
+}
+fn alu_srl(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x01 == 0x01;
+    let r = (a >> 1) | (a & 0x80);
+    alu_srflagupdate(cpu, r, c);
+    r
+}
+
+
 pub fn NOP(_cpu: &mut Cpu) {
     debug!("NOP")
 }
@@ -973,74 +987,25 @@ pub fn RES1E(cpu: &mut Cpu) {
     cpu.regs.E = e;
 }
 pub fn SRLa(cpu: &mut Cpu) {
-
-    let c = cpu.regs.A & 1;
-    cpu.regs.A = cpu.regs.A >> 1;
-
-        cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-        cpu.regs.set_FC(c==1);
+    cpu.regs.A = alu_srl(cpu, cpu.regs.A);
 }
 pub fn SRLb(cpu: &mut Cpu) {
-
-    let c = cpu.regs.B & 1;
-    cpu.regs.B = cpu.regs.B >> 1;
-
-        cpu.regs.set_FZ(cpu.regs.B == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-        cpu.regs.set_FC(c==1);
+    cpu.regs.B = alu_srl(cpu, cpu.regs.B);
 }
 pub fn SRLc(cpu: &mut Cpu) {
-
-    let c = cpu.regs.C & 1;
-    cpu.regs.C = cpu.regs.C >> 1;
-
-        cpu.regs.set_FZ(cpu.regs.C == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-        cpu.regs.set_FC(c==1);
+    cpu.regs.C = alu_srl(cpu, cpu.regs.C);
 }
 pub fn SRLd(cpu: &mut Cpu) {
-
-    let c = cpu.regs.D & 1;
-    cpu.regs.D = cpu.regs.D >> 1;
-
-        cpu.regs.set_FZ(cpu.regs.D == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-        cpu.regs.set_FC(c==1);
+    cpu.regs.D = alu_srl(cpu, cpu.regs.D);
 }
 pub fn SRLe(cpu: &mut Cpu) {
-
-    let c = cpu.regs.E & 1;
-    cpu.regs.E = cpu.regs.E >> 1;
-
-    cpu.regs.set_FZ(cpu.regs.E == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-        cpu.regs.set_FC(c==1);
+    cpu.regs.E = alu_srl(cpu, cpu.regs.E);
 }
 pub fn SRLh(cpu: &mut Cpu) {
-
-    let c = cpu.regs.H & 1;
-    cpu.regs.H = cpu.regs.H >> 1;
-
-    cpu.regs.set_FZ(cpu.regs.H == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(c==1);
+    cpu.regs.H = alu_srl(cpu, cpu.regs.H);
 }
 pub fn SRLl(cpu: &mut Cpu) {
-
-    let c = cpu.regs.L & 1;
-    cpu.regs.L = cpu.regs.L >> 1;
-
-    cpu.regs.set_FZ(cpu.regs.L == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(c==1);
+    cpu.regs.L = alu_srl(cpu, cpu.regs.L);
 }
 
 
