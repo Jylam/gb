@@ -358,6 +358,11 @@ pub fn ADDad(cpu: &mut Cpu) {
     alu_add(cpu, cpu.regs.D, false);
     debug!("ADD A,D")
 }
+pub fn ADDahl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    alu_add(cpu, hl, false);
+    debug!("ADD A, (HL)");
+}
 pub fn ADDab(cpu: &mut Cpu) {
     alu_add(cpu, cpu.regs.B, false);
     debug!("ADD A,B");
@@ -486,6 +491,12 @@ pub fn CPc(cpu: &mut Cpu) {
 pub fn CPa(cpu: &mut Cpu) {
     alu_cp(cpu, cpu.regs.A);
     debug!("CP A")
+}
+pub fn CPhl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    alu_cp(cpu, hl);
+    debug!("CP HL");
+    let imm = imm8(cpu);
 }
 pub fn CPL(cpu: &mut Cpu) {
     let A = cpu.regs.A;
@@ -1618,6 +1629,13 @@ impl<'a> Cpu<'a>{
             execute: ADDad,
             jump: false,
         };
+        cpu.opcodes[0x86] = Opcode {
+            name: "ADD A, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: ADDahl,
+            jump: false,
+        };
         cpu.opcodes[0x87] = Opcode {
             name: "ADD A,A",
             len: 1,
@@ -1714,6 +1732,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: CPc,
+            jump: false,
+        };
+        cpu.opcodes[0xBE] = Opcode {
+            name: "CP (HL)",
+            len: 1,
+            cycles: 8,
+            execute: CPhl,
             jump: false,
         };
         cpu.opcodes[0xBF] = Opcode {
