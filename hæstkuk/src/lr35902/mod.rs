@@ -143,7 +143,7 @@ pub fn imm8(cpu: &mut Cpu) -> u8 {
 pub fn UNK(cpu: &mut Cpu) {
     println!("*** Unknow instruction at {:04X}", cpu.regs.get_PC());
     cpu.print_status();
-    sleep(Duration::from_secs(5));
+    //sleep(Duration::from_secs(5));
     process::exit(3);
 }
 pub fn ALTUNK(cpu: &mut Cpu) {
@@ -229,6 +229,28 @@ fn alu_xor(cpu: &mut Cpu, b: u8) {
     cpu.regs.set_FN(false);
     cpu.regs.A = r;
 }
+
+fn alu_rr(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x01 == 0x01;
+    let r = (a >> 1) | (if cpu.regs.get_FC() { 0x80 } else { 0 });
+    alu_srflagupdate(cpu, r, c);
+    r
+}
+
+fn alu_rrc(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x01 == 0x01;
+    let r = (a >> 1) | (if c { 0x80 } else { 0 });
+    alu_srflagupdate(cpu, r, c);
+    return r
+}
+
+fn alu_srflagupdate(cpu: &mut Cpu, r: u8, c: bool) {
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FZ(r == 0);
+    cpu.regs.set_FC(c);
+}
+
 
 pub fn NOP(_cpu: &mut Cpu) {
     debug!("NOP")
@@ -466,106 +488,37 @@ pub fn CPd8(cpu: &mut Cpu) {
 }
 
 pub fn RRb(cpu: &mut Cpu) {
-    let c = cpu.regs.B&0b00000001;
-    cpu.regs.B = cpu.regs.B>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.B |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.B == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.B = alu_rr(cpu, cpu.regs.B);
     debug!("RR B");
 }
 pub fn RRc(cpu: &mut Cpu) {
-    let c = cpu.regs.A&0b00000001;
-    cpu.regs.C = cpu.regs.C>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.C |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.C == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.C = alu_rr(cpu, cpu.regs.C);
     debug!("RR C");
-
 }
 pub fn RRd(cpu: &mut Cpu) {
-    let c = cpu.regs.D&0b00000001;
-    cpu.regs.D = cpu.regs.D>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.D |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.D == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.D = alu_rr(cpu, cpu.regs.D);
     debug!("RR D");
-
 }
 pub fn RRe(cpu: &mut Cpu) {
-    let c = cpu.regs.E&0b00000001;
-    cpu.regs.E = cpu.regs.E>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.E |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.E == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.E = alu_rr(cpu, cpu.regs.E);
     debug!("RR E");
-
 }
 pub fn RRh(cpu: &mut Cpu) {
-    let c = cpu.regs.H&0b00000001;
-    cpu.regs.H = cpu.regs.H>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.H |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.H == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.H = alu_rr(cpu, cpu.regs.H);
     debug!("RR H");
-
 }
 pub fn RRl(cpu: &mut Cpu) {
-
-    let c = cpu.regs.L&0b00000001;
-    cpu.regs.L = cpu.regs.L>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.L |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.L == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.L = alu_rr(cpu, cpu.regs.L);
     debug!("RR L");
-
 }
 pub fn RRa(cpu: &mut Cpu) {
-
-    let c = cpu.regs.A&0b00000001;
-    cpu.regs.A = cpu.regs.A>>1;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.A |= 1<<7;
-    }
-    cpu.regs.set_FC(c==1);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
+    cpu.regs.A = alu_rr(cpu, cpu.regs.A);
     debug!("RR A");
-
 }
 pub fn RRCa(cpu: &mut Cpu) {
-
-    cpu.regs.set_FC(((cpu.regs.A&0b10000000)>>7) == 1);
-    cpu.regs.A = cpu.regs.A>>1;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    debug!("OR C");
-
+    cpu.regs.A = alu_rrc(cpu, cpu.regs.A);
+    cpu.regs.set_FZ(false);
+    debug!("RRC A");
 }
 pub fn LDade(cpu: &mut Cpu) {
     let addr = cpu.regs.get_DE();
@@ -1220,7 +1173,7 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x0F] = Opcode {
-            name: "RRC A",
+            name: "RRCA",
             len: 1,
             cycles: 4,
             execute: RRCa,
