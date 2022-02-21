@@ -1,5 +1,7 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
+use std::fs::File;
+use std::io::Read;
 use rom;
 use lcd;
 
@@ -7,6 +9,7 @@ use lcd;
 #[derive(Clone, Debug, Default)]
 pub struct Mem<'a> {
     _size: u16,
+    bootrom: Vec<u8>,
     rom:  rom::ROM<'a>,
     ram: Vec<u8>,
     pub lcd:  lcd::LCD<'a>,
@@ -14,18 +17,27 @@ pub struct Mem<'a> {
 
 impl<'a> Mem<'a>{
     pub fn new(arom: rom::ROM<'a>, alcd: lcd::LCD<'a>) -> Mem<'a> {
-        Mem{
+        let mut mem = Mem{
             _size: 0xFFFF,
             rom: arom,
             ram: vec![0x00; 65536],
             lcd: alcd,
-        }
+        ..Default::default()
+        };
+
+        let mut f = File::open("./DMG_ROM.bin".to_string()).expect("File not found");
+        let read_size = f.read_to_end(&mut mem.bootrom).expect("Can't read bootrom");
+        println!("Bootrom File : {:?}", f);
+        println!("Read : {}", read_size);
+        println!("{:?}", mem.bootrom);
+        mem
     }
     pub fn read8(&mut self, addr: u16) -> u8 {
         //debug!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
         self.lcd.update();
         match addr {
-            0x0000..=0x7FFF => self.rom.buffer[addr as usize],
+            0x0000..=0x00FF => self.bootrom[addr as usize],
+            0x0100..=0x7FFF => self.rom.buffer[addr as usize],
             0xFF40..=0xFF54 => self.lcd.read8(addr-0xFF40),
             0xFF03..=0xFF7F => { debug!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
             _ => {self.ram[addr as usize]},

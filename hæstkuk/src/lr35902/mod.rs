@@ -149,7 +149,6 @@ pub fn UNK(cpu: &mut Cpu) {
 pub fn ALTUNK(cpu: &mut Cpu) {
     println!("*** Unknow alternative instruction [{:02X}] at {:04X}", cpu.mem.read8(cpu.regs.get_PC()+1), cpu.regs.get_PC());
     cpu.print_status();
-    sleep(Duration::from_secs(5));
     process::exit(3);
 }
 pub fn alu_sub(cpu: &mut Cpu, b: u8, carry: bool) {
@@ -2143,10 +2142,16 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn reset(&mut self) {
-        self.regs.PC = 0x0100
+        println!("JYJY RESET");
+        self.regs.PC = 0x0000;
     }
 
     pub fn step(&mut self) -> u8 {
+        println!("JYJY PC {:04X}", self.regs.PC);
+        if self.regs.PC == 0x00FE {
+            process::exit(3);
+
+        }
         let code = self.mem.read8(self.regs.PC) as usize;
 
         let opcode;
@@ -2158,7 +2163,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         (opcode.execute)(self);
-        //self.print_status();
+        self.print_status();
 
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
