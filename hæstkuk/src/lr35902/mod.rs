@@ -152,134 +152,6 @@ pub fn ALTUNK(cpu: &mut Cpu) {
     sleep(Duration::from_secs(5));
     process::exit(3);
 }
-pub fn NOP(_cpu: &mut Cpu) {
-    debug!("NOP")
-}
-pub fn XORd8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    cpu.regs.A = cpu.regs.A^imm;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("XOR {:02X}", imm);
-}
-pub fn XORc(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A^cpu.regs.C;
-        cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("XOR C");
-}
-pub fn XORa(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A^cpu.regs.A;
-        cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("XOR A");
-}
-pub fn XOR_hl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    cpu.regs.A = cpu.regs.A^hl;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("XOR A, [HL]");
-}
-pub fn ORd(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.D|cpu.regs.A;
-    cpu.regs.set_FZ(cpu.regs.D == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("OR D");
-}
-pub fn ORc(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.C|cpu.regs.A;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("OR C");
-}
-pub fn ORb(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.B|cpu.regs.A;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("OR B");
-}
-pub fn ORa(cpu: &mut Cpu) {
-    let v = cpu.regs.A;
-    cpu.regs.A = cpu.regs.A|v;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("OR A");
-}
-pub fn ORhl(cpu: &mut Cpu) {
-    let v = cpu.mem.read8(cpu.regs.get_HL());
-    cpu.regs.A = cpu.regs.A|v;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("OR (hl)");
-}
-pub fn ORd8(cpu: &mut Cpu) {
-    let v = imm8(cpu);
-    cpu.regs.A = cpu.regs.A|v;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-    debug!("OR imm8");
-}
-pub fn ANDc(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A&cpu.regs.C;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
-    cpu.regs.set_FC(false);
-    debug!("AND C");
-}
-pub fn ANDa(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A&cpu.regs.A;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
-    cpu.regs.set_FC(false);
-    debug!("AND A");
-}
-pub fn ANDhl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    cpu.regs.A = cpu.regs.A&hl;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
-    cpu.regs.set_FC(false);
-    debug!("AND A");
-}
-pub fn ANDd8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    cpu.regs.A = cpu.regs.A & imm;
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
-    cpu.regs.set_FC(false);
-    debug!("AND {:02}", imm);
-}
-pub fn SUBad8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    alu_sub(cpu, imm, false);
-    debug!("SUB A, {:02X}", imm);
-}
-
 pub fn alu_sub(cpu: &mut Cpu, b: u8, carry: bool) {
 
     let c = if carry && cpu.regs.get_FC() { 1 } else { 0 };
@@ -309,7 +181,7 @@ pub fn alu_add(cpu: &mut Cpu, b: u8, carry: bool) {
     cpu.regs.A = r;
 }
 
-fn alu_inc(cpu: &mut Cpu, a: u8) -> u8 {
+pub fn alu_inc(cpu: &mut Cpu, a: u8) -> u8 {
     let r = a.wrapping_add(1);
     cpu.regs.set_FZ( r == 0);
     cpu.regs.set_FH( (a & 0x0F) + 1 > 0x0F);
@@ -325,13 +197,109 @@ pub fn alu_add16(cpu: &mut Cpu, b: u16) {
     cpu.regs.set_HL(r);
 }
 
-
 pub fn alu_cp(cpu: &mut Cpu, b: u8) {
     let r = cpu.regs.A;
     alu_sub(cpu, b, false);
     cpu.regs.A = r;
 }
 
+fn alu_and(cpu: &mut Cpu, b: u8) {
+    let r = cpu.regs.A & b;
+    cpu.regs.set_FZ(r == 0);
+    cpu.regs.set_FH(true);
+    cpu.regs.set_FC(false);
+    cpu.regs.set_FN(false);
+    cpu.regs.A = r;
+}
+
+fn alu_or(cpu: &mut Cpu, b: u8) {
+    let r = cpu.regs.A | b;
+    cpu.regs.set_FZ(r == 0);
+    cpu.regs.set_FC(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FN(false);
+    cpu.regs.A = r;
+}
+
+fn alu_xor(cpu: &mut Cpu, b: u8) {
+    let r = cpu.regs.A ^ b;
+    cpu.regs.set_FZ(r == 0);
+    cpu.regs.set_FC(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FN(false);
+    cpu.regs.A = r;
+}
+
+pub fn NOP(_cpu: &mut Cpu) {
+    debug!("NOP")
+}
+pub fn XORd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    alu_xor(cpu, imm);
+    debug!("XOR {:02X}", imm);
+}
+pub fn XORc(cpu: &mut Cpu) {
+    alu_xor(cpu, cpu.regs.C);
+    debug!("XOR C");
+}
+pub fn XORa(cpu: &mut Cpu) {
+    alu_xor(cpu, cpu.regs.A);
+    debug!("XOR A");
+}
+pub fn XOR_hl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    alu_xor(cpu, hl);
+    debug!("XOR A, [HL]");
+}
+pub fn ORd(cpu: &mut Cpu) {
+    alu_or(cpu, cpu.regs.D);
+    debug!("OR D");
+}
+pub fn ORc(cpu: &mut Cpu) {
+    alu_or(cpu, cpu.regs.C);
+    debug!("OR C");
+}
+pub fn ORb(cpu: &mut Cpu) {
+    alu_or(cpu, cpu.regs.B);
+    debug!("OR B");
+}
+pub fn ORa(cpu: &mut Cpu) {
+    alu_or(cpu, cpu.regs.A);
+    debug!("OR A");
+}
+pub fn ORhl(cpu: &mut Cpu) {
+    let v = cpu.mem.read8(cpu.regs.get_HL());
+    alu_xor(cpu, v);
+    debug!("OR (hl)");
+}
+pub fn ORd8(cpu: &mut Cpu) {
+    let v = imm8(cpu);
+    alu_or(cpu, v);
+    debug!("OR imm8");
+}
+pub fn ANDc(cpu: &mut Cpu) {
+    alu_and(cpu, cpu.regs.C);
+    debug!("AND C");
+}
+pub fn ANDa(cpu: &mut Cpu) {
+    alu_and(cpu, cpu.regs.A);
+    debug!("AND A");
+}
+pub fn ANDhl(cpu: &mut Cpu) {
+    let hl = cpu.mem.read8(cpu.regs.get_HL());
+    alu_and(cpu, hl);
+    debug!("AND A");
+}
+pub fn ANDd8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    alu_and(cpu, imm);
+    debug!("AND {:02}", imm);
+}
+pub fn SUBad8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    alu_sub(cpu, imm, false);
+    debug!("SUB A, {:02X}", imm);
+}
 
 pub fn ADCac(cpu: &mut Cpu) {
     alu_add(cpu, cpu.regs.C, true);
