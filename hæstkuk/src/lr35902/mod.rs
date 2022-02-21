@@ -276,23 +276,30 @@ pub fn ANDd8(cpu: &mut Cpu) {
 }
 pub fn SUBad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    cpu.regs.set_FC(imm>cpu.regs.A);
-    cpu.regs.A = cpu.regs.A.wrapping_sub(imm);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    //      H - Set if carry from bit 3.
-    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH(true);
-    } else {
-        cpu.regs.set_FH(true);
-    }
-
+    alu_sub(cpu, imm, false);
     debug!("SUB A, {:02X}", imm);
 }
 
-pub fn alu_sub(cpu: &mut Cpu, b: u8) {
+pub fn alu_sub(cpu: &mut Cpu, b: u8, carry: bool) {
 
-    let c = if cpu.regs.get_FC() { 1 } else { 0 };
+    let c = if carry && cpu.regs.get_FC() { 1 } else { 0 };
+    let a = cpu.regs.A;
+    let r = a.wrapping_sub(b).wrapping_sub(c);
+    cpu.regs.set_FZ(r == 0);
+    cpu.regs.set_FH((a & 0xF) < (b & 0xF) + c);
+    cpu.regs.set_FN(true);
+    cpu.regs.set_FC((a as u16) < (b as u16) + (c as u16));
+    cpu.regs.A = r;
+}
+pub fn alu_dec(cpu: &mut Cpu, a: u8) -> u8 {
+    let r = a.wrapping_sub(1);
+    cpu.regs.set_FZ( r == 0);
+    cpu.regs.set_FH( (a & 0x0F) == 0);
+    cpu.regs.set_FN( true);
+    return r
+}
+pub fn alu_add(cpu: &mut Cpu, b: u8, carry: bool) {
+    let c = if carry && cpu.regs.get_FC() { 1 } else { 0 };
     let a = cpu.regs.A;
     let r = a.wrapping_add(b).wrapping_add(c);
     cpu.regs.set_FZ(r == 0);
@@ -302,207 +309,100 @@ pub fn alu_sub(cpu: &mut Cpu, b: u8) {
     cpu.regs.A = r;
 }
 
-pub fn ADCac(cpu: &mut Cpu) {
-    let mut c = 0;
-    if cpu.regs.get_FC() == true {
-        c=1;
-    }
-    let imm = cpu.regs.C+c;
-
-    cpu.regs.set_FC((imm as u16)+(cpu.regs.A as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(imm);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
+fn alu_inc(cpu: &mut Cpu, a: u8) -> u8 {
+    let r = a.wrapping_add(1);
+    cpu.regs.set_FZ( r == 0);
+    cpu.regs.set_FH( (a & 0x0F) + 1 > 0x0F);
+    cpu.regs.set_FN( false);
+    return r
+}
+pub fn alu_add16(cpu: &mut Cpu, b: u16) {
+    let a = cpu.regs.get_HL();
+    let r = a.wrapping_add(b);
+    cpu.regs.set_FH((a & 0x07FF) + (b & 0x07FF) > 0x07FF);
     cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 3.
-    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH(true);
-    } else {
-        cpu.regs.set_FH(true);
-    }
-    debug!("ADC A, {:02X}", imm);
+    cpu.regs.set_FC(a > 0xFFFF - b);
+    cpu.regs.set_HL(r);
+}
+
+
+pub fn ADCac(cpu: &mut Cpu) {
+    alu_add(cpu, cpu.regs.C, true);
+    debug!("ADC A, C {:02X}", cpu.regs.C);
 }
 pub fn ADCad8(cpu: &mut Cpu) {
-    let mut c = 0;
-    if cpu.regs.get_FC() == true {
-        c=1;
-    }
-    let imm = imm8(cpu)+c;
-    cpu.regs.set_FC((imm as u16)+(cpu.regs.A as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(imm);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 3.
-    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH(true);
-    } else {
-        cpu.regs.set_FH(true);
-    }
+    let imm = imm8(cpu);
+    alu_add(cpu, imm, true);
     debug!("ADC A, {:02X}", imm);
 }
 pub fn ADDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    cpu.regs.set_FC((imm as u16)+(cpu.regs.A as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(imm);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    if ((cpu.regs.A & 0xf) + (imm & 0xf) + cpu.regs.get_FC() as u8) > 0xf {
-        cpu.regs.set_FH(true);
-    } else {
-        cpu.regs.set_FH(true);
-    }
-    //TODO
-    //      H - Set if carry from bit 3.
+    alu_add(cpu, imm, false);
     debug!("ADD A, {:02X}", imm);
 }
 pub fn ADDaa(cpu: &mut Cpu) {
-        cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.A as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.A);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    let fc = cpu.regs.get_FC();
-    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.A & 0xf) + fc as u8) > 0xf);
-    //TODO
-    //      H - Half-Carry.
+    alu_add(cpu, cpu.regs.A, false);
     debug!("ADD A,A");
 }
 pub fn ADDad(cpu: &mut Cpu) {
-    cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.D as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.D);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 3.
-    let fc = cpu.regs.get_FC();
-    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.D & 0xf) + fc as u8) > 0xf);
+    alu_add(cpu, cpu.regs.D, false);
     debug!("ADD A,D")
 }
 pub fn ADDab(cpu: &mut Cpu) {
-    cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.B as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.B);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 3.
-    let fc = cpu.regs.get_FC();
-    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.B & 0xf) + fc as u8) > 0xf);
+    alu_add(cpu, cpu.regs.B, false);
     debug!("ADD A,B");
 }
 pub fn ADDac(cpu: &mut Cpu) {
-    cpu.regs.set_FC((cpu.regs.A as u16)+(cpu.regs.C as u16) > 255);
-    cpu.regs.A = cpu.regs.A.wrapping_add(cpu.regs.C);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 3.
-    let fc = cpu.regs.get_FC();
-    cpu.regs.set_FH(((cpu.regs.A & 0xf) + (cpu.regs.C & 0xf) + fc as u8) > 0xf);
+    alu_add(cpu, cpu.regs.C, false);
     debug!("ADD A,C");
 }
 pub fn ADDhlde(cpu: &mut Cpu) {
-    let hl = cpu.regs.get_HL();
     let de = cpu.regs.get_DE();
-
-    cpu.regs.set_HL(hl.wrapping_add(de));
-
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 11.
-    //      C - Set if carry from bit 15.
-    let fc = cpu.regs.get_FC();
-    cpu.regs.set_FH(((cpu.regs.get_HL() & 0xf) + (cpu.regs.get_DE() & 0xf) + fc as u16) > 0xf);
+    alu_add16(cpu, de);
     debug!("ADD HL,DE");
 }
 pub fn ADDhlbc(cpu: &mut Cpu) {
-    let hl = cpu.regs.get_HL();
     let bc = cpu.regs.get_BC();
-
-    cpu.regs.set_HL(hl.wrapping_add(bc));
-
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 11.
-    //      C - Set if carry from bit 15.
+    alu_add16(cpu, bc);
     debug!("ADD HL, BC");
 }
 pub fn ADDhlhl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
+    alu_add16(cpu, hl);
 
-    cpu.regs.set_HL(hl.wrapping_add(hl));
-
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 11.
-    //      C - Set if carry from bit 15.
     debug!("ADD HL,HL");
 }
 pub fn ADDhlsp(cpu: &mut Cpu) {
-    let hl = cpu.regs.get_HL();
     let sp = cpu.regs.get_SP();
-
-    cpu.regs.set_HL(hl.wrapping_add(sp));
-
-    cpu.regs.set_FN(false);
-    //TODO
-    //      H - Set if carry from bit 11.
-    //      C - Set if carry from bit 15.
+    alu_add16(cpu, sp);
     debug!("ADD HL,HL");
 }
 pub fn DECc(cpu: &mut Cpu) {
-    cpu.regs.C = cpu.regs.C.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.C == 0);
-    cpu.regs.set_FN(true);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.C = alu_dec(cpu, cpu.regs.C);
     debug!("DEC C, F is {:b}", cpu.regs.F);
 }
 pub fn DECb(cpu: &mut Cpu) {
-    cpu.regs.B = cpu.regs.B.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.B == 0);
-    cpu.regs.set_FN(true);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.B = alu_dec(cpu, cpu.regs.B);
     debug!("DEC B");
 }
 pub fn DECh(cpu: &mut Cpu) {
-    cpu.regs.H = cpu.regs.H.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.H == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.H = alu_dec(cpu, cpu.regs.H);
     debug!("DEC H");
 }
 pub fn DECa(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.A = alu_dec(cpu, cpu.regs.A);
     debug!("DEC A");
 }
 pub fn DECe(cpu: &mut Cpu) {
-    cpu.regs.E = cpu.regs.E.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.E == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.E = alu_dec(cpu, cpu.regs.E);
     debug!("DEC E");
 }
 pub fn DECl(cpu: &mut Cpu) {
-    cpu.regs.L = cpu.regs.L.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.L == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.L = alu_dec(cpu, cpu.regs.L);
     debug!("DEC D");
 }
 pub fn DECd(cpu: &mut Cpu) {
-    cpu.regs.D = cpu.regs.D.wrapping_sub(1);
-    cpu.regs.set_FZ(cpu.regs.D == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.D = alu_dec(cpu, cpu.regs.D);
     debug!("DEC D");
 }
 pub fn DECbc(cpu: &mut Cpu) {
@@ -546,43 +446,27 @@ pub fn INCbc(cpu: &mut Cpu) {
     debug!("INC BC");
 }
 pub fn INCa(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.A.wrapping_add(1);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.A = alu_inc(cpu, cpu.regs.A);
     debug!("INC A");
 }
 pub fn INCh(cpu: &mut Cpu) {
-    cpu.regs.H = cpu.regs.H.wrapping_add(1);
-    cpu.regs.set_FZ(cpu.regs.H == 0);
-    cpu.regs.set_FN(false);
+    cpu.regs.H = alu_inc(cpu, cpu.regs.H);
     debug!("INC H");
 }
 pub fn INCl(cpu: &mut Cpu) {
-    cpu.regs.L = cpu.regs.L.wrapping_add(1);
-    cpu.regs.set_FZ(cpu.regs.L == 0);
-    cpu.regs.set_FN(false);
+    cpu.regs.L = alu_inc(cpu, cpu.regs.L);
     debug!("INC L");
 }
 pub fn INCc(cpu: &mut Cpu) {
-    cpu.regs.C = cpu.regs.C.wrapping_add(1);
-    cpu.regs.set_FZ(cpu.regs.C == 0);
-    cpu.regs.set_FN(false);
+    cpu.regs.C = alu_inc(cpu, cpu.regs.C);
     debug!("INC C");
 }
 pub fn INCd(cpu: &mut Cpu) {
-    cpu.regs.D = cpu.regs.D.wrapping_add(1);
-    cpu.regs.set_FZ(cpu.regs.D == 0);
-    cpu.regs.set_FN(false);
-    // Z 0 H -
-    //Z N H C
+    cpu.regs.D = alu_inc(cpu, cpu.regs.D);
     debug!("INC D");
 }
 pub fn INCe(cpu: &mut Cpu) {
-    cpu.regs.E = cpu.regs.E.wrapping_add(1);
-    cpu.regs.set_FZ(cpu.regs.E == 0);
-    cpu.regs.set_FN(false);
+    cpu.regs.E = alu_inc(cpu, cpu.regs.E);
     debug!("INC E");
 }
 pub fn CPc(cpu: &mut Cpu) {
