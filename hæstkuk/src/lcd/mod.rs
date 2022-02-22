@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use std::marker::PhantomData;
 
-
 // LCD controller
 #[derive(Clone, Debug, Default)]
 pub struct LCD<'a> {
@@ -30,12 +29,6 @@ impl<'a> LCD<'a>{
 			_ => {debug!("LCD read8 at {:04X}", addr); self.regs[addr as usize]}
 		}
 	}
-
-	pub fn update(&mut self) {
-		self.regs[(0x04)] = self.regs[(0x04)].wrapping_add(1);
-
-    }
-
 
 	pub fn operation(&self) -> bool {
 		!((self.regs[0x00]&(1<<7))==0)

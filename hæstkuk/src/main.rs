@@ -15,7 +15,6 @@ mod render;
 extern crate minifb;
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
-const REFRESH_CYCLES : u32 = 10000;
 
 fn main() {
     env_logger::init();
@@ -52,8 +51,6 @@ fn main() {
 
     render = render::Render::new(); // Open SDL window
 
-    let mut y: u8 = 0;
-    let mut refresh_count: u32 = 1;
     let mut vblank_counter: u32 = 1;
 
     cpu.reset();
@@ -63,25 +60,14 @@ fn main() {
         if vblank_counter == 0 {
             vblank_counter = VBLANK_FREQ_CYCLES;
             render.display_BG_map(&mut cpu);
-            refresh_count = REFRESH_CYCLES;
-            cpu.mem.lcd.update();
+            render.display_tile_pattern_tables (&mut cpu);
             if cpu.interrupts_enabled() {
                 cpu.irq_vblank();
-            } else {
             }
         }
 
-
-        refresh_count-=1;
-        if refresh_count == 0 {
-            render.display_tile_pattern_tables (&mut cpu);
-            //render.display_BG_map(&mut cpu);
-            refresh_count = REFRESH_CYCLES;
-            //cpu.mem.lcd.update();
-            cpu.writeMem8(0xFF44, y);
-            y=y.wrapping_add(1);
-        }
         cpu.step();
+        cpu.mem.lcd_update();
 
 
         if render.get_events() {
