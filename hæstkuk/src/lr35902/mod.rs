@@ -2263,10 +2263,6 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn step(&mut self) -> u8 {
-        if self.regs.PC == 0x00FE {
-            process::exit(3);
-
-        }
         let code = self.mem.read8(self.regs.PC) as usize;
 
         let opcode;
