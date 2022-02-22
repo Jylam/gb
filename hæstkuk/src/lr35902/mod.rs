@@ -2272,13 +2272,12 @@ impl<'a> Cpu<'a>{
         let opcode;
         if code == 0xCB {
             let code = self.mem.read8(self.regs.PC+1) as usize;
-            debug!("Alternate opcode");
             opcode = self.alt_opcodes[code];
         } else {
             opcode = self.opcodes[code];
         }
         (opcode.execute)(self);
-        self.print_status();
+        //self.print_status();
 
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {

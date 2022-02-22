@@ -186,6 +186,7 @@ impl<'a> Render<'a> {
                 y += 8;
             }
         }
+        self.display_scroll(cpu, &mut buffer);
         self.window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
@@ -208,5 +209,32 @@ impl<'a> Render<'a> {
         self.window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
+
+    pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>) {
+        let SCY = cpu.mem.read8(0xFF42) as usize;
+        let SCX = cpu.mem.read8(0xFF43) as usize;
+//        println!("SCROLL {:02X} {:02X}", SCX, SCY);
+
+
+        for y in SCY..SCY+144 {
+            self.put_pixel8(buf, SCX, y, 3);
+        }
+        for y in SCY..SCY+144 {
+            self.put_pixel8(buf, SCX+160, y , 3);
+        }
+        for x in SCX..SCX+160 {
+            self.put_pixel8(buf, x, SCY, 3);
+        }
+        for x in SCX..SCX+160 {
+            self.put_pixel8(buf, x, SCY+144, 3);
+        }
+
+
+    }
+
+
+
+
+
 
 }

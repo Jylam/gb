@@ -33,7 +33,8 @@ impl<'a> LCD<'a>{
 
 	pub fn update(&mut self) {
 		self.regs[(0x04)] = self.regs[(0x04)].wrapping_add(1);
-	}
+
+    }
 
 
 	pub fn operation(&self) -> bool {

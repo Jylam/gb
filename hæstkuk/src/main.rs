@@ -15,7 +15,7 @@ mod render;
 extern crate minifb;
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
-const REFRESH_CYCLES : u32 = 1000;
+const REFRESH_CYCLES : u32 = 10000;
 
 fn main() {
     env_logger::init();
@@ -62,6 +62,9 @@ fn main() {
         vblank_counter-=1;
         if vblank_counter == 0 {
             vblank_counter = VBLANK_FREQ_CYCLES;
+            render.display_BG_map(&mut cpu);
+            refresh_count = REFRESH_CYCLES;
+            cpu.mem.lcd.update();
             if cpu.interrupts_enabled() {
                 cpu.irq_vblank();
             } else {
@@ -72,9 +75,9 @@ fn main() {
         refresh_count-=1;
         if refresh_count == 0 {
             render.display_tile_pattern_tables (&mut cpu);
-            render.display_BG_map(&mut cpu);
+            //render.display_BG_map(&mut cpu);
             refresh_count = REFRESH_CYCLES;
-            cpu.mem.lcd.update();
+            //cpu.mem.lcd.update();
             cpu.writeMem8(0xFF44, y);
             y=y.wrapping_add(1);
         }
