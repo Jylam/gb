@@ -486,6 +486,10 @@ pub fn INCc(cpu: &mut Cpu) {
     cpu.regs.C = alu_inc(cpu, cpu.regs.C);
     debug!("INC C");
 }
+pub fn INCb(cpu: &mut Cpu) {
+    cpu.regs.B = alu_inc(cpu, cpu.regs.B);
+    debug!("INC B");
+}
 pub fn INCd(cpu: &mut Cpu) {
     cpu.regs.D = alu_inc(cpu, cpu.regs.D);
     debug!("INC D");
@@ -705,6 +709,16 @@ pub fn LDcd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     cpu.regs.C = imm;
     debug!("LD C, {:02X}", imm)
+}
+pub fn LDed8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.E = imm;
+    debug!("LD E, {:02X}", imm)
+}
+pub fn LDld8(cpu: &mut Cpu) {
+    let imm = imm8(cpu);
+    cpu.regs.L = imm;
+    debug!("LD L, {:02X}", imm)
 }
 pub fn LDad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -1108,6 +1122,13 @@ impl<'a> Cpu<'a>{
             execute: INCbc,
             jump: false,
         };
+        cpu.opcodes[0x04] = Opcode {
+            name: "INC B",
+            len: 1,
+            cycles: 4,
+            execute: INCb,
+            jump: false,
+        };
         cpu.opcodes[0x05] = Opcode {
             name: "DEC B",
             len: 1,
@@ -1262,6 +1283,13 @@ impl<'a> Cpu<'a>{
             execute: DECe,
             jump: false,
         };
+        cpu.opcodes[0x1E] = Opcode {
+            name: "LD E, d8",
+            len: 2,
+            cycles: 8,
+            execute: LDed8,
+            jump: false,
+        };
         cpu.opcodes[0x1F] = Opcode {
             name: "RRA",
             len: 1,
@@ -1351,6 +1379,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: DECl,
+            jump: false,
+        };
+        cpu.opcodes[0x2E] = Opcode {
+            name: "LD L, d8",
+            len: 2,
+            cycles: 8,
+            execute: LDld8,
             jump: false,
         };
         cpu.opcodes[0x2F] = Opcode {
