@@ -101,6 +101,8 @@ impl<'a> Render<'a> {
 
 
     pub fn put_pixel8(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, c: u8) {
+        if x+y*self.width > 65535 {println!("put_pixel8 error"); return;};
+
         buf[x+y*self.width] = (((c as u32*64)<<16) |
                                       (( c as u32*64)<<8) |
                                       (( c as u32*64))) as u32;

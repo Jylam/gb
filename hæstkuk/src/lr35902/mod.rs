@@ -2275,7 +2275,7 @@ impl<'a> Cpu<'a>{
         (opcode.execute)(self);
 
         if self.regs.PC > 0x00FE {
-        self.print_status();
+        //self.print_status();
         }
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
