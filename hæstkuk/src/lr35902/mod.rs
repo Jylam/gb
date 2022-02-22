@@ -2273,8 +2273,10 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         (opcode.execute)(self);
-        //self.print_status();
 
+        if self.regs.PC > 0x00FE {
+        self.print_status();
+        }
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);

@@ -33,19 +33,16 @@ impl<'a> Mem<'a>{
         mem
     }
     pub fn read8(&mut self, addr: u16) -> u8 {
-        //debug!("[{:04X}] >>> {:02X}", addr, self.rom.buffer[addr as usize]);
         match addr {
             0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] } else {self.ram[addr as usize]},
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
-            0xFF03..=0xFF7F => { debug!("Unsupported read8 in Hardware area {:04X}", addr); self.ram[addr as usize]},
             _ => {self.ram[addr as usize]},
         }
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
-        debug!(">>> Writing {:02X} at {:04X}", v, addr);
         match addr {
             0x0000..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
-            0xFF50 => {self.bootrom_enable = false; }
+            0xFF50 => {self.bootrom_enable = false; println!("Disabling BOOTROM");}
             _ => {self.ram[addr as usize] = v;},
         }
     }
