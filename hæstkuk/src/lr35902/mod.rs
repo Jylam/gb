@@ -345,6 +345,10 @@ pub fn SUBad8(cpu: &mut Cpu) {
     alu_sub(cpu, imm, false);
     debug!("SUB A, {:02X}", imm);
 }
+pub fn SUBb(cpu: &mut Cpu) {
+    alu_sub(cpu, cpu.regs.B, false);
+    debug!("SUB B");
+}
 
 pub fn ADCac(cpu: &mut Cpu) {
     alu_add(cpu, cpu.regs.C, true);
@@ -1703,6 +1707,13 @@ impl<'a> Cpu<'a>{
             execute: ADCac,
             jump: false,
         };
+        cpu.opcodes[0x90] = Opcode {
+            name: "SUB B",
+            len: 1,
+            cycles: 4,
+            execute: SUBb,
+            jump: false,
+        };
         cpu.opcodes[0xA1] = Opcode {
             name: "AND C",
             len: 1,
@@ -2252,7 +2263,6 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn step(&mut self) -> u8 {
-        println!("JYJY PC {:04X}", self.regs.PC);
         if self.regs.PC == 0x00FE {
             process::exit(3);
 
