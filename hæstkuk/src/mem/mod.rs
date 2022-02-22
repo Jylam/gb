@@ -27,9 +27,7 @@ impl<'a> Mem<'a>{
 
         let mut f = File::open("./DMG_ROM.bin".to_string()).expect("File not found");
         let read_size = f.read_to_end(&mut mem.bootrom).expect("Can't read bootrom");
-        println!("Bootrom File : {:?}", f);
-        println!("Read : {}", read_size);
-        println!("{:?}", mem.bootrom);
+        println!("Boot ROM: {} bytes", read_size);
         mem
     }
     pub fn read8(&mut self, addr: u16) -> u8 {

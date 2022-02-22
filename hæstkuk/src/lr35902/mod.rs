@@ -268,6 +268,13 @@ fn alu_rl(cpu: &mut Cpu, a: u8) -> u8 {
 }
 
 
+fn alu_bit(cpu: &mut Cpu, a: u8, b: u8) {
+    let r = a & (1 << (b as u32)) == 0;
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FH(true);
+    cpu.regs.set_FZ(r);
+}
+
 pub fn NOP(_cpu: &mut Cpu) {
     debug!("NOP")
 }
@@ -970,28 +977,20 @@ pub fn RLA(cpu: &mut Cpu) {
     cpu.regs.set_FZ(false);
 }
 pub fn BIT0c(cpu: &mut Cpu) {
-    let v = cpu.regs.C&0b0000_0001;
-    cpu.regs.set_FZ(v==0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
+    alu_bit(cpu, cpu.regs.C, 0);
+    debug!("BIT0, H")
 }
 pub fn BIT5a(cpu: &mut Cpu) {
-    let v = cpu.regs.A&0b0010_0000;
-    cpu.regs.set_FZ(v==0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
+    alu_bit(cpu, cpu.regs.A, 5);
+    debug!("BIT5, A")
 }
 pub fn BIT6a(cpu: &mut Cpu) {
-    let v = cpu.regs.A&0b0100_0000;
-    cpu.regs.set_FZ(v==0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
+    alu_bit(cpu, cpu.regs.A, 6);
+    debug!("BIT6, A")
 }
 pub fn BIT7h(cpu: &mut Cpu) {
-    let v = cpu.regs.A&0b1000_0000;
-    cpu.regs.set_FZ(v==0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(true);
+    alu_bit(cpu, cpu.regs.H, 7);
+    debug!("BIT7, H")
 }
 pub fn RLCa(cpu: &mut Cpu) {
 
@@ -1376,7 +1375,7 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x32] = Opcode {
-            name: "LDD (HL), a",
+            name: "LDD (HL-), a",
             len: 1,
             cycles: 8,
             execute: LDDhmla,
@@ -2188,7 +2187,6 @@ impl<'a> Cpu<'a>{
         let code = self.mem.read8(self.regs.PC) as usize;
         let alt_code = self.mem.read8(self.regs.PC+1) as usize;
 
-        println!("----------------------------------------");
         if code == 0xCB {
             println!("PC {:04X} opcode {:02X} ALT {:02X} ", self.regs.PC, code, alt_code);
         } else {
@@ -2197,8 +2195,9 @@ impl<'a> Cpu<'a>{
         println!("==== CPU ====");
         println!("A : {:02X}\tB : {:02X}\tC : {:02X}\tD : {:02X}", self.regs.A, self.regs.B, self.regs.C, self.regs.D);
         println!("E : {:02X}\tF : {:02X}\tH : {:02X}\tL : {:02X}", self.regs.E, self.regs.F, self.regs.H, self.regs.L);
-        println!("PC: {:04X} SP: {:04X}", self.regs.get_PC(), self.regs.get_SP());
-        println!("==== END ====");
+        println!("PC: {:04X} SP: {:04X}  Z:{} N:{} H:{} C:{}", self.regs.get_PC(), self.regs.get_SP(),
+        self.regs.get_FZ(), self.regs.get_FN(),self.regs.get_FH(),self.regs.get_FC());
+        println!("----------------------------------------");
     }
 
     pub fn interrupts_enabled(&mut self) -> bool {
@@ -2228,7 +2227,7 @@ impl<'a> Cpu<'a>{
         let opcode;
         if code == 0xCB {
             let code = self.mem.read8(self.regs.PC+1) as usize;
-            debug!("Alternate opcode {:02X}", code);
+            debug!("Alternate opcode");
             opcode = self.alt_opcodes[code];
         } else {
             opcode = self.opcodes[code];
