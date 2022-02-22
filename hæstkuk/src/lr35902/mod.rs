@@ -640,7 +640,7 @@ pub fn LDda(cpu: &mut Cpu) {
     debug!("LD D, A")
 }
 pub fn LDae(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.B;
+    cpu.regs.A = cpu.regs.E;
     debug!("LD A, E")
 }
 pub fn LDha(cpu: &mut Cpu) {
@@ -652,7 +652,7 @@ pub fn LDla(cpu: &mut Cpu) {
     debug!("LD L, A")
 }
 pub fn LDad(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.B;
+    cpu.regs.A = cpu.regs.D;
     debug!("LD A, D")
 }
 pub fn LDab(cpu: &mut Cpu) {
