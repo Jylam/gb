@@ -2210,7 +2210,7 @@ impl<'a> Cpu<'a>{
             name: "BIT 0, (HL)",
             len: 2,
             cycles: 16,
-            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 7);},
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 0);},
             jump: false,
         };
         cpu.alt_opcodes[0x87] = Opcode {
