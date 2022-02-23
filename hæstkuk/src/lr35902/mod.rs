@@ -2227,6 +2227,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 1);},
             jump: false,
         };
+        cpu.alt_opcodes[0x8E] = Opcode {
+            name: "RES 1, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 1); cpu.mem.write8(a, v);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x8F] = Opcode {
             name: "RES 1, A",
             len: 2,
