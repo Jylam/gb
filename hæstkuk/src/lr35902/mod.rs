@@ -503,34 +503,6 @@ pub fn CPd8(cpu: &mut Cpu) {
     debug!("CP {:02X}", imm)
 }
 
-pub fn RRb(cpu: &mut Cpu) {
-    cpu.regs.B = alu_rr(cpu, cpu.regs.B);
-    debug!("RR B");
-}
-pub fn RRc(cpu: &mut Cpu) {
-    cpu.regs.C = alu_rr(cpu, cpu.regs.C);
-    debug!("RR C");
-}
-pub fn RRd(cpu: &mut Cpu) {
-    cpu.regs.D = alu_rr(cpu, cpu.regs.D);
-    debug!("RR D");
-}
-pub fn RRe(cpu: &mut Cpu) {
-    cpu.regs.E = alu_rr(cpu, cpu.regs.E);
-    debug!("RR E");
-}
-pub fn RRh(cpu: &mut Cpu) {
-    cpu.regs.H = alu_rr(cpu, cpu.regs.H);
-    debug!("RR H");
-}
-pub fn RRl(cpu: &mut Cpu) {
-    cpu.regs.L = alu_rr(cpu, cpu.regs.L);
-    debug!("RR L");
-}
-pub fn RRa(cpu: &mut Cpu) {
-    cpu.regs.A = alu_rr(cpu, cpu.regs.A);
-    debug!("RR A");
-}
 pub fn LDade(cpu: &mut Cpu) {
     let addr = cpu.regs.get_DE();
     cpu.regs.A = cpu.mem.read8(addr);
@@ -1283,7 +1255,7 @@ impl<'a> Cpu<'a>{
             name: "RRA",
             len: 1,
             cycles: 4,
-            execute: RRa,
+            execute: |cpu|{cpu.regs.A = alu_rr(cpu, cpu.regs.A);},
             jump: false,
         };
         cpu.opcodes[0x20] = Opcode {
@@ -2097,42 +2069,42 @@ impl<'a> Cpu<'a>{
             name: "RR B",
             len: 2,
             cycles: 8,
-            execute: RRb,
+            execute: |cpu|{cpu.regs.B = alu_rr(cpu, cpu.regs.B);},
             jump: false,
         };
         cpu.alt_opcodes[0x19] = Opcode {
             name: "RR C",
             len: 2,
             cycles: 8,
-            execute: RRc,
+            execute: |cpu|{cpu.regs.C = alu_rr(cpu, cpu.regs.C);},
             jump: false,
         };
         cpu.alt_opcodes[0x1A] = Opcode {
             name: "RR D",
             len: 2,
             cycles: 8,
-            execute: RRd,
+            execute: |cpu|{cpu.regs.D = alu_rr(cpu, cpu.regs.D);},
             jump: false,
         };
         cpu.alt_opcodes[0x1B] = Opcode {
             name: "RR E",
             len: 2,
             cycles: 8,
-            execute: RRe,
+            execute: |cpu|{cpu.regs.E = alu_rr(cpu, cpu.regs.E);},
             jump: false,
         };
         cpu.alt_opcodes[0x1C] = Opcode {
             name: "RR H",
             len: 2,
             cycles: 8,
-            execute: RRh,
+            execute: |cpu|{cpu.regs.H = alu_rr(cpu, cpu.regs.H);},
             jump: false,
         };
         cpu.alt_opcodes[0x1D] = Opcode {
             name: "RR L",
             len: 2,
             cycles: 8,
-            execute: RRl,
+            execute: |cpu|{cpu.regs.L = alu_rr(cpu, cpu.regs.L);},
             jump: false,
         };
         cpu.alt_opcodes[0x41] = Opcode {
@@ -2377,12 +2349,12 @@ impl<'a> Cpu<'a>{
         } else {
             opcode = self.opcodes[code];
         }
-        (opcode.execute)(self);
-
         if self.regs.PC > 0x00FE {
             println!("{}", opcode.name);
             self.print_status();
         }
+        (opcode.execute)(self);
+
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
             self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
