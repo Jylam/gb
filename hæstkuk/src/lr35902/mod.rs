@@ -1306,6 +1306,13 @@ impl<'a> Cpu<'a>{
             execute: LDIahlp,
             jump: false,
         };
+        cpu.opcodes[0x2B] = Opcode {
+            name: "DEC HL",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{let v = cpu.regs.get_HL().wrapping_sub(1); cpu.regs.set_HL(v);},
+            jump: false,
+        };
         cpu.opcodes[0x2C] = Opcode {
             name: "INC L",
             len: 1,
@@ -2197,6 +2204,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: SRLa,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x46] = Opcode {
+            name: "BIT 0, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 7);},
             jump: false,
         };
         cpu.alt_opcodes[0x87] = Opcode {
