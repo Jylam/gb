@@ -2,6 +2,8 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
+use std::thread::sleep;
+use std::time::Duration;
 use std::process;
 use mem;
 
@@ -141,7 +143,7 @@ pub fn imm8(cpu: &mut Cpu) -> u8 {
 pub fn UNK(cpu: &mut Cpu) {
     println!("*** Unknow instruction at {:04X}", cpu.regs.get_PC());
     cpu.print_status();
-    //sleep(Duration::from_secs(5));
+    sleep(Duration::from_secs(5));
     process::exit(3);
 }
 pub fn ALTUNK(cpu: &mut Cpu) {
@@ -929,8 +931,18 @@ pub fn RETI(cpu: &mut Cpu) {
     EI(cpu);
     debug!("RETI (-> {:04X})", addr)
 }
-pub fn RETNC(cpu: &mut Cpu) {
+pub fn RETC(cpu: &mut Cpu) {
     if cpu.regs.get_FC() == true {
+        let addr = PopStack(cpu);
+        cpu.regs.PC = addr;
+        debug!("RET NC (-> {:04X})", addr)
+    } else {
+        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
+        debug!("RET NC (-> continue)")
+    }
+}
+pub fn RETNC(cpu: &mut Cpu) {
+    if cpu.regs.get_FC() == false {
         let addr = PopStack(cpu);
         cpu.regs.PC = addr;
         debug!("RET NC (-> {:04X})", addr)
@@ -1958,6 +1970,13 @@ impl<'a> Cpu<'a>{
             cycles: 8,
             execute: SUBad8,
             jump: false,
+        };
+        cpu.opcodes[0xD8] = Opcode {
+            name: "RET NC",
+            len: 1,
+            cycles: 20,
+            execute: RETNC,
+            jump: true,
         };
         cpu.opcodes[0xE1] = Opcode {
             name: "POP HL",
