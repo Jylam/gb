@@ -636,6 +636,11 @@ pub fn LDhlc(cpu: &mut Cpu) {
     cpu.regs.set_HL(C as u16);
     debug!("LD (HL), C")
 }
+pub fn LDhle(cpu: &mut Cpu) {
+    let E = cpu.regs.E;
+    cpu.regs.set_HL(E as u16);
+    debug!("LD (HL), E")
+}
 pub fn LDhld(cpu: &mut Cpu) {
     let D = cpu.regs.D;
     cpu.regs.set_HL(D as u16);
@@ -767,6 +772,10 @@ pub fn LDba(cpu: &mut Cpu) {
 pub fn LDbb(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.B;
     debug!("LD B, B")
+}
+pub fn LDel(cpu: &mut Cpu) {
+    cpu.regs.E = cpu.regs.L;
+    debug!("LD E, L")
 }
 pub fn LDea(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.A;
@@ -1530,6 +1539,13 @@ impl<'a> Cpu<'a>{
             execute: LDca,
             jump: false,
         };
+        cpu.opcodes[0x56] = Opcode {
+            name: "LD D, (HL)",
+            len: 1,
+            cycles: 8,
+            execute: LDdhl,
+            jump: false,
+        };
         cpu.opcodes[0x57] = Opcode {
             name: "LD D, A",
             len: 1,
@@ -1537,11 +1553,11 @@ impl<'a> Cpu<'a>{
             execute: LDda,
             jump: false,
         };
-        cpu.opcodes[0x56] = Opcode {
-            name: "LD D, (HL)",
+        cpu.opcodes[0x5D] = Opcode {
+            name: "LD E, L",
             len: 1,
-            cycles: 8,
-            execute: LDdhl,
+            cycles: 4,
+            execute: LDel,
             jump: false,
         };
         cpu.opcodes[0x5E] = Opcode {
@@ -1619,6 +1635,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: LDhld,
+            jump: false,
+        };
+        cpu.opcodes[0x73] = Opcode {
+            name: "LD (HL),E",
+            len: 1,
+            cycles: 8,
+            execute: LDhle,
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
