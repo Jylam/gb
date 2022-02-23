@@ -195,6 +195,14 @@ pub fn alu_add16(cpu: &mut Cpu, b: u16) {
     cpu.regs.set_HL(r);
 }
 
+fn alu_add16imm(cpu: &mut Cpu, a: u16) -> u16 {
+    let b = imm8(cpu) as i8 as i16 as u16;
+    cpu.regs.set_FN(false);
+    cpu.regs.set_FZ(false);
+    cpu.regs.set_FH((a & 0x000F) + (b & 0x000F) > 0x000F);
+    cpu.regs.set_FC((a & 0x00FF) + (b & 0x00FF) > 0x00FF);
+    return a.wrapping_add(b)
+}
 pub fn alu_cp(cpu: &mut Cpu, b: u8) {
     let r = cpu.regs.A;
     alu_sub(cpu, b, false);
@@ -403,35 +411,6 @@ pub fn ADDhlsp(cpu: &mut Cpu) {
     alu_add16(cpu, sp);
     debug!("ADD HL,HL");
 }
-pub fn DECc(cpu: &mut Cpu) {
-    cpu.regs.C = alu_dec(cpu, cpu.regs.C);
-    debug!("DEC C, F is {:b}", cpu.regs.F);
-}
-pub fn DECh(cpu: &mut Cpu) {
-    cpu.regs.H = alu_dec(cpu, cpu.regs.H);
-    debug!("DEC H");
-}
-pub fn DECa(cpu: &mut Cpu) {
-    cpu.regs.A = alu_dec(cpu, cpu.regs.A);
-    debug!("DEC A");
-}
-pub fn DECe(cpu: &mut Cpu) {
-    cpu.regs.E = alu_dec(cpu, cpu.regs.E);
-    debug!("DEC E");
-}
-pub fn DECl(cpu: &mut Cpu) {
-    cpu.regs.L = alu_dec(cpu, cpu.regs.L);
-    debug!("DEC D");
-}
-pub fn DECd(cpu: &mut Cpu) {
-    cpu.regs.D = alu_dec(cpu, cpu.regs.D);
-    debug!("DEC D");
-}
-pub fn DECde(cpu: &mut Cpu) {
-    let de = cpu.regs.get_DE();
-    cpu.regs.set_BC(de.wrapping_sub(1));
-    debug!("DEC DE");
-}
 pub fn INChl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.set_HL(hl.wrapping_add(1));
@@ -489,13 +468,6 @@ pub fn CPhl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     alu_cp(cpu, hl);
     debug!("CP HL");
-}
-pub fn CPL(cpu: &mut Cpu) {
-    let A = cpu.regs.A;
-    cpu.regs.A = !A;
-    cpu.regs.set_FN(true);
-    cpu.regs.set_FH(true);
-    debug!("CPL")
 }
 pub fn CPd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
@@ -1223,7 +1195,9 @@ impl<'a> Cpu<'a>{
             name: "DEC DE",
             len: 1,
             cycles: 4,
-            execute: DECde,
+            execute: |cpu| {
+    let de = cpu.regs.get_DE();
+    cpu.regs.set_BC(de.wrapping_sub(1)) },
             jump: false,
         };
         cpu.opcodes[0x1C] = Opcode {
@@ -1361,7 +1335,12 @@ impl<'a> Cpu<'a>{
             name: "CPL",
             len: 1,
             cycles: 4,
-            execute: CPL,
+            execute: |cpu| {
+                let A = cpu.regs.A;
+                cpu.regs.A = !A;
+                cpu.regs.set_FN(true);
+                cpu.regs.set_FH(true);
+            },
             jump: false,
         };
         cpu.opcodes[0x30] = Opcode {
@@ -2019,6 +1998,14 @@ impl<'a> Cpu<'a>{
             execute: ORd8,
             jump: false,
         };
+        cpu.opcodes[0xF8] = Opcode {
+            name: "LD HL,SP+r8",
+            len: 2,
+            cycles: 12,
+            execute: |cpu|{let r = alu_add16imm(cpu, cpu.regs.get_SP()); cpu.regs.set_HL(r);},
+            jump: false,
+        };
+
         cpu.opcodes[0xFA] = Opcode {
             name: "LD A, (a16)",
             len: 3,
@@ -2133,6 +2120,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: BIT6a,
+            jump: false,
+        };
+        cpu.alt_opcodes[0x79] = Opcode {
+            name: "BIT 7,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 7);},
             jump: false,
         };
         cpu.alt_opcodes[0x7C] = Opcode {
