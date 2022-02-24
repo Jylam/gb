@@ -2323,6 +2323,9 @@ impl<'a> Cpu<'a>{
         if code_str.contains("r8") {
             code_str = code_str.replace("r8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
         }
+        if code_str.contains("d16") {
+            code_str = code_str.replace("d16", &String::from(format!("0x{:04X}",imm16(self) as i8)));
+        }
         if code_str.contains("(HL)") {
             let hl = self.mem.read8(self.regs.get_HL());
             code_str = code_str.replace("(HL)", &String::from(format!("0x{:02X}", hl as i8)));
