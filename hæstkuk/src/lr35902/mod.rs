@@ -2318,6 +2318,23 @@ impl<'a> Cpu<'a>{
         self.mem.write8(addr, v)
     }
 
+    pub fn get_opcode_args(&mut self, codestr: &str) -> String {
+        let mut code_str = String::from(codestr);
+        if code_str.contains("r8") {
+            code_str = code_str.replace("r8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
+        }
+        if code_str.contains("(HL)") {
+            let hl = self.mem.read8(self.regs.get_HL());
+            code_str = code_str.replace("(HL)", &String::from(format!("0x{:02X}", hl as i8)));
+        }
+        if code_str.contains("(HL-)") {
+            let hl = self.mem.read8(self.regs.get_HL());
+            code_str = code_str.replace("(HL-)", &String::from(format!("0x{:02X}", hl as i8)));
+        }
+
+        code_str
+    }
+
     pub fn print_status(&mut self) {
         let code = self.mem.read8(self.regs.PC) as usize;
         let alt_code = self.mem.read8(self.regs.PC+1) as usize;
@@ -2348,8 +2365,8 @@ impl<'a> Cpu<'a>{
                 format!("{:02X}", code)
             };
             let foo = (self.regs.get_SP(), self.regs.get_FZ(), self.regs.get_FN(),self.regs.get_FH(),self.regs.get_FC());
-
-        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}\tSP: {:04X} Z:{} N:{} H:{} C:{}", self.regs.PC, opcode.name, codestr,
+            let disas = self.get_opcode_args(opcode.name);
+        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}\tSP: {:04X} Z:{} N:{} H:{} C:{}", self.regs.PC, disas, codestr,
                  self.regs.A,self.regs.B,self.regs.C,self.regs.D,
                  self.regs.E,self.regs.F,self.regs.H,self.regs.L,
                  foo.0, foo.1, foo.2, foo.3, foo.4
@@ -2383,9 +2400,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FE {
-//            println!("{:04X}: {}\t{:02X}", self.regs.PC, opcode.name, code);
             self.print_status_small();
-
         }
         (opcode.execute)(self);
 

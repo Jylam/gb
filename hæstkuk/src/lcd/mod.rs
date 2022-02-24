@@ -15,7 +15,7 @@ impl<'a> LCD<'a>{
 		LCD{
 			regs: vec![0x00; 0x15],
 			phantom: PhantomData,
-            debug: true
+            debug: false
 		}
 	}
 	pub fn write8(&mut self, addr: u16, v: u8)  {
@@ -35,10 +35,10 @@ impl<'a> LCD<'a>{
 	}
 
 	pub fn update(&mut self) {
-        self.debug = false;
+        //self.debug = false;
         let ly = self.read8(0xFF44) as u8;
         self.write8(0xFF44, ly.wrapping_add(1));
-        self.debug = true;
+        //self.debug = true;
     }
 	pub fn operation(&self) -> bool {
 		!((self.regs[0x00]&(1<<7))==0)
