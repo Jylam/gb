@@ -67,7 +67,7 @@ fn main() {
         }
 
         cpu.step();
-        cpu.mem.lcd_update();
+        cpu.mem.lcd.update();
 
 
         if render.get_events() {

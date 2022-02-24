@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 pub struct LCD<'a> {
 	regs: Vec<u8>,
 	phantom: PhantomData<&'a u8>,
+    debug: bool
 }
 
 
@@ -14,22 +15,31 @@ impl<'a> LCD<'a>{
 		LCD{
 			regs: vec![0x00; 0x15],
 			phantom: PhantomData,
+            debug: true
 		}
 	}
 	pub fn write8(&mut self, addr: u16, v: u8)  {
+        let addr = addr-0xFF40;
 		debug!("LCD Write8 {:02X} at {:04X}", v, addr);
 		match addr {
-			0..=15 => {self.regs[(addr) as usize] = v;}
+			0..=15 => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
 			_ => {error!("LCD Write8 range error")}
 		}
 	}
 
 	pub fn read8(&self, addr: u16) -> u8 {
+        let addr = addr-0xFF40;
 		match addr {
-			_ => {debug!("LCD read8 at {:04X}", addr); self.regs[addr as usize]}
+			_ => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
 		}
 	}
 
+	pub fn update(&mut self) {
+        self.debug = false;
+        let ly = self.read8(0xFF44) as u8;
+        self.write8(0xFF44, ly.wrapping_add(1));
+        self.debug = true;
+    }
 	pub fn operation(&self) -> bool {
 		!((self.regs[0x00]&(1<<7))==0)
 	}
