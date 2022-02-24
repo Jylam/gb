@@ -1365,7 +1365,7 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x32] = Opcode {
-            name: "LDD (HL-), a",
+            name: "LDD (HL-), A",
             len: 1,
             cycles: 8,
             execute: LDDhmla,
@@ -2351,7 +2351,7 @@ impl<'a> Cpu<'a>{
                 format!("{:02X}", code)
             };
 
-        println!("{:04X}: {}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}", self.regs.PC, opcode.name, codestr,
+        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}", self.regs.PC, opcode.name, codestr,
                  self.regs.A,self.regs.B,self.regs.C,self.regs.D,
                  self.regs.E,self.regs.F,self.regs.H,self.regs.L,
                  );
