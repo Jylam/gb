@@ -2369,7 +2369,7 @@ impl<'a> Cpu<'a>{
             };
             let foo = (self.regs.get_SP(), self.regs.get_FZ(), self.regs.get_FN(),self.regs.get_FH(),self.regs.get_FC());
             let disas = self.get_opcode_args(opcode.name);
-        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}\tSP: {:04X} Z:{} N:{} H:{} C:{}", self.regs.PC, disas, codestr,
+        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}\tSP: {:04X} Z:{: <5} N:{: <5} H:{: <5} C:{: <5}", self.regs.PC, disas, codestr,
                  self.regs.A,self.regs.B,self.regs.C,self.regs.D,
                  self.regs.E,self.regs.F,self.regs.H,self.regs.L,
                  foo.0, foo.1, foo.2, foo.3, foo.4
