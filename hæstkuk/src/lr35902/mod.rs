@@ -2338,6 +2338,25 @@ impl<'a> Cpu<'a>{
         println!("----------------------------------------");
     }
 
+    pub fn print_status_small(&mut self) {
+        let code = self.mem.read8(self.regs.PC) as usize;
+        let alt_code = self.mem.read8(self.regs.PC+1) as usize;
+        let opcode;
+        let codestr =
+            if code == 0xCB {
+                opcode = self.alt_opcodes[alt_code];
+                format!("{:02X} {:02X}", code, alt_code)
+            } else {
+                opcode = self.opcodes[code];
+                format!("{:02X}", code)
+            };
+
+        println!("{:04X}: {}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}", self.regs.PC, opcode.name, codestr,
+                 self.regs.A,self.regs.B,self.regs.C,self.regs.D,
+                 self.regs.E,self.regs.F,self.regs.H,self.regs.L,
+                 );
+    }
+
     pub fn interrupts_enabled(&mut self) -> bool {
         self.regs.I
     }
@@ -2365,8 +2384,9 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FE {
-            println!("{}", opcode.name);
-            self.print_status();
+//            println!("{:04X}: {}\t{:02X}", self.regs.PC, opcode.name, code);
+            self.print_status_small();
+
         }
         (opcode.execute)(self);
 
