@@ -285,9 +285,6 @@ fn alu_bit(cpu: &mut Cpu, a: u8, b: u8) {
     cpu.regs.set_FZ(r);
 }
 
-pub fn NOP(_cpu: &mut Cpu) {
-    debug!("NOP")
-}
 pub fn XORd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     alu_xor(cpu, imm);
@@ -988,7 +985,7 @@ impl<'a> Cpu<'a>{
             name: "NOP",
             len: 1,
             cycles: 4,
-            execute: |cpu|{},
+            execute: |_cpu|{},
             jump: false,
         };
         cpu.opcodes[0x01] = Opcode {
@@ -1030,7 +1027,7 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x06] = Opcode {
-            name: "LD B,d8",
+            name: "LD B, d8",
             len: 2,
             cycles: 8,
             execute: |cpu|{
@@ -2350,10 +2347,12 @@ impl<'a> Cpu<'a>{
                 opcode = self.opcodes[code];
                 format!("{:02X}", code)
             };
+            let foo = (self.regs.get_SP(), self.regs.get_FZ(), self.regs.get_FN(),self.regs.get_FH(),self.regs.get_FC());
 
-        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}", self.regs.PC, opcode.name, codestr,
+        println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}\tSP: {:04X} Z:{} N:{} H:{} C:{}", self.regs.PC, opcode.name, codestr,
                  self.regs.A,self.regs.B,self.regs.C,self.regs.D,
                  self.regs.E,self.regs.F,self.regs.H,self.regs.L,
+                 foo.0, foo.1, foo.2, foo.3, foo.4
                  );
     }
 
