@@ -285,6 +285,11 @@ fn alu_bit(cpu: &mut Cpu, a: u8, b: u8) {
     cpu.regs.set_FZ(r);
 }
 
+fn cpu_jr(cpu: &mut Cpu) {
+    let n = imm8(cpu) as i8;
+    cpu.regs.set_PC((((cpu.regs.get_PC()+2) as u32 as i32) + (n as i32)) as u16);
+}
+
 pub fn XORd8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     alu_xor(cpu, imm);
@@ -676,10 +681,7 @@ pub fn LDdhl(cpu: &mut Cpu) {
     debug!("LD D, {:04X}", m);
 }
 pub fn JRr8(cpu: &mut Cpu) {
-    let offset = cpu.regs.PC + 2;
-    let v      = imm8(cpu) as i8;
-    cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 };
-    debug!("JR {:04X} (PC (after +{:}))", cpu.regs.PC, v)
+    cpu_jr(cpu);
 }
 pub fn POPhl(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
@@ -735,44 +737,16 @@ pub fn RST38h(cpu: &mut Cpu) {
     debug!("RST 38h")
 }
 pub fn JRncr8(cpu: &mut Cpu) {
-    let offset = cpu.regs.PC + 2;
-    let v:i8      = imm8(cpu) as i8;
-    if cpu.regs.get_FC() == false {
-        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
-    } else {
-        cpu.regs.PC = offset;
-    }
-    debug!("JRNC {:02X}", v)
+    if !cpu.regs.get_FC() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
 pub fn JRnzr8(cpu: &mut Cpu) {
-    let offset = cpu.regs.PC + 2;
-    let v:i8      = imm8(cpu) as i8;
-    if cpu.regs.get_FZ() == false {
-        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
-    } else {
-        cpu.regs.PC = offset;
-    }
-    debug!("JRNZ {:02X}", v)
+    if !cpu.regs.get_FZ() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
 pub fn JRcr8(cpu: &mut Cpu) {
-    let offset = cpu.regs.PC + 2;
-    let v:i8      = imm8(cpu) as i8;
-    if cpu.regs.get_FC() == true {
-        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
-    } else {
-        cpu.regs.PC = offset;
-    }
-    debug!("JR C {:02X}", v)
+    if cpu.regs.get_FC() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
 pub fn JRzr8(cpu: &mut Cpu) {
-    let offset = cpu.regs.PC + 2;
-    let v:i8      = imm8(cpu) as i8;
-    if cpu.regs.get_FZ() == true {
-        cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 }
-    } else {
-        cpu.regs.PC = offset;
-    }
-    debug!("JRZ {:02X}", v)
+    if cpu.regs.get_FZ() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
 pub fn CALLa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
@@ -1370,7 +1344,7 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 12,
             execute: JRcr8,
-            jump: false,
+            jump: true,
         };
         cpu.opcodes[0x39] = Opcode {
             name: "ADD HL, SP",
@@ -1767,7 +1741,7 @@ impl<'a> Cpu<'a>{
                     cpu.regs.set_PC(pc+2);
                 }
             },
-            jump: false,
+            jump: true,
         };
         cpu.opcodes[0xC0] = Opcode {
             name: "RET NZ",
@@ -2318,7 +2292,7 @@ impl<'a> Cpu<'a>{
             code_str = code_str.replace("d8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
         }
         if code_str.contains("d16") {
-            code_str = code_str.replace("d16", &String::from(format!("0x{:04X}",imm16(self) as i8)));
+            code_str = code_str.replace("d16", &String::from(format!("0x{:04X}",imm16(self) as i16)));
         }
         if code_str.contains("(HL)") {
             let hl = self.mem.read8(self.regs.get_HL());
@@ -2396,8 +2370,8 @@ impl<'a> Cpu<'a>{
         } else {
             opcode = self.opcodes[code];
         }
-        if self.regs.PC > 0x00FE {
-            self.print_status_small();
+        if self.regs.PC > 0x0000 {
+//            self.print_status_small();
         }
         (opcode.execute)(self);
 
