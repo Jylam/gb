@@ -34,41 +34,41 @@ pub struct Registers {
 #[allow(dead_code)]
 impl Registers {
     fn get_AF(self) -> u16 {
-       ((self.A as u16)<<8) | ((self.F as u16)&0xFF)
+        ((self.A as u16)<<8) | ((self.F as u16)&0xFF)
     }
     fn set_AF(&mut self, v: u16) {
         self.A = ((v&0xFF00)>>8) as u8;
         self.F = (v&0xFF) as u8;
     }
     fn get_BC(self) -> u16 {
-       ((self.B as u16)<<8) | ((self.C as u16)&0xFF)
+        ((self.B as u16)<<8) | ((self.C as u16)&0xFF)
     }
     fn set_BC(&mut self, v: u16) {
         self.B = (((v&0xFF00)as u16)>>8) as u8;
         self.C = (v&0xFF) as u8;
     }
     fn get_DE(self) -> u16 {
-       ((self.D as u16)<<8) | ((self.E as u16)&0xFF)
+        ((self.D as u16)<<8) | ((self.E as u16)&0xFF)
     }
     fn set_DE(&mut self, v: u16) {
         self.D = ((v&0xFF00)>>8) as u8;
         self.E = (v&0xFF) as u8;
     }
     fn get_HL(self) -> u16 {
-       ((self.H as u16)<<8) | ((self.L as u16)&0xFF)
+        ((self.H as u16)<<8) | ((self.L as u16)&0xFF)
     }
     fn set_HL(&mut self, v: u16) {
         self.H = (((v&0xFF00)as u16)>>8) as u8;
         self.L = (v&0xFF) as u8;
     }
     fn get_SP(self) -> u16 {
-       self.SP
+        self.SP
     }
     fn set_SP(&mut self, v: u16) {
         self.SP = v;
     }
     fn get_PC(self) -> u16 {
-       self.PC
+        self.PC
     }
     fn set_PC(&mut self, v: u16) {
         self.PC = v;
@@ -636,11 +636,6 @@ pub fn LDha8a(cpu: &mut Cpu) {
     cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
     debug!("LDH (FF{:02X}), A", imm)
 }
-pub fn LDhaa8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    cpu.regs.A = cpu.mem.read8(0xFF00+imm as u16);
-    debug!("LDH A, ({:02X})", imm)
-}
 pub fn LDa16a(cpu: &mut Cpu) {
     let imm = addr16(cpu);
     cpu.mem.write8(imm, cpu.regs.A);
@@ -680,28 +675,11 @@ pub fn LDdhl(cpu: &mut Cpu) {
     cpu.regs.D = m;
     debug!("LD D, {:04X}", m);
 }
-pub fn JPa16(cpu: &mut Cpu) {
-    let addr = addr16(cpu);
-    cpu.regs.PC = addr;
-    debug!("JP {:04X}", addr)
-}
-pub fn JPZa16(cpu: &mut Cpu) {
-    let addr = addr16(cpu);
-    if cpu.regs.get_FZ() == true {
-        cpu.regs.PC = addr;
-    }
-    debug!("JP {:04X}", addr)
-}
 pub fn JRr8(cpu: &mut Cpu) {
     let offset = cpu.regs.PC + 2;
     let v      = imm8(cpu) as i8;
     cpu.regs.PC = if v < 0 { offset - (-v) as u16 } else { offset + v as u16 };
     debug!("JR {:04X} (PC (after +{:}))", cpu.regs.PC, v)
-}
-pub fn JPhl(cpu: &mut Cpu) {
-    let addr = cpu.regs.get_HL();
-    cpu.regs.PC = addr;
-    debug!("JP ({:04X})", addr)
 }
 pub fn POPhl(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
@@ -1031,8 +1009,8 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{
-    let imm = imm8(cpu);
-    cpu.regs.B = imm;
+                let imm = imm8(cpu);
+                cpu.regs.B = imm;
             },
             jump: false,
         };
@@ -1055,8 +1033,8 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: |cpu|{
-    let bc = cpu.regs.get_BC();
-    alu_add16(cpu, bc);
+                let bc = cpu.regs.get_BC();
+                alu_add16(cpu, bc);
             },
             jump: false,
         };
@@ -1065,8 +1043,8 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{
-    let bc = cpu.regs.get_BC();
-    cpu.regs.set_BC(bc.wrapping_sub(1));
+                let bc = cpu.regs.get_BC();
+                cpu.regs.set_BC(bc.wrapping_sub(1));
             },
             jump: false,
         };
@@ -1093,8 +1071,8 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{
-    let imm = imm8(cpu);
-    cpu.regs.C = imm;
+                let imm = imm8(cpu);
+                cpu.regs.C = imm;
 
             },
             jump: false,
@@ -1104,8 +1082,8 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{
-    cpu.regs.A = alu_rrc(cpu, cpu.regs.A);
-    cpu.regs.set_FZ(false);
+                cpu.regs.A = alu_rrc(cpu, cpu.regs.A);
+                cpu.regs.set_FZ(false);
             },
             jump: false,
         };
@@ -1114,8 +1092,8 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 12,
             execute: |cpu| {
-    let imm = imm16(cpu);
-    cpu.regs.set_DE(imm);
+                let imm = imm16(cpu);
+                cpu.regs.set_DE(imm);
             },
             jump: false,
         };
@@ -1124,7 +1102,7 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: |cpu|{
-    cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
+                cpu.mem.write8(cpu.regs.get_DE(), cpu.regs.A);
             },
             jump: false,
         };
@@ -1193,9 +1171,9 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu| {
-    let de = cpu.regs.get_DE();
-    cpu.regs.set_BC(de.wrapping_sub(1)) },
-            jump: false,
+                let de = cpu.regs.get_DE();
+                cpu.regs.set_BC(de.wrapping_sub(1)) },
+                jump: false,
         };
         cpu.opcodes[0x1C] = Opcode {
             name: "INC E",
@@ -1314,18 +1292,14 @@ impl<'a> Cpu<'a>{
             name: "INC L",
             len: 1,
             cycles: 4,
-            execute: |cpu| {
-                cpu.regs.L = alu_inc(cpu, cpu.regs.L);
-            },
+            execute: |cpu| {cpu.regs.L = alu_inc(cpu, cpu.regs.L); },
             jump: false,
         };
         cpu.opcodes[0x2D] = Opcode {
             name: "DEC L",
             len: 1,
             cycles: 4,
-            execute: |cpu| {
-                cpu.regs.L = alu_dec(cpu, cpu.regs.L);
-            },
+            execute: |cpu| {cpu.regs.L = alu_dec(cpu, cpu.regs.L);},
             jump: false,
         };
         cpu.opcodes[0x2E] = Opcode {
@@ -1339,12 +1313,7 @@ impl<'a> Cpu<'a>{
             name: "CPL",
             len: 1,
             cycles: 4,
-            execute: |cpu| {
-                let A = cpu.regs.A;
-                cpu.regs.A = !A;
-                cpu.regs.set_FN(true);
-                cpu.regs.set_FH(true);
-            },
+            execute: |cpu| {let A = cpu.regs.A; cpu.regs.A = !A; cpu.regs.set_FN(true); cpu.regs.set_FH(true); },
             jump: false,
         };
         cpu.opcodes[0x30] = Opcode {
@@ -1761,7 +1730,7 @@ impl<'a> Cpu<'a>{
             name: "CP B",
             len: 1,
             cycles: 4,
-        execute: |cpu| {alu_cp(cpu, cpu.regs.B);},
+            execute: |cpu| {alu_cp(cpu, cpu.regs.B);},
             jump: false,
         };
         cpu.opcodes[0xB9] = Opcode {
@@ -1782,63 +1751,22 @@ impl<'a> Cpu<'a>{
             name: "CP A",
             len: 1,
             cycles: 4,
-        execute: |cpu| {alu_cp(cpu, cpu.regs.A);},
+            execute: |cpu| {alu_cp(cpu, cpu.regs.A);},
             jump: false,
         };
         cpu.opcodes[0xCA] = Opcode {
             name: "JP Z a16",
             len: 3,
             cycles: 16,
-            execute: JPZa16,
-            jump: false,
-        };
-        cpu.opcodes[0xD9] = Opcode {
-            name: "RETI",
-            len: 1,
-            cycles: 20,
-            execute: RETI,
-            jump: true,
-        };
-        cpu.opcodes[0xD5] = Opcode {
-            name: "PUSH DE",
-            len: 1,
-            cycles: 16,
-            execute: PUSHde,
-            jump: false,
-        };
-        cpu.opcodes[0xE0] = Opcode {
-            name: "LDH (a8),A",
-            len: 2,
-            cycles: 12,
-            execute: LDha8a,
-            jump: false,
-        };
-        cpu.opcodes[0xE5] = Opcode {
-            name: "PUSH HL",
-            len: 1,
-            cycles: 16,
-            execute: PUSHhl,
-            jump: false,
-        };
-        cpu.opcodes[0xEA] = Opcode {
-            name: "LD (a16),A",
-            len: 3,
-            cycles: 16,
-            execute: LDa16a,
-            jump: false,
-        };
-        cpu.opcodes[0xE9] = Opcode {
-            name: "JP (HL)",
-            len: 1,
-            cycles: 4,
-            execute: JPhl,
-            jump: true,
-        };
-        cpu.opcodes[0xF3] = Opcode {
-            name: "DI",
-            len: 1,
-            cycles: 4,
-            execute: DI,
+            execute: |cpu|{
+                let addr = addr16(cpu);
+                if cpu.regs.get_FZ() == true {
+                    cpu.regs.PC = addr;
+                } else {
+                    let pc = cpu.regs.get_PC();
+                    cpu.regs.set_PC(pc+2);
+                }
+            },
             jump: false,
         };
         cpu.opcodes[0xC0] = Opcode {
@@ -1855,11 +1783,25 @@ impl<'a> Cpu<'a>{
             execute: POPbc,
             jump: false,
         };
+
+        cpu.opcodes[0xC2] = Opcode {
+            name: "JPNZ a16",
+            len: 3,
+            cycles: 16,
+            execute: |cpu|{
+                let addr = addr16(cpu);
+                let pc = cpu.regs.get_PC();
+                if !cpu.regs.get_FZ() { cpu.regs.set_PC(addr); } else {cpu.regs.set_PC(pc+2);}
+            },
+            jump: true,
+        };
+
+
         cpu.opcodes[0xC3] = Opcode {
             name: "JP a16",
             len: 3,
             cycles: 16,
-            execute: JPa16,
+            execute: |cpu| {let addr = addr16(cpu); cpu.regs.PC = addr; },
             jump: true,
         };
         cpu.opcodes[0xC4] = Opcode {
@@ -1925,6 +1867,20 @@ impl<'a> Cpu<'a>{
             execute: POPde,
             jump: false,
         };
+        cpu.opcodes[0xD5] = Opcode {
+            name: "PUSH DE",
+            len: 1,
+            cycles: 16,
+            execute: PUSHde,
+            jump: false,
+        };
+        cpu.opcodes[0xD9] = Opcode {
+            name: "RETI",
+            len: 1,
+            cycles: 20,
+            execute: RETI,
+            jump: true,
+        };
         cpu.opcodes[0xD6] = Opcode {
             name: "SUB A,d8",
             len: 2,
@@ -1938,6 +1894,13 @@ impl<'a> Cpu<'a>{
             cycles: 20,
             execute: RETNC,
             jump: true,
+        };
+        cpu.opcodes[0xE0] = Opcode {
+            name: "LDH (a8),A",
+            len: 2,
+            cycles: 12,
+            execute: LDha8a,
+            jump: false,
         };
         cpu.opcodes[0xE1] = Opcode {
             name: "POP HL",
@@ -1953,11 +1916,32 @@ impl<'a> Cpu<'a>{
             execute: LDpca,
             jump: false,
         };
+        cpu.opcodes[0xE5] = Opcode {
+            name: "PUSH HL",
+            len: 1,
+            cycles: 16,
+            execute: PUSHhl,
+            jump: false,
+        };
         cpu.opcodes[0xE6] = Opcode {
             name: "AND d8",
             len: 2,
             cycles: 8,
             execute: ANDd8,
+            jump: false,
+        };
+        cpu.opcodes[0xE9] = Opcode {
+            name: "JP (HL)",
+            len: 1,
+            cycles: 4,
+            execute: |cpu| { let addr = cpu.regs.get_HL(); cpu.regs.PC = addr;},
+            jump: true,
+        };
+        cpu.opcodes[0xEA] = Opcode {
+            name: "LD (a16),A",
+            len: 3,
+            cycles: 16,
+            execute: LDa16a,
             jump: false,
         };
         cpu.opcodes[0xEE] = Opcode {
@@ -1978,7 +1962,7 @@ impl<'a> Cpu<'a>{
             name: "LDH A,(a8)",
             len: 2,
             cycles: 12,
-            execute: LDhaa8,
+            execute: |cpu| {let imm = imm8(cpu); cpu.regs.A = cpu.mem.read8(0xFF00+imm as u16); },
             jump: false,
         };
         cpu.opcodes[0xF1] = Opcode {
@@ -1986,6 +1970,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 12,
             execute: POPaf,
+            jump: false,
+        };
+        cpu.opcodes[0xF3] = Opcode {
+            name: "DI",
+            len: 1,
+            cycles: 4,
+            execute: DI,
             jump: false,
         };
         cpu.opcodes[0xF5] = Opcode {
@@ -2323,6 +2314,9 @@ impl<'a> Cpu<'a>{
         if code_str.contains("r8") {
             code_str = code_str.replace("r8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
         }
+        if code_str.contains("d8") {
+            code_str = code_str.replace("d8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
+        }
         if code_str.contains("d16") {
             code_str = code_str.replace("d16", &String::from(format!("0x{:04X}",imm16(self) as i8)));
         }
@@ -2331,8 +2325,8 @@ impl<'a> Cpu<'a>{
             code_str = code_str.replace("(HL)", &String::from(format!("0x{:02X}", hl as i8)));
         }
         if code_str.contains("(HL-)") {
-            let hl = self.mem.read8(self.regs.get_HL());
-            code_str = code_str.replace("(HL-)", &String::from(format!("0x{:02X}", hl as i8)));
+            let hl = self.regs.get_HL();
+            code_str = code_str.replace("(HL-)", &String::from(format!("(0x{:04X})", hl as u16)));
         }
 
         code_str
@@ -2367,13 +2361,13 @@ impl<'a> Cpu<'a>{
                 opcode = self.opcodes[code];
                 format!("{:02X}", code)
             };
-            let foo = (self.regs.get_SP(), self.regs.get_FZ(), self.regs.get_FN(),self.regs.get_FH(),self.regs.get_FC());
-            let disas = self.get_opcode_args(opcode.name);
+        let foo = (self.regs.get_SP(), self.regs.get_FZ(), self.regs.get_FN(),self.regs.get_FH(),self.regs.get_FC());
+        let disas = self.get_opcode_args(opcode.name);
         println!("{:04X}: {: <16}\t{}\tA {:02X} B {:02X} C {:02X} D {:02X} E {:02X} F {:02X} H {:02X} L {:02X}\tSP: {:04X} Z:{: <5} N:{: <5} H:{: <5} C:{: <5}", self.regs.PC, disas, codestr,
                  self.regs.A,self.regs.B,self.regs.C,self.regs.D,
                  self.regs.E,self.regs.F,self.regs.H,self.regs.L,
                  foo.0, foo.1, foo.2, foo.3, foo.4
-                 );
+                );
     }
 
     pub fn interrupts_enabled(&mut self) -> bool {
