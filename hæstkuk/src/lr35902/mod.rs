@@ -1354,6 +1354,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.B = cpu.regs.B;},
             jump: false,
         };
+        cpu.opcodes[0x44] = Opcode {
+            name: "LD B, H",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.B = cpu.regs.H;},
+            jump: false,
+        };
         cpu.opcodes[0x46] = Opcode {
             name: "LD B, (HL)",
             len: 1,
@@ -1380,6 +1387,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{cpu.regs.C = cpu.regs.A;},
+            jump: false,
+        };
+        cpu.opcodes[0x54] = Opcode {
+            name: "LD D, H",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.D = cpu.regs.H;},
             jump: false,
         };
         cpu.opcodes[0x56] = Opcode {
@@ -1613,6 +1627,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{alu_sub(cpu, cpu.regs.A, false);},
             jump: false,
         };
+        cpu.opcodes[0x98] = Opcode {
+            name: "SBC A, B",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{alu_sub(cpu, cpu.regs.B, true);},
+            jump: false,
+        };
         cpu.opcodes[0x9B] = Opcode {
             name: "SBC A, E",
             len: 1,
@@ -1780,8 +1801,6 @@ impl<'a> Cpu<'a>{
             },
             jump: true,
         };
-
-
         cpu.opcodes[0xC3] = Opcode {
             name: "JP a16",
             len: 3,
@@ -2416,8 +2435,8 @@ impl<'a> Cpu<'a>{
         } else {
             opcode = self.opcodes[code];
         }
-        if self.regs.PC > 0x0000 {
-//            self.print_status_small();
+        if self.regs.PC > 0x00FF {
+            self.print_status_small();
         }
         (opcode.execute)(self);
 
