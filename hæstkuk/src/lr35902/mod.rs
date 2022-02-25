@@ -203,6 +203,24 @@ fn alu_add16imm(cpu: &mut Cpu, a: u16) -> u16 {
     cpu.regs.set_FC((a & 0x00FF) + (b & 0x00FF) > 0x00FF);
     return a.wrapping_add(b)
 }
+
+fn alu_daa(cpu: &mut Cpu) {
+    let mut a = cpu.regs.A;
+    let mut adjust = if cpu.regs.get_FC() { 0x60 } else { 0x00 };
+    if cpu.regs.get_FH() { adjust |= 0x06; };
+    if !cpu.regs.get_FN() {
+        if a & 0x0F > 0x09 { adjust |= 0x06; };
+        if a > 0x99 { adjust |= 0x60; };
+        a = a.wrapping_add(adjust);
+    } else {
+        a = a.wrapping_sub(adjust);
+    }
+
+    cpu.regs.set_FC(adjust >= 0x60);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FZ(a == 0);
+    cpu.regs.A = a;
+}
 pub fn alu_cp(cpu: &mut Cpu, b: u8) {
     let r = cpu.regs.A;
     alu_sub(cpu, b, false);
@@ -334,14 +352,6 @@ pub fn ORd8(cpu: &mut Cpu) {
     alu_or(cpu, v);
     debug!("OR imm8");
 }
-pub fn ANDc(cpu: &mut Cpu) {
-    alu_and(cpu, cpu.regs.C);
-    debug!("AND C");
-}
-pub fn ANDa(cpu: &mut Cpu) {
-    alu_and(cpu, cpu.regs.A);
-    debug!("AND A");
-}
 pub fn ANDhl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     alu_and(cpu, hl);
@@ -356,10 +366,6 @@ pub fn SUBad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     alu_sub(cpu, imm, false);
     debug!("SUB A, {:02X}", imm);
-}
-pub fn SUBb(cpu: &mut Cpu) {
-    alu_sub(cpu, cpu.regs.B, false);
-    debug!("SUB B");
 }
 
 pub fn ADCac(cpu: &mut Cpu) {
@@ -560,46 +566,6 @@ pub fn LDhld(cpu: &mut Cpu) {
     cpu.regs.set_HL(D as u16);
     debug!("LD (HL), D")
 }
-pub fn LDda(cpu: &mut Cpu) {
-    cpu.regs.D = cpu.regs.A;
-    debug!("LD D, A")
-}
-pub fn LDae(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.E;
-    debug!("LD A, E")
-}
-pub fn LDha(cpu: &mut Cpu) {
-    cpu.regs.H = cpu.regs.A;
-    debug!("LD H, A")
-}
-pub fn LDla(cpu: &mut Cpu) {
-    cpu.regs.L = cpu.regs.A;
-    debug!("LD L, A")
-}
-pub fn LDad(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.D;
-    debug!("LD A, D")
-}
-pub fn LDab(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.B;
-    debug!("LD A, B")
-}
-pub fn LDac(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.C;
-    debug!("LD A, C")
-}
-pub fn LDhb(cpu: &mut Cpu) {
-    cpu.regs.H = cpu.regs.B;
-    debug!("LD H, B")
-}
-pub fn LDlh(cpu: &mut Cpu) {
-    cpu.regs.L = cpu.regs.H;
-    debug!("LD L, H")
-}
-pub fn LDca(cpu: &mut Cpu) {
-    cpu.regs.C = cpu.regs.A;
-    debug!("LD C, A")
-}
 pub fn LDpca(cpu: &mut Cpu) {
     let C = cpu.regs.C as u16;
     cpu.mem.write8(0xFF00 + C, cpu.regs.A);
@@ -657,10 +623,6 @@ pub fn LDba(cpu: &mut Cpu) {
 pub fn LDbb(cpu: &mut Cpu) {
     cpu.regs.B = cpu.regs.B;
     debug!("LD B, B")
-}
-pub fn LDel(cpu: &mut Cpu) {
-    cpu.regs.E = cpu.regs.L;
-    debug!("LD E, L")
 }
 pub fn LDea(cpu: &mut Cpu) {
     cpu.regs.E = cpu.regs.A;
@@ -1234,6 +1196,13 @@ impl<'a> Cpu<'a>{
             execute: LDhd8,
             jump: false,
         };
+        cpu.opcodes[0x27] = Opcode {
+            name: "DAA",
+            len: 1,
+            cycles: 4,
+            execute: |cpu| {alu_daa(cpu);},
+            jump: false,
+        };
         cpu.opcodes[0x28] = Opcode {
             name: "JR Z, r8",
             len: 2,
@@ -1382,7 +1351,7 @@ impl<'a> Cpu<'a>{
             name: "LD B, B",
             len: 1,
             cycles: 4,
-            execute: LDbb,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B;},
             jump: false,
         };
         cpu.opcodes[0x46] = Opcode {
@@ -1396,7 +1365,7 @@ impl<'a> Cpu<'a>{
             name: "LD B, A",
             len: 1,
             cycles: 4,
-            execute: LDba,
+            execute: |cpu|{cpu.regs.B = cpu.regs.A;},
             jump: false,
         };
         cpu.opcodes[0x4E] = Opcode {
@@ -1410,7 +1379,7 @@ impl<'a> Cpu<'a>{
             name: "LD C, A",
             len: 1,
             cycles: 4,
-            execute: LDca,
+            execute: |cpu|{cpu.regs.C = cpu.regs.A;},
             jump: false,
         };
         cpu.opcodes[0x56] = Opcode {
@@ -1424,14 +1393,21 @@ impl<'a> Cpu<'a>{
             name: "LD D, A",
             len: 1,
             cycles: 4,
-            execute: LDda,
+            execute: |cpu|{cpu.regs.D = cpu.regs.A;},
+            jump: false,
+        };
+        cpu.opcodes[0x59] = Opcode {
+            name: "LD E, C",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.E = cpu.regs.C;},
             jump: false,
         };
         cpu.opcodes[0x5D] = Opcode {
             name: "LD E, L",
             len: 1,
             cycles: 4,
-            execute: LDel,
+            execute: |cpu|{cpu.regs.E = cpu.regs.L;},
             jump: false,
         };
         cpu.opcodes[0x5E] = Opcode {
@@ -1452,7 +1428,7 @@ impl<'a> Cpu<'a>{
             name: "LD H, B",
             len: 1,
             cycles: 4,
-            execute: LDhb,
+            execute: |cpu|{cpu.regs.H = cpu.regs.B;},
             jump: false,
         };
         cpu.opcodes[0x66] = Opcode {
@@ -1466,14 +1442,14 @@ impl<'a> Cpu<'a>{
             name: "LD H, A",
             len: 1,
             cycles: 4,
-            execute: LDha,
+            execute: |cpu|{cpu.regs.H = cpu.regs.A;},
             jump: false,
         };
         cpu.opcodes[0x6C] = Opcode {
             name: "LD L, H",
             len: 1,
             cycles: 4,
-            execute: LDlh,
+            execute: |cpu|{cpu.regs.L = cpu.regs.H;},
             jump: false,
         };
         cpu.opcodes[0x6E] = Opcode {
@@ -1487,7 +1463,7 @@ impl<'a> Cpu<'a>{
             name: "LD L, A",
             len: 1,
             cycles: 4,
-            execute: LDla,
+            execute: |cpu|{cpu.regs.L = cpu.regs.A;},
             jump: false,
         };
         cpu.opcodes[0x70] = Opcode {
@@ -1529,49 +1505,49 @@ impl<'a> Cpu<'a>{
             name: "LD A, B",
             len: 1,
             cycles: 4,
-            execute: LDab,
+            execute: |cpu|{cpu.regs.A = cpu.regs.B;},
             jump: false,
         };
         cpu.opcodes[0x7A] = Opcode {
             name: "LD A, D",
             len: 1,
             cycles: 4,
-            execute: LDad,
+            execute: |cpu|{cpu.regs.A = cpu.regs.D;},
             jump: false,
         };
         cpu.opcodes[0x7B] = Opcode {
             name: "LD A, E",
             len: 1,
             cycles: 4,
-            execute: LDae,
+            execute: |cpu|{cpu.regs.A = cpu.regs.E;},
             jump: false,
         };
         cpu.opcodes[0x79] = Opcode {
             name: "LD A, C",
             len: 1,
             cycles: 4,
-            execute: LDac,
+            execute: |cpu|{cpu.regs.A = cpu.regs.C;},
             jump: false,
         };
         cpu.opcodes[0x7C] = Opcode {
             name: "LD A, H",
             len: 1,
             cycles: 4,
-            execute: LDah,
+            execute: |cpu|{cpu.regs.A = cpu.regs.H;},
             jump: false,
         };
         cpu.opcodes[0x7D] = Opcode {
             name: "LD A, L",
             len: 1,
             cycles: 4,
-            execute: LDal,
+            execute: |cpu|{cpu.regs.A = cpu.regs.L;},
             jump: false,
         };
         cpu.opcodes[0x7E] = Opcode {
             name: "LD A, C",
             len: 1,
             cycles: 4,
-            execute: LDac,
+            execute: |cpu|{cpu.regs.A = cpu.regs.C;},
             jump: false,
         };
         cpu.opcodes[0x80] = Opcode {
@@ -1620,14 +1596,49 @@ impl<'a> Cpu<'a>{
             name: "SUB B",
             len: 1,
             cycles: 4,
-            execute: SUBb,
+            execute: |cpu|{alu_sub(cpu, cpu.regs.B, false);},
+            jump: false,
+        };
+        cpu.opcodes[0x92] = Opcode {
+            name: "SUB D",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{alu_sub(cpu, cpu.regs.D, false);},
+            jump: false,
+        };
+        cpu.opcodes[0x97] = Opcode {
+            name: "SUB A",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{alu_sub(cpu, cpu.regs.A, false);},
+            jump: false,
+        };
+        cpu.opcodes[0x9B] = Opcode {
+            name: "SBC A, E",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{let e = cpu.regs.E; alu_sub(cpu, e, true);},
+            jump: false,
+        };
+        cpu.opcodes[0x9C] = Opcode {
+            name: "SBC A, H",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{let h = cpu.regs.H; alu_sub(cpu, h, true);},
             jump: false,
         };
         cpu.opcodes[0xA1] = Opcode {
             name: "AND C",
             len: 1,
             cycles: 4,
-            execute: ANDc,
+            execute: |cpu|{alu_and(cpu, cpu.regs.C);},
+            jump: false,
+        };
+        cpu.opcodes[0xA4] = Opcode {
+            name: "AND H",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{alu_and(cpu, cpu.regs.H);},
             jump: false,
         };
         cpu.opcodes[0xA6] = Opcode {
@@ -1641,7 +1652,7 @@ impl<'a> Cpu<'a>{
             name: "AND A",
             len: 1,
             cycles: 4,
-            execute: ANDa,
+            execute: |cpu|{alu_and(cpu, cpu.regs.A);},
             jump: false,
         };
         cpu.opcodes[0xA9] = Opcode {
@@ -2077,11 +2088,18 @@ impl<'a> Cpu<'a>{
             execute: |cpu| {alu_bit(cpu, cpu.regs.A, 0);},
             jump: false,
         };
+        cpu.alt_opcodes[0x57] = Opcode {
+            name: "BIT 2,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 2);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x6F] = Opcode {
             name: "BIT 5,A",
             len: 2,
             cycles: 8,
-            execute: BIT5a,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 5);},
             jump: false,
         };
         cpu.alt_opcodes[0x77] = Opcode {
@@ -2203,6 +2221,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 1);},
             jump: false,
         };
+        cpu.alt_opcodes[0x96] = Opcode {
+            name: "RES 2, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 2); cpu.mem.write8(a, v);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x97] = Opcode {
             name: "RES 2, A",
             len: 2,
@@ -2224,6 +2249,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 3);},
             jump: false,
         };
+        cpu.alt_opcodes[0xA6] = Opcode {
+            name: "RES 4, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 4); cpu.mem.write8(a, v);},
+            jump: false,
+        };
         cpu.alt_opcodes[0xA7] = Opcode {
             name: "RES 4, A",
             len: 2,
@@ -2234,7 +2266,7 @@ impl<'a> Cpu<'a>{
         cpu.alt_opcodes[0xAE] = Opcode {
             name: "RES 5, (HL)",
             len: 2,
-            cycles: 8,
+            cycles: 16,
             execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 5); cpu.mem.write8(a, v);},
             jump: false,
         };
@@ -2243,6 +2275,20 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xBE] = Opcode {
+            name: "RES 7, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 7); cpu.mem.write8(a, v);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xC7] = Opcode {
+            name: "SET 0, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 0);},
             jump: false,
         };
         cpu.alt_opcodes[0xE6] = Opcode {
