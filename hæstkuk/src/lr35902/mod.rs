@@ -710,13 +710,6 @@ pub fn JRcr8(cpu: &mut Cpu) {
 pub fn JRzr8(cpu: &mut Cpu) {
     if cpu.regs.get_FZ() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
-pub fn CALLa16(cpu: &mut Cpu) {
-    let addr = addr16(cpu);
-    let next = cpu.regs.PC + 3;
-    PushStack(cpu, next);
-    cpu.regs.PC = addr;
-    debug!("CALL {:04X}", addr)
-}
 pub fn CALLNZa16(cpu: &mut Cpu) {
     let addr = addr16(cpu);
     if cpu.regs.get_FZ() == true {
@@ -1843,11 +1836,32 @@ impl<'a> Cpu<'a>{
             execute: RET,
             jump: true,
         };
+        cpu.opcodes[0xCC] = Opcode {
+            name: "CALL Z a16",
+            len: 3,
+            cycles: 24,
+            execute: |cpu|{
+                if cpu.regs.get_FZ() {
+                let addr = addr16(cpu);
+                let next = cpu.regs.PC + 3;
+                PushStack(cpu, next);
+                cpu.regs.PC = addr;
+                } else {
+                cpu.regs.PC = cpu.regs.PC+3;
+                };
+            },
+            jump: true,
+        };
         cpu.opcodes[0xCD] = Opcode {
             name: "CALL a16",
             len: 3,
             cycles: 24,
-            execute: CALLa16,
+            execute: |cpu|{
+                let addr = addr16(cpu);
+                let next = cpu.regs.PC + 3;
+                PushStack(cpu, next);
+                cpu.regs.PC = addr;
+            },
             jump: true,
         };
         cpu.opcodes[0xCE] = Opcode {
