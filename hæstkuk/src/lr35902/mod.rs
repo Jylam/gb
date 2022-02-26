@@ -128,16 +128,13 @@ pub struct Cpu<'a> {
 }
 
 pub fn addr16(cpu: &mut Cpu) -> u16 {
-    let v = cpu.mem.read16(cpu.regs.get_PC()+1);
-    v
+    cpu.mem.read16(cpu.regs.get_PC()+1)
 }
 pub fn imm16(cpu: &mut Cpu) -> u16 {
-    let v = cpu.mem.read16(cpu.regs.get_PC()+1);
-    v
+    cpu.mem.read16(cpu.regs.get_PC()+1)
 }
 pub fn imm8(cpu: &mut Cpu) -> u8 {
-    let v = cpu.mem.read8(cpu.regs.get_PC()+1);
-    v
+    cpu.mem.read8(cpu.regs.get_PC()+1)
 }
 
 pub fn UNK(cpu: &mut Cpu) {
@@ -405,7 +402,7 @@ pub fn ADDhlhl(cpu: &mut Cpu) {
 pub fn ADDhlsp(cpu: &mut Cpu) {
     let sp = cpu.regs.get_SP();
     alu_add16(cpu, sp);
-    debug!("ADD HL,HL");
+    debug!("ADD HL,SP");
 }
 pub fn INChl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -517,11 +514,6 @@ pub fn LDhlpa(cpu: &mut Cpu) {
     cpu.mem.write8(hl, cpu.regs.A);
     cpu.regs.set_HL(hl.wrapping_add(1));
     debug!("LD {:04X}+, A", hl);
-}
-pub fn LDhld8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    cpu.mem.write8(cpu.regs.get_HL(), imm);
-    debug!("LD (HL), {:02X}", imm)
 }
 pub fn LDIahlp(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -735,26 +727,6 @@ pub fn RETNC(cpu: &mut Cpu) {
         debug!("RET NC (-> continue)")
     }
 }
-pub fn RETZ(cpu: &mut Cpu) {
-    let mut addr = 0;
-    if cpu.regs.get_FZ() == false {
-        addr = PopStack(cpu);
-        cpu.regs.PC = addr;
-    } else {
-        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
-    }
-    debug!("RET Z (-> {:04X})", addr)
-}
-pub fn RETNZ(cpu: &mut Cpu) {
-    let mut addr = 0;
-    if cpu.regs.get_FZ() == true {
-        addr = PopStack(cpu);
-        cpu.regs.PC = addr;
-    } else {
-        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
-    }
-    debug!("RET NZ (-> {:04X})", addr)
-}
 pub fn DI(cpu: &mut Cpu) {
     cpu.regs.I = false;
     debug!("DI")
@@ -821,14 +793,12 @@ pub fn SRLl(cpu: &mut Cpu) {
 
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
-    debug!("Pushing {:04X} into stack at {:04X}", v, cpu.regs.SP);
     cpu.mem.write16(cpu.regs.SP, v);
     cpu.regs.SP = cpu.regs.SP.wrapping_sub(2);
 }
 pub fn PopStack(cpu: &mut Cpu) -> u16 {
     cpu.regs.SP = cpu.regs.SP.wrapping_add(2);
     let addr = cpu.mem.read16(cpu.regs.SP);
-    debug!("Poping {:04X} from stack at {:04X}", addr, cpu.regs.SP);
     addr
 }
 
@@ -937,6 +907,15 @@ impl<'a> Cpu<'a>{
                 cpu.regs.set_FN(false);
                 cpu.regs.set_FH(false);
                 cpu.regs.set_FC(c==1);
+            },
+            jump: false,
+        };
+        cpu.opcodes[0x08] = Opcode {
+            name: "LD (a16),SP",
+            len: 3,
+            cycles: 20,
+            execute: |cpu|{
+                let a = imm16(cpu); cpu.mem.write16(a, cpu.regs.get_SP());
             },
             jump: false,
         };
@@ -1281,7 +1260,7 @@ impl<'a> Cpu<'a>{
             name: "LD (HL), d8",
             len: 2,
             cycles: 12,
-            execute: LDhld8,
+            execute: |cpu|{let imm = imm8(cpu); cpu.mem.write8(cpu.regs.get_HL(), imm);},
             jump: false,
         };
         cpu.opcodes[0x38] = Opcode {
@@ -1797,7 +1776,7 @@ impl<'a> Cpu<'a>{
             name: "RET NZ",
             len: 1,
             cycles: 20,
-            execute: RETNZ,
+            execute: |cpu| { if !cpu.regs.get_FZ() {cpu.regs.PC = PopStack(cpu);} else {cpu.regs.PC = cpu.regs.PC.wrapping_add(1);}},
             jump: true,
         };
         cpu.opcodes[0xC1] = Opcode {
@@ -1851,7 +1830,7 @@ impl<'a> Cpu<'a>{
             name: "RET Z",
             len: 1,
             cycles: 20,
-            execute: RETZ,
+            execute: |cpu| { if cpu.regs.get_FZ() {cpu.regs.PC = PopStack(cpu);} else {cpu.regs.PC = cpu.regs.PC.wrapping_add(1);}},
             jump: true,
         };
         cpu.opcodes[0xC9] = Opcode {
@@ -2021,6 +2000,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 12,
             execute: POPaf,
+            jump: false,
+        };
+        cpu.opcodes[0xF2] = Opcode {
+            name: "LD A,(C)",
+            len: 1,
+            cycles: 8,
+            execute: |cpu| {let c = cpu.mem.read8(0xFF00+cpu.regs.C as u16); cpu.regs.A = c; },
             jump: false,
         };
         cpu.opcodes[0xF3] = Opcode {
