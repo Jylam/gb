@@ -360,10 +360,6 @@ pub fn SUBad8(cpu: &mut Cpu) {
     debug!("SUB A, {:02X}", imm);
 }
 
-pub fn ADCac(cpu: &mut Cpu) {
-    alu_add(cpu, cpu.regs.C, true);
-    debug!("ADC A, C {:02X}", cpu.regs.C);
-}
 pub fn ADCad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     alu_add(cpu, imm, true);
@@ -1425,6 +1421,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.H = cpu.regs.B;},
             jump: false,
         };
+        cpu.opcodes[0x62] = Opcode {
+            name: "LD H, D",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.H = cpu.regs.D;},
+            jump: false,
+        };
         cpu.opcodes[0x66] = Opcode {
             name: "LD H, (HL)",
             len: 1,
@@ -1437,6 +1440,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{cpu.regs.H = cpu.regs.A;},
+            jump: false,
+        };
+        cpu.opcodes[0x6B] = Opcode {
+            name: "LD L, E",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.L = cpu.regs.E;},
             jump: false,
         };
         cpu.opcodes[0x6C] = Opcode {
@@ -1583,7 +1593,14 @@ impl<'a> Cpu<'a>{
             name: "ADC A,C",
             len: 1,
             cycles: 4,
-            execute: ADCac,
+            execute: |cpu| {alu_add(cpu, cpu.regs.C, true);},
+            jump: false,
+        };
+        cpu.opcodes[0x8C] = Opcode {
+            name: "ADC A,H",
+            len: 1,
+            cycles: 4,
+            execute: |cpu| {alu_add(cpu, cpu.regs.H, true);},
             jump: false,
         };
         cpu.opcodes[0x90] = Opcode {
@@ -1591,6 +1608,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{alu_sub(cpu, cpu.regs.B, false);},
+            jump: false,
+        };
+        cpu.opcodes[0x91] = Opcode {
+            name: "SUB C",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{alu_sub(cpu, cpu.regs.C, false);},
             jump: false,
         };
         cpu.opcodes[0x92] = Opcode {
@@ -1731,6 +1755,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: CPc,
+            jump: false,
+        };
+        cpu.opcodes[0xBB] = Opcode {
+            name: "CP E",
+            len: 1,
+            cycles: 4,
+            execute: |cpu| {alu_cp(cpu, cpu.regs.E);},
             jump: false,
         };
         cpu.opcodes[0xBE] = Opcode {
@@ -2018,6 +2049,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 12,
             execute: |cpu|{let r = alu_add16imm(cpu, cpu.regs.get_SP()); cpu.regs.set_HL(r);},
+            jump: false,
+        };
+        cpu.opcodes[0xF9] = Opcode {
+            name: "LD SP, HL",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{let r = cpu.regs.get_HL(); cpu.regs.set_SP(r);},
             jump: false,
         };
 
