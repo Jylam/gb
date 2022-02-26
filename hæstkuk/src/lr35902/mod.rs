@@ -419,11 +419,6 @@ pub fn INC_hl(cpu: &mut Cpu) {
     cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_add(1));
     debug!("INC (HL)");
 }
-pub fn DEC_hl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_sub(1));
-    debug!("DEC (HL)");
-}
 pub fn INCde(cpu: &mut Cpu) {
     let de = cpu.regs.get_DE();
     cpu.regs.set_DE(de.wrapping_add(1));
@@ -1253,7 +1248,7 @@ impl<'a> Cpu<'a>{
             name: "DEC (hl)",
             len: 1,
             cycles: 12,
-            execute: DEC_hl,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_sub(1)); },
             jump: false,
         };
         cpu.opcodes[0x36] = Opcode {
@@ -1275,6 +1270,15 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: ADDhlsp,
+            jump: false,
+        };
+        cpu.opcodes[0x3B] = Opcode {
+            name: "DEC SP",
+            len: 1,
+            cycles: 4,
+            execute: |cpu| {
+                cpu.regs.SP = cpu.regs.SP.wrapping_sub(1);
+            },
             jump: false,
         };
         cpu.opcodes[0x3C] = Opcode {
@@ -1922,7 +1926,7 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{ let v = imm8(cpu); alu_sub(cpu, v, true); },
-            jump: true,
+            jump: false,
         };
 
         cpu.opcodes[0xE0] = Opcode {
@@ -1958,6 +1962,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: ANDd8,
+            jump: false,
+        };
+        cpu.opcodes[0xE8] = Opcode {
+            name: "DEC SP",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| { cpu.regs.SP = alu_add16imm(cpu, cpu.regs.SP);},
             jump: false,
         };
         cpu.opcodes[0xE9] = Opcode {
@@ -2476,7 +2487,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FF {
-            //self.print_status_small();
+        //    self.print_status_small();
         }
         (opcode.execute)(self);
 
