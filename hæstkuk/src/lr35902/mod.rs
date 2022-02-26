@@ -313,14 +313,6 @@ pub fn XORd8(cpu: &mut Cpu) {
     alu_xor(cpu, imm);
     debug!("XOR {:02X}", imm);
 }
-pub fn XORc(cpu: &mut Cpu) {
-    alu_xor(cpu, cpu.regs.C);
-    debug!("XOR C");
-}
-pub fn XORa(cpu: &mut Cpu) {
-    alu_xor(cpu, cpu.regs.A);
-    debug!("XOR A");
-}
 pub fn XOR_hl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     alu_xor(cpu, hl);
@@ -555,11 +547,6 @@ pub fn LDhlc(cpu: &mut Cpu) {
     let C = cpu.regs.C;
     cpu.regs.set_HL(C as u16);
     debug!("LD (HL), C")
-}
-pub fn LDhle(cpu: &mut Cpu) {
-    let E = cpu.regs.E;
-    cpu.regs.set_HL(E as u16);
-    debug!("LD (HL), E")
 }
 pub fn LDhld(cpu: &mut Cpu) {
     let D = cpu.regs.D;
@@ -1477,35 +1464,35 @@ impl<'a> Cpu<'a>{
             name: "LD (HL),B",
             len: 1,
             cycles: 8,
-            execute: LDhlb,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.B); },
             jump: false,
         };
         cpu.opcodes[0x71] = Opcode {
             name: "LD (HL),C",
             len: 1,
             cycles: 8,
-            execute: LDhlc,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.C); },
             jump: false,
         };
         cpu.opcodes[0x72] = Opcode {
             name: "LD (HL),D",
             len: 1,
             cycles: 8,
-            execute: LDhld,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.D); },
             jump: false,
         };
         cpu.opcodes[0x73] = Opcode {
             name: "LD (HL),E",
             len: 1,
             cycles: 8,
-            execute: LDhle,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.E); },
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
             name: "LD (HL),A",
             len: 1,
             cycles: 8,
-            execute: LDhla,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.A); },
             jump: false,
         };
         cpu.opcodes[0x78] = Opcode {
@@ -1673,7 +1660,14 @@ impl<'a> Cpu<'a>{
             name: "XOR C",
             len: 1,
             cycles: 4,
-            execute: XORc,
+            execute: |cpu|{ alu_xor(cpu, cpu.regs.C); },
+            jump: false,
+        };
+        cpu.opcodes[0xAD] = Opcode {
+            name: "XOR L",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{ alu_xor(cpu, cpu.regs.L); },
             jump: false,
         };
         cpu.opcodes[0xAE] = Opcode {
@@ -1687,7 +1681,7 @@ impl<'a> Cpu<'a>{
             name: "XOR A",
             len: 1,
             cycles: 4,
-            execute: XORa,
+            execute: |cpu|{ alu_xor(cpu, cpu.regs.A); },
             jump: false,
         };
         cpu.opcodes[0xB0] = Opcode {
@@ -1913,6 +1907,14 @@ impl<'a> Cpu<'a>{
             execute: RETNC,
             jump: true,
         };
+        cpu.opcodes[0xDE] = Opcode {
+            name: "SBC A, d8",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{ let v = imm8(cpu); alu_sub(cpu, v, true); },
+            jump: true,
+        };
+
         cpu.opcodes[0xE0] = Opcode {
             name: "LDH (a8),A",
             len: 2,
@@ -2450,7 +2452,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FF {
-           // self.print_status_small();
+            //self.print_status_small();
         }
         (opcode.execute)(self);
 

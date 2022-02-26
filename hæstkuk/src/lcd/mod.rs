@@ -20,18 +20,23 @@ impl<'a> LCD<'a>{
 	}
 	pub fn write8(&mut self, addr: u16, v: u8)  {
         let addr = addr-0xFF40;
-		debug!("LCD Write8 {:02X} at {:04X}", v, addr);
+		if self.debug {
+            println!("LCD write8 {:02X} at {:04X}", v, addr);
+        }
 		match addr {
 			0..=15 => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
-			_ => {error!("LCD Write8 range error")}
+			_ => {error!("LCD write8 range error")}
 		}
 	}
 
 	pub fn read8(&self, addr: u16) -> u8 {
         let addr = addr-0xFF40;
+		if self.debug {
+            println!("LCD read8 at {:04X}", addr);
+        }
 		match addr {
 			0..=15 => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
-			_ => {error!("LCD Read8 range error"); 0}
+			_ => {error!("LCD read8 range error"); 0}
 		}
 	}
 
