@@ -2450,7 +2450,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FF {
-            self.print_status_small();
+           // self.print_status_small();
         }
         (opcode.execute)(self);
 

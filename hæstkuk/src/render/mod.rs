@@ -106,6 +106,7 @@ impl<'a> Render<'a> {
             return;
         };
 
+
         buf[x+y*self.width] = (((c as u32*64)<<16) |
                                       (( c as u32*64)<<8) |
                                       (( c as u32*64))) as u32;
@@ -117,6 +118,8 @@ impl<'a> Render<'a> {
     }
 
     pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16) -> Vec<u8> {
+
+        let colors = cpu.mem.lcd.get_bw_palette();
         let mut ret = vec![0; 8*8];
         let mut offset = addr;
         for i in 0..8 {
@@ -134,14 +137,14 @@ impl<'a> Render<'a> {
 
             offset+=2;
 
-            ret[0+i*8] = p1;
-            ret[1+i*8] = p2;
-            ret[2+i*8] = p3;
-            ret[3+i*8] = p4;
-            ret[4+i*8] = p5;
-            ret[5+i*8] = p6;
-            ret[6+i*8] = p7;
-            ret[7+i*8] = p8;
+            ret[0+i*8] = colors[p1 as usize];
+            ret[1+i*8] = colors[p2 as usize];
+            ret[2+i*8] = colors[p3 as usize];
+            ret[3+i*8] = colors[p4 as usize];
+            ret[4+i*8] = colors[p5 as usize];
+            ret[5+i*8] = colors[p6 as usize];
+            ret[6+i*8] = colors[p7 as usize];
+            ret[7+i*8] = colors[p8 as usize];
         }
 
         ret
@@ -180,7 +183,7 @@ impl<'a> Render<'a> {
         let mut y = 0;
 
         let mut buffer = vec![0x00; self.width*self.height];
-        for offset in 0x9800..0x9BFF {
+        for offset in 0x9800..=0x9BFF {
             let id = cpu.readMem8(offset);
             let tile = self.get_tile_by_id(cpu, id);
             self.display_tile(&mut buffer, x, y, tile);
@@ -218,6 +221,7 @@ impl<'a> Render<'a> {
     pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>) {
         let SCY = cpu.mem.read8(0xFF42) as usize;
         let SCX = cpu.mem.read8(0xFF43) as usize;
+        let cury = cpu.mem.read8(0xFF44) as usize;
 
         for y in SCY..SCY+144 {
             self.put_pixel8(buf, SCX, y, 3);
@@ -231,6 +235,10 @@ impl<'a> Render<'a> {
         for x in SCX..SCX+160 {
             self.put_pixel8(buf, x, SCY+144, 3);
         }
+        for x in 0..255 {
+            self.put_pixel8(buf, x, cury, 3);
+        }
+
     }
 
 

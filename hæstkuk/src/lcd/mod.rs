@@ -30,82 +30,53 @@ impl<'a> LCD<'a>{
 	pub fn read8(&self, addr: u16) -> u8 {
         let addr = addr-0xFF40;
 		match addr {
-			_ => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
+			0..=15 => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
+			_ => {error!("LCD Read8 range error"); 0}
 		}
 	}
 
 	pub fn update(&mut self) {
-        //self.debug = false;
-        let ly = self.read8(0xFF44) as u8;
-        self.write8(0xFF44, ly.wrapping_add(1));
-        //self.debug = true;
+
+        // Update LY at FF44
+        let mut ly = self.read8(0xFF44) as u8;
+        if ly==153 {
+            ly = 0;
+        } else {
+            ly = ly.wrapping_add(1);
+        }
+        self.write8(0xFF44, ly);
+
+        // Update LYC 0xFF45  at STAT 0xFF41
+        let lyc = self.read8(0xFF45) as u8;
+        let mut stat = self.read8(0xFF41) as u8;
+        if ly == lyc {
+            stat = stat | (1 << 2);
+        } else {
+            stat = stat & !(1 << 2)
+        }
+
+        // Update mode
+        if ly>=144 {
+            stat = stat | 0x01; // VBlank
+        } else {
+            stat = stat & !0x01;
+        }
+
+        self.write8(0xFF45, stat);
+
     }
-	pub fn operation(&self) -> bool {
-		!((self.regs[0x00]&(1<<7))==0)
-	}
-	pub fn window_tile_table_address(&self) -> u16 {
-		if !((self.regs[0x00]&(1<<6))==0) {
-			0x9C00
-		} else {
-			0x9800
-		}
-	}
-	pub fn window_display(&self) -> bool {
-		!((self.regs[0x00]&(1<<5))==0)
-	}
-	pub fn tile_pattern_table_address(&self) -> u16 {
-		if !((self.regs[0x00]&(1<<4))==0) {
-			0x8000
-		} else {
-			0x8800
-		}
-	}
 
-	pub fn background_tile_table_address(&self) -> u16 {
-		if !((self.regs[0x00]&(1<<3))==0) {
-			0x9C00
-		} else {
-			0x9800
-		}
-	}
-	pub fn sprite_size(&self) -> bool {
-		!((self.regs[0x00]&(1<<2))==0)
-	}
-	pub fn color_0_transparency(&self) -> bool {
-		(self.regs[0x00]&(1<<1))==0
-	}
+    // Get palette and return the color between 0..3 (3 being white, 0 black)
+	pub fn get_bw_palette(&mut self) -> Vec<u8> {
+        let pal = self.read8(0xFF47) as u8;
+        let col3 = (pal&0b11000000) >> 6;
+        let col2 = (pal&0b00110000) >> 4;
+        let col1 = (pal&0b00001100) >> 2;
+        let col0 = (pal&0b00000011) >> 0;
 
-	pub fn background_display(&self) -> bool {
-		!((self.regs[0x00]&1)==0)
-	}
-	pub fn scroll_x(&self) -> u8 {
-		self.regs[0x03]
-	}
-	pub fn scroll_y(&self) -> u8 {
-		self.regs[0x02]
-	}
-	pub fn curline(&self) -> u8 {
-		self.regs[0x04]
-	}
-	pub fn cmpline(&self) -> u8 {
-		self.regs[0x05]
-	}
-	pub fn win_pos_y(&self) -> u8 {
-		self.regs[0x0A]
-	}
-	pub fn win_pos_x(&self) -> u8 {
-		self.regs[0x0B]
-	}
+        let convert = vec![0b11, 0b10, 0b01, 0b00];
 
-	/*
-	   FF40 -- LCDCONT [RW] LCD Control              | when set to 1 | when set to 0
-	   Bit7  LCD operation                           | ON            | OFF
-	   Bit6  Window Tile Table address               | 9C00-9FFF     | 9800-9BFF
-	   Bit5  Window display                          | ON            | OFF
-	   Bit4  Tile Pattern Table address              | 8000-8FFF     | 8800-97FF
-	   Bit3  Background Tile Table address           | 9C00-9FFF     | 9800-9BFF
-	   Bit2  Sprite size                             | 8x16          | 8x8
-	   Bit1  Color #0 transparency in the window     | SOLID         | TRANSPARENT
-	   Bit0  Background display                      | ON            | OFF
-	   */
+        vec![convert[col0 as usize], convert[col1 as usize], convert[col2 as usize], convert[col3 as usize]]
+    }
+
 }

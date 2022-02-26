@@ -49,7 +49,7 @@ fn main() {
     mem = mem::Mem::new(rom, lcd);
     cpu = lr35902::Cpu::new(mem);
 
-    render = render::Render::new(); // Open SDL window
+    render = render::Render::new();
 
     let mut vblank_counter: u32 = 1;
 
