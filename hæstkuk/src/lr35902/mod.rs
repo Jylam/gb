@@ -1588,6 +1588,20 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.L = cpu.regs.B;},
             jump: false,
         };
+        cpu.opcodes[0x69] = Opcode {
+            name: "LD L, C",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.L = cpu.regs.C;},
+            jump: false,
+        };
+        cpu.opcodes[0x6A] = Opcode {
+            name: "LD L, D",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.L = cpu.regs.D;},
+            jump: false,
+        };
         cpu.opcodes[0x6B] = Opcode {
             name: "LD L, E",
             len: 1,
@@ -1600,6 +1614,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{cpu.regs.L = cpu.regs.H;},
+            jump: false,
+        };
+        cpu.opcodes[0x6D] = Opcode {
+            name: "LD L, L",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L;},
             jump: false,
         };
         cpu.opcodes[0x6E] = Opcode {
@@ -1642,6 +1663,27 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 8,
             execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.E); },
+            jump: false,
+        };
+        cpu.opcodes[0x74] = Opcode {
+            name: "LD (HL),H",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.H); },
+            jump: false,
+        };
+        cpu.opcodes[0x75] = Opcode {
+            name: "LD (HL),L",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); cpu.mem.write8(hl, cpu.regs.L); },
+            jump: false,
+        };
+        cpu.opcodes[0x76] = Opcode {
+            name: "HALT",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{println!("HALT"); loop{}},
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
@@ -1698,6 +1740,13 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 4,
             execute: |cpu|{cpu.regs.A = cpu.regs.C;},
+            jump: false,
+        };
+        cpu.opcodes[0x7F] = Opcode {
+            name: "LD A, A",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A;},
             jump: false,
         };
         cpu.opcodes[0x80] = Opcode {
