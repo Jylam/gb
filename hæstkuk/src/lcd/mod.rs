@@ -49,7 +49,9 @@ impl<'a> LCD<'a>{
         } else {
             ly = ly.wrapping_add(1);
         }
-        self.write8(0xFF44, ly);
+        //self.write8(0xFF44, ly);
+        self.write8(0xFF44, 0x90);
+
 
         // Update LYC 0xFF45  at STAT 0xFF41
         let lyc = self.read8(0xFF45) as u8;

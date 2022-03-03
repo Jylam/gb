@@ -58,8 +58,8 @@ impl Registers {
         ((self.H as u16)<<8) | ((self.L as u16)&0xFF)
     }
     fn set_HL(&mut self, v: u16) {
-        self.H = (((v&0xFF00)as u16)>>8) as u8;
-        self.L = (v&0xFF) as u8;
+        self.H = (v>>8) as u8;
+        self.L = (v&0x00FF) as u8;
     }
     fn get_SP(self) -> u16 {
         self.SP
@@ -98,7 +98,6 @@ impl Registers {
             self.F |= 0b0010_0000
         } else {
             self.F &= 0b1101_1111
-
         }
     }
     fn get_FH(&mut self) -> bool{
@@ -275,13 +274,13 @@ fn alu_srflagupdate(cpu: &mut Cpu, r: u8, c: bool) {
 
 fn alu_sra(cpu: &mut Cpu, a: u8) -> u8 {
     let c = a & 0x01 == 0x01;
-    let r = a >> 1;
+    let r = a >> 1  | (a & 0x80) ;
     alu_srflagupdate(cpu, r, c);
     r
 }
 fn alu_srl(cpu: &mut Cpu, a: u8) -> u8 {
     let c = a & 0x01 == 0x01;
-    let r = (a >> 1) | (a & 0x80);
+    let r = a >> 1;
     alu_srflagupdate(cpu, r, c);
     r
 }
@@ -330,11 +329,6 @@ pub fn ANDhl(cpu: &mut Cpu) {
     alu_and(cpu, hl);
     debug!("AND A");
 }
-pub fn ANDd8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    alu_and(cpu, imm);
-    debug!("AND {:02}", imm);
-}
 pub fn SUBad8(cpu: &mut Cpu) {
     let imm = imm8(cpu);
     alu_sub(cpu, imm, false);
@@ -377,12 +371,7 @@ pub fn ADDhlde(cpu: &mut Cpu) {
     alu_add16(cpu, de);
     debug!("ADD HL,DE");
 }
-pub fn ADDhlhl(cpu: &mut Cpu) {
-    let hl = cpu.regs.get_HL();
-    alu_add16(cpu, hl);
 
-    debug!("ADD HL,HL");
-}
 pub fn ADDhlsp(cpu: &mut Cpu) {
     let sp = cpu.regs.get_SP();
     alu_add16(cpu, sp);
@@ -477,11 +466,6 @@ pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
     debug!("LD HL, {:04X}", imm)
-}
-pub fn LDhd8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    cpu.regs.H = imm;
-    debug!("LD H, {:04X}", imm)
 }
 pub fn LDhla(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
@@ -637,17 +621,6 @@ pub fn JRcr8(cpu: &mut Cpu) {
 }
 pub fn JRzr8(cpu: &mut Cpu) {
     if cpu.regs.get_FZ() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
-}
-pub fn CALLNZa16(cpu: &mut Cpu) {
-    let addr = addr16(cpu);
-    if cpu.regs.get_FZ() == true {
-        let next = cpu.regs.PC + 3;
-        PushStack(cpu, next);
-        cpu.regs.PC = addr;
-    } else {
-        cpu.regs.PC = cpu.regs.PC.wrapping_add(3);
-    }
-    debug!("CALL {:04X}", addr)
 }
 pub fn RET(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
@@ -1101,7 +1074,10 @@ impl<'a> Cpu<'a>{
             name: "LD H, d8",
             len: 2,
             cycles: 8,
-            execute: LDhd8,
+            execute: |cpu|{
+                let imm = imm8(cpu);
+                cpu.regs.H = imm;
+            },
             jump: false,
         };
         cpu.opcodes[0x27] = Opcode {
@@ -1122,7 +1098,7 @@ impl<'a> Cpu<'a>{
             name: "ADD HL, HL",
             len: 1,
             cycles: 8,
-            execute: ADDhlhl,
+            execute: |cpu|{let hl = cpu.regs.get_HL(); alu_add16(cpu, hl);},
             jump: false,
         };
         cpu.opcodes[0x2A] = Opcode {
@@ -1646,7 +1622,7 @@ impl<'a> Cpu<'a>{
             name: "HALT",
             len: 1,
             cycles: 8,
-            execute: |cpu|{println!("HALT"); loop{}},
+            execute: |_|{println!("HALT"); loop{}},
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
@@ -1995,7 +1971,16 @@ impl<'a> Cpu<'a>{
             name: "CALL NZ a16",
             len: 3,
             cycles: 24,
-            execute: CALLNZa16,
+            execute: |cpu|{
+                let addr = addr16(cpu);
+                if !cpu.regs.get_FZ() == true {
+                    let next = cpu.regs.PC + 3;
+                    PushStack(cpu, next);
+                    cpu.regs.PC = addr;
+                } else {
+                    cpu.regs.PC = cpu.regs.PC.wrapping_add(3);
+                }
+            },
             jump: true,
         };
         cpu.opcodes[0xC5] = Opcode {
@@ -2143,7 +2128,7 @@ impl<'a> Cpu<'a>{
             name: "AND d8",
             len: 2,
             cycles: 8,
-            execute: ANDd8,
+            execute: |cpu|{ let imm = imm8(cpu); alu_and(cpu, imm); },
             jump: false,
         };
         cpu.opcodes[0xE8] = Opcode {
@@ -2596,6 +2581,9 @@ impl<'a> Cpu<'a>{
         if code_str.contains("d8") {
             code_str = code_str.replace("d8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
         }
+        if code_str.contains("a16") {
+            code_str = code_str.replace("a16", &String::from(format!("0x{:04X}",imm16(self) as i16)));
+        }
         if code_str.contains("d16") {
             code_str = code_str.replace("d16", &String::from(format!("0x{:04X}",imm16(self) as i16)));
         }
@@ -2648,7 +2636,14 @@ impl<'a> Cpu<'a>{
                  foo.0, foo.1, foo.2, foo.3, foo.4
                 );
     }
+    pub fn print_dump(&mut self) {
+        let pc = self.regs.get_PC();
+        println!("A: {:02X} F: {:02X} B: {:02X} C: {:02X} D: {:02X} E: {:02X} H: {:02X} L: {:02X} SP: {:04X} PC: 00:{:04X} ({:02X} {:02X} {:02X} {:02X})",
+                 self.regs.A, self.regs.F, self.regs.B,self.regs.C,self.regs.D,
+                 self.regs.E,self.regs.H,self.regs.L, self.regs.get_SP(), self.regs.get_PC(),
+                 self.mem.read8(pc), self.mem.read8(pc+1),self.mem.read8(pc+2),self.mem.read8(pc+3));
 
+    }
     pub fn interrupts_enabled(&mut self) -> bool {
         self.regs.I
     }
@@ -2676,9 +2671,18 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FF {
-//            self.print_status_small();
+  //          self.print_status_small();
         }
+        if self.regs.PC > 0x00FF {
+            self.print_dump();
+        }
+
+        if self.regs.PC == 0xC83D {
+//        process::exit(3);
+        }
+
         (opcode.execute)(self);
+
 
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
@@ -2688,11 +2692,9 @@ impl<'a> Cpu<'a>{
         if self.mem.read8(0xFF02) == 0x81 {
             let c = self.mem.read8(0xFF01);
             //println!("SERIAL got {}", c as char);
-            print!("{}", c as char);
+//            print!("{}", c as char);
             self.mem.write8(0xff02, 0x0);
         }
-
-
         opcode.cycles as u8
     }
 
