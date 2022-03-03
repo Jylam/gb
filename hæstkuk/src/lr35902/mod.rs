@@ -185,7 +185,8 @@ pub fn alu_inc(cpu: &mut Cpu, a: u8) -> u8 {
 pub fn alu_add16(cpu: &mut Cpu, b: u16) {
     let a = cpu.regs.get_HL();
     let r = a.wrapping_add(b);
-    cpu.regs.set_FH((a & 0x07FF) + (b & 0x07FF) > 0x07FF);
+//    cpu.regs.set_FH((a & 0x07FF) + (b & 0x07FF) > 0x07FF);
+    cpu.regs.set_FH(((cpu.regs.get_HL()&0xFFF) + (b&0xFFF)) > 0xFFF);
     cpu.regs.set_FN(false);
     cpu.regs.set_FC(a > 0xFFFF - b);
     cpu.regs.set_HL(r);
