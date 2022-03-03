@@ -34,11 +34,11 @@ pub struct Registers {
 #[allow(dead_code)]
 impl Registers {
     fn get_AF(self) -> u16 {
-        ((self.A as u16)<<8) | ((self.F as u16)&0xFF)
+        ((self.A as u16)<<8) | ((self.F as u16)&0xF0)
     }
     fn set_AF(&mut self, v: u16) {
         self.A = ((v&0xFF00)>>8) as u8;
-        self.F = (v&0xFF) as u8;
+        self.F = (v&0x00F0) as u8;
     }
     fn get_BC(self) -> u16 {
         ((self.B as u16)<<8) | ((self.C as u16)&0xFF)
@@ -2687,7 +2687,8 @@ impl<'a> Cpu<'a>{
 
         if self.mem.read8(0xFF02) == 0x81 {
             let c = self.mem.read8(0xFF01);
-            println!("SERIAL got {}", c as char);
+            //println!("SERIAL got {}", c as char);
+            print!("{}", c as char);
             self.mem.write8(0xff02, 0x0);
         }
 
