@@ -315,25 +315,9 @@ pub fn XOR_hl(cpu: &mut Cpu) {
     alu_xor(cpu, hl);
     debug!("XOR A, [HL]");
 }
-pub fn ORd(cpu: &mut Cpu) {
-    alu_or(cpu, cpu.regs.D);
-    debug!("OR D");
-}
-pub fn ORc(cpu: &mut Cpu) {
-    alu_or(cpu, cpu.regs.C);
-    debug!("OR C");
-}
-pub fn ORb(cpu: &mut Cpu) {
-    alu_or(cpu, cpu.regs.B);
-    debug!("OR B");
-}
-pub fn ORa(cpu: &mut Cpu) {
-    alu_or(cpu, cpu.regs.A);
-    debug!("OR A");
-}
 pub fn ORhl(cpu: &mut Cpu) {
     let v = cpu.mem.read8(cpu.regs.get_HL());
-    alu_xor(cpu, v);
+    alu_or(cpu, v);
     debug!("OR (hl)");
 }
 pub fn ORd8(cpu: &mut Cpu) {
@@ -627,30 +611,9 @@ pub fn POPbc(cpu: &mut Cpu) {
 }
 pub fn POPaf(cpu: &mut Cpu) {
     let sp = PopStack(cpu);
-    cpu.regs.set_AF(sp);
+    cpu.regs.set_AF(sp&0xFFF0);
     debug!("POP AF");
 }
-pub fn PUSHde(cpu: &mut Cpu) {
-    let v = cpu.regs.get_DE();
-    PushStack(cpu, v);
-    debug!("PUSH DE");
-}
-pub fn PUSHbc(cpu: &mut Cpu) {
-    let v = cpu.regs.get_BC();
-    PushStack(cpu, v);
-    debug!("PUSH BC");
-}
-pub fn PUSHaf(cpu: &mut Cpu) {
-    let v = cpu.regs.get_AF();
-    PushStack(cpu, v);
-    debug!("PUSH AF");
-}
-pub fn PUSHhl(cpu: &mut Cpu) {
-    let v = cpu.regs.get_HL();
-    PushStack(cpu, v);
-    debug!("PUSH HL");
-}
-
 pub fn RST28h(cpu: &mut Cpu) {
     let PC = cpu.regs.PC;
     PushStack(cpu, PC);
@@ -1907,21 +1870,28 @@ impl<'a> Cpu<'a>{
             name: "OR B",
             len: 1,
             cycles: 4,
-            execute: ORb,
+            execute: |cpu|{ alu_or(cpu, cpu.regs.B); },
             jump: false,
         };
         cpu.opcodes[0xB1] = Opcode {
             name: "OR C",
             len: 1,
             cycles: 4,
-            execute: ORc,
+            execute: |cpu|{ alu_or(cpu, cpu.regs.C); },
             jump: false,
         };
         cpu.opcodes[0xB2] = Opcode {
             name: "OR D",
             len: 1,
             cycles: 4,
-            execute: ORc,
+            execute: |cpu|{ alu_or(cpu, cpu.regs.D); },
+            jump: false,
+        };
+        cpu.opcodes[0xB3] = Opcode {
+            name: "OR E",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{ alu_or(cpu, cpu.regs.E); },
             jump: false,
         };
         cpu.opcodes[0xB6] = Opcode {
@@ -1935,7 +1905,7 @@ impl<'a> Cpu<'a>{
             name: "OR A",
             len: 1,
             cycles: 4,
-            execute: ORa,
+            execute: |cpu|{ alu_or(cpu, cpu.regs.A); },
             jump: false,
         };
         cpu.opcodes[0xB8] = Opcode {
@@ -2032,7 +2002,7 @@ impl<'a> Cpu<'a>{
             name: "PUSH BC",
             len: 1,
             cycles: 16,
-            execute: PUSHbc,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.get_BC()); },
             jump: false,
         };
         cpu.opcodes[0xC6] = Opcode {
@@ -2109,7 +2079,7 @@ impl<'a> Cpu<'a>{
             name: "PUSH DE",
             len: 1,
             cycles: 16,
-            execute: PUSHde,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.get_DE()); },
             jump: false,
         };
         cpu.opcodes[0xD9] = Opcode {
@@ -2166,7 +2136,7 @@ impl<'a> Cpu<'a>{
             name: "PUSH HL",
             len: 1,
             cycles: 16,
-            execute: PUSHhl,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.get_HL()); },
             jump: false,
         };
         cpu.opcodes[0xE6] = Opcode {
@@ -2243,7 +2213,7 @@ impl<'a> Cpu<'a>{
             name: "PUSH AF",
             len: 1,
             cycles: 16,
-            execute: PUSHaf,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.get_AF()); },
             jump: false,
         };
         cpu.opcodes[0xF6] = Opcode {
@@ -2361,6 +2331,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu| {alu_bit(cpu, cpu.regs.C, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x42] = Opcode {
+            name: "BIT 0,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 0);},
             jump: false,
         };
         cpu.alt_opcodes[0x47] = Opcode {
@@ -2699,7 +2676,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FF {
-            //self.print_status_small();
+//            self.print_status_small();
         }
         (opcode.execute)(self);
 
