@@ -644,16 +644,6 @@ pub fn RETC(cpu: &mut Cpu) {
         debug!("RET NC (-> continue)")
     }
 }
-pub fn RETNC(cpu: &mut Cpu) {
-    if cpu.regs.get_FC() == false {
-        let addr = PopStack(cpu);
-        cpu.regs.PC = addr;
-        debug!("RET NC (-> {:04X})", addr)
-    } else {
-        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
-        debug!("RET NC (-> continue)")
-    }
-}
 pub fn DI(cpu: &mut Cpu) {
     cpu.regs.I = false;
     debug!("DI")
@@ -2051,7 +2041,14 @@ impl<'a> Cpu<'a>{
             name: "RET NC",
             len: 1,
             cycles: 20,
-            execute: RETNC,
+            execute: |cpu|{
+                if cpu.regs.get_FC() == false {
+                    let addr = PopStack(cpu);
+                    cpu.regs.PC = addr;
+                } else {
+                    cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
+                }
+            },
             jump: true,
         };
         cpu.opcodes[0xD1] = Opcode {
@@ -2083,10 +2080,17 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0xD8] = Opcode {
-            name: "RET NC",
+            name: "RET C",
             len: 1,
             cycles: 20,
-            execute: RETNC,
+            execute: |cpu|{
+                if cpu.regs.get_FC() == true {
+                    let addr = PopStack(cpu);
+                    cpu.regs.PC = addr;
+                } else {
+                    cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
+                }
+            },
             jump: true,
         };
         cpu.opcodes[0xDE] = Opcode {
