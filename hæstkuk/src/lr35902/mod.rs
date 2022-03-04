@@ -126,9 +126,6 @@ pub struct Cpu<'a> {
     alt_opcodes: Vec<Opcode>,
 }
 
-pub fn addr16(cpu: &mut Cpu) -> u16 {
-    cpu.mem.read16(cpu.regs.get_PC()+1)
-}
 pub fn imm16(cpu: &mut Cpu) -> u16 {
     cpu.mem.read16(cpu.regs.get_PC()+1)
 }
@@ -457,12 +454,6 @@ pub fn LDchl(cpu: &mut Cpu) {
     cpu.regs.C = cpu.mem.read8(addr);
     debug!("LD C, (HL) ({:04X})", addr);
 }
-pub fn LDaa16(cpu: &mut Cpu) {
-    let addr = addr16(cpu);
-    cpu.regs.A = cpu.mem.read8(addr);
-    debug!("LD A, (a16) ({:04X})", addr);
-
-}
 pub fn LDhld16(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.regs.set_HL(imm);
@@ -547,7 +538,7 @@ pub fn LDha8a(cpu: &mut Cpu) {
     debug!("LDH (FF{:02X}), A", imm)
 }
 pub fn LDa16a(cpu: &mut Cpu) {
-    let imm = addr16(cpu);
+    let imm = imm16(cpu);
     cpu.mem.write8(imm, cpu.regs.A);
     debug!("LD ({:04X}), A", imm)
 }
@@ -1166,14 +1157,22 @@ impl<'a> Cpu<'a>{
             name: "INC (HL)",
             len: 1,
             cycles: 12,
-            execute: INC_hl,
+            execute: |cpu| {
+                let hl = cpu.regs.get_HL();
+                let v = cpu.mem.read8(hl);
+                let v2 = alu_inc(cpu, v);
+                cpu.mem.write8(hl, v2); },
             jump: false,
         };
         cpu.opcodes[0x35] = Opcode {
             name: "DEC (hl)",
             len: 1,
             cycles: 12,
-            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_sub(1)); },
+            execute: |cpu| {
+                let hl = cpu.regs.get_HL();
+                let v = cpu.mem.read8(hl);
+                let v2 = alu_dec(cpu, v);
+                cpu.mem.write8(hl, v2); },
             jump: false,
         };
         cpu.opcodes[0x36] = Opcode {
@@ -1812,6 +1811,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{ alu_xor(cpu, cpu.regs.C); },
             jump: false,
         };
+        cpu.opcodes[0xAB] = Opcode {
+            name: "XOR E",
+            len: 1,
+            cycles: 4,
+            execute: |cpu|{ alu_xor(cpu, cpu.regs.E); },
+            jump: false,
+        };
         cpu.opcodes[0xAD] = Opcode {
             name: "XOR L",
             len: 1,
@@ -1915,7 +1921,7 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 16,
             execute: |cpu|{
-                let addr = addr16(cpu);
+                let addr = imm16(cpu);
                 if cpu.regs.get_FZ() == true {
                     cpu.regs.PC = addr;
                 } else {
@@ -1945,7 +1951,7 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 16,
             execute: |cpu|{
-                let addr = addr16(cpu);
+                let addr = imm16(cpu);
                 let pc = cpu.regs.get_PC();
                 if !cpu.regs.get_FZ() { cpu.regs.set_PC(addr); } else {cpu.regs.set_PC(pc+2);}
             },
@@ -1955,7 +1961,7 @@ impl<'a> Cpu<'a>{
             name: "JP a16",
             len: 3,
             cycles: 16,
-            execute: |cpu| {let addr = addr16(cpu); cpu.regs.PC = addr; },
+            execute: |cpu| {let addr = imm16(cpu); cpu.regs.PC = addr; },
             jump: true,
         };
         cpu.opcodes[0xC4] = Opcode {
@@ -1963,7 +1969,7 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 24,
             execute: |cpu|{
-                let addr = addr16(cpu);
+                let addr = imm16(cpu);
                 if !cpu.regs.get_FZ() == true {
                     let next = cpu.regs.PC + 3;
                     PushStack(cpu, next);
@@ -2008,7 +2014,7 @@ impl<'a> Cpu<'a>{
             cycles: 24,
             execute: |cpu|{
                 if cpu.regs.get_FZ() {
-                let addr = addr16(cpu);
+                let addr = imm16(cpu);
                 let next = cpu.regs.PC + 3;
                 PushStack(cpu, next);
                 cpu.regs.PC = addr;
@@ -2023,7 +2029,7 @@ impl<'a> Cpu<'a>{
             len: 3,
             cycles: 24,
             execute: |cpu|{
-                let addr = addr16(cpu);
+                let addr = imm16(cpu);
                 let next = cpu.regs.PC + 3;
                 PushStack(cpu, next);
                 cpu.regs.PC = addr;
@@ -2100,7 +2106,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{ let v = imm8(cpu); alu_sub(cpu, v, true); },
             jump: false,
         };
-
+        cpu.opcodes[0xDF] = Opcode {
+            name: "RST 1 8H",
+            len: 1,
+            cycles: 16,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC); cpu.regs.set_PC(0x18);},
+            jump: true,
+        };
         cpu.opcodes[0xE0] = Opcode {
             name: "LDH (a8),A",
             len: 2,
@@ -2175,7 +2187,7 @@ impl<'a> Cpu<'a>{
             name: "LDH A,(a8)",
             len: 2,
             cycles: 12,
-            execute: |cpu| {let imm = imm8(cpu); cpu.regs.A = cpu.mem.read8(0xFF00+imm as u16); },
+            execute: |cpu| {let imm = 0xFF00 | imm8(cpu) as u16; cpu.regs.A = cpu.mem.read8(imm); },
             jump: false,
         };
         cpu.opcodes[0xF1] = Opcode {
@@ -2232,7 +2244,11 @@ impl<'a> Cpu<'a>{
             name: "LD A, (a16)",
             len: 3,
             cycles: 16,
-            execute: LDaa16,
+            execute: |cpu| {
+                let addr = imm16(cpu);
+                let a = cpu.mem.read8(addr);
+                cpu.regs.A = a;
+            },
             jump: false,
         };
         cpu.opcodes[0xFB] = Opcode {
@@ -2582,6 +2598,9 @@ impl<'a> Cpu<'a>{
         let mut code_str = String::from(codestr);
         if code_str.contains("r8") {
             code_str = code_str.replace("r8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
+        }
+        if code_str.contains("a8") {
+            code_str = code_str.replace("a8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
         }
         if code_str.contains("d8") {
             code_str = code_str.replace("d8", &String::from(format!("0x{:02X}",imm8(self) as i8)));
