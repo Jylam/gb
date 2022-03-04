@@ -543,7 +543,7 @@ pub fn LDdd8(cpu: &mut Cpu) {
 }
 pub fn LDha8a(cpu: &mut Cpu) {
     let imm = imm8(cpu);
-    cpu.mem.write8(0xFF00+imm as u16, cpu.regs.A);
+    cpu.mem.write8(0xFF00|imm as u16, cpu.regs.A);
     debug!("LDH (FF{:02X}), A", imm)
 }
 pub fn LDa16a(cpu: &mut Cpu) {
@@ -1022,7 +1022,7 @@ impl<'a> Cpu<'a>{
             name: "RRA",
             len: 1,
             cycles: 4,
-            execute: |cpu|{cpu.regs.A = alu_rr(cpu, cpu.regs.A);},
+            execute: |cpu|{cpu.regs.A = alu_rr(cpu, cpu.regs.A); cpu.regs.set_FZ(false)},
             jump: false,
         };
         cpu.opcodes[0x20] = Opcode {
@@ -1676,10 +1676,10 @@ impl<'a> Cpu<'a>{
             jump: false,
         };
         cpu.opcodes[0x7E] = Opcode {
-            name: "LD A, C",
+            name: "LD A, (HL)",
             len: 1,
-            cycles: 4,
-            execute: |cpu|{cpu.regs.A = cpu.regs.C;},
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.mem.read8(cpu.regs.get_HL());},
             jump: false,
         };
         cpu.opcodes[0x7F] = Opcode {
