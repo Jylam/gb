@@ -1883,6 +1883,13 @@ impl<'a> Cpu<'a>{
             execute: CPc,
             jump: false,
         };
+        cpu.opcodes[0xBA] = Opcode {
+            name: "CP D",
+            len: 1,
+            cycles: 4,
+            execute: |cpu| {alu_cp(cpu, cpu.regs.D);},
+            jump: false,
+        };
         cpu.opcodes[0xBB] = Opcode {
             name: "CP E",
             len: 1,
@@ -2775,7 +2782,7 @@ impl<'a> Cpu<'a>{
   //          self.print_status_small();
         }
         if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
-            self.print_dump();
+//            self.print_dump();
         }
 
         (opcode.execute)(self);
