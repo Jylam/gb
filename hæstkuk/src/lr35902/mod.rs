@@ -302,6 +302,13 @@ fn alu_rl(cpu: &mut Cpu, a: u8) -> u8 {
 }
 
 
+fn alu_swap(cpu: &mut Cpu, a: u8) -> u8 {
+    cpu.regs.set_FZ(a == 0);
+    cpu.regs.set_FC(false);
+    cpu.regs.set_FH(false);
+    cpu.regs.set_FN(false);
+    (a >> 4) | (a << 4)
+}
 fn alu_bit(cpu: &mut Cpu, a: u8, b: u8) {
     let r = a & (1 << (b as u32)) == 0;
     cpu.regs.set_FN(false);
@@ -796,14 +803,7 @@ impl<'a> Cpu<'a>{
             name: "RLCA",
             len: 1,
             cycles: 4,
-            execute: |cpu|{
-                let c = cpu.regs.A >> 7;
-                cpu.regs.A = (cpu.regs.A << 1) | c;
-                cpu.regs.set_FZ(cpu.regs.A == 0);
-                cpu.regs.set_FN(false);
-                cpu.regs.set_FH(false);
-                cpu.regs.set_FC(c==1);
-            },
+            execute: |cpu|{cpu.regs.A = alu_rlc(cpu, cpu.regs.A); cpu.regs.set_FZ(false);},
             jump: false,
         };
         cpu.opcodes[0x08] = Opcode {
@@ -2830,6 +2830,41 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.C = alu_sra(cpu, cpu.regs.C);},
             jump: false,
         };
+        cpu.alt_opcodes[0x2A] = Opcode {
+            name: "SRA D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = alu_sra(cpu, cpu.regs.D);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x2B] = Opcode {
+            name: "SRA E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = alu_sra(cpu, cpu.regs.E);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x2C] = Opcode {
+            name: "SRA H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = alu_sra(cpu, cpu.regs.H);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x2D] = Opcode {
+            name: "SRA L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = alu_sra(cpu, cpu.regs.L);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x2F] = Opcode {
+            name: "SRA A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = alu_sra(cpu, cpu.regs.A);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x41] = Opcode {
             name: "BIT 0,C",
             len: 2,
@@ -2869,7 +2904,7 @@ impl<'a> Cpu<'a>{
             name: "BIT 6,A",
             len: 2,
             cycles: 8,
-            execute: BIT6a,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 6);},
             jump: false,
         };
         cpu.alt_opcodes[0x79] = Opcode {
@@ -2893,11 +2928,53 @@ impl<'a> Cpu<'a>{
             execute: |cpu| {alu_bit(cpu, cpu.regs.A, 7);},
             jump: false,
         };
+        cpu.alt_opcodes[0x30] = Opcode {
+            name: "SWAP B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| { cpu.regs.B = alu_swap(cpu, cpu.regs.B); },
+            jump: false,
+        };
+        cpu.alt_opcodes[0x31] = Opcode {
+            name: "SWAP C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| { cpu.regs.C = alu_swap(cpu, cpu.regs.C); },
+            jump: false,
+        };
+        cpu.alt_opcodes[0x32] = Opcode {
+            name: "SWAP D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| { cpu.regs.D = alu_swap(cpu, cpu.regs.D); },
+            jump: false,
+        };
+        cpu.alt_opcodes[0x33] = Opcode {
+            name: "SWAP E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| { cpu.regs.E = alu_swap(cpu, cpu.regs.E); },
+            jump: false,
+        };
+        cpu.alt_opcodes[0x34] = Opcode {
+            name: "SWAP H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| { cpu.regs.H = alu_swap(cpu, cpu.regs.H); },
+            jump: false,
+        };
+        cpu.alt_opcodes[0x35] = Opcode {
+            name: "SWAP L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| { cpu.regs.L = alu_swap(cpu, cpu.regs.L); },
+            jump: false,
+        };
         cpu.alt_opcodes[0x37] = Opcode {
             name: "SWAP A",
             len: 2,
             cycles: 8,
-            execute: SWAPa,
+            execute: |cpu| { cpu.regs.A = alu_swap(cpu, cpu.regs.A); },
             jump: false,
         };
         cpu.alt_opcodes[0x38] = Opcode {
@@ -3203,7 +3280,7 @@ impl<'a> Cpu<'a>{
   //          self.print_status_small();
         }
         if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
-//            self.print_dump();
+            self.print_dump();
         }
 
         (opcode.execute)(self);
