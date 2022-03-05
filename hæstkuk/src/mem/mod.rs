@@ -32,9 +32,12 @@ impl<'a> Mem<'a>{
         println!("Boot ROM: {} bytes", read_size);
         mem
     }
+    pub fn is_bootrom_enabled(&mut self) -> bool {
+        self.bootrom_enable
+    }
     pub fn read8(&mut self, addr: u16) -> u8 {
         match addr {
-            0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] } else {self.ram[addr as usize]},
+            0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] } else {self.rom.buffer[addr as usize]},
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
             0xFF40..=0xFF4F => { self.lcd.read8(addr)},
             _ => {self.ram[addr as usize]},
@@ -42,7 +45,7 @@ impl<'a> Mem<'a>{
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
         match addr {
-            0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] = v;} else {self.ram[addr as usize] = v;},
+            0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] = v;} else {self.rom.buffer[addr as usize] = v;},
             0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             0xFF40..=0xFF4F => { self.lcd.write8(addr, v)},
             0xFF50 => {self.bootrom_enable = false; println!("Disabling BOOTROM");}

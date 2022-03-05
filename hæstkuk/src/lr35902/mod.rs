@@ -590,18 +590,6 @@ pub fn POPaf(cpu: &mut Cpu) {
     cpu.regs.set_AF(sp&0xFFF0);
     debug!("POP AF");
 }
-pub fn RST28h(cpu: &mut Cpu) {
-    let PC = cpu.regs.PC;
-    PushStack(cpu, PC);
-    cpu.regs.PC = 0x28;
-    debug!("RST 28h")
-}
-pub fn RST38h(cpu: &mut Cpu) {
-    let PC = cpu.regs.PC;
-    PushStack(cpu, PC);
-    cpu.regs.PC = 0x38;
-    debug!("RST 38h")
-}
 pub fn JRncr8(cpu: &mut Cpu) {
     if !cpu.regs.get_FC() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
@@ -1983,7 +1971,7 @@ impl<'a> Cpu<'a>{
             name: "RST 00H",
             len: 1,
             cycles: 16,
-            execute: |cpu|{ PushStack(cpu, cpu.regs.PC); cpu.regs.set_PC(0x00);},
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x00);},
             jump: true,
         };
         cpu.opcodes[0xC8] = Opcode {
@@ -2049,6 +2037,13 @@ impl<'a> Cpu<'a>{
             cycles: 8,
             execute: ADCad8,
             jump: false,
+        };
+        cpu.opcodes[0xCF] = Opcode {
+            name: "RST 08H",
+            len: 1,
+            cycles: 16,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x08);},
+            jump: true,
         };
         cpu.opcodes[0xD0] = Opcode {
             name: "RET NC",
@@ -2146,6 +2141,13 @@ impl<'a> Cpu<'a>{
             execute: SUBad8,
             jump: false,
         };
+        cpu.opcodes[0xD7] = Opcode {
+            name: "RST 10h",
+            len: 1,
+            cycles: 16,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x10);},
+            jump: true,
+        };
         cpu.opcodes[0xD8] = Opcode {
             name: "RET C",
             len: 1,
@@ -2171,7 +2173,7 @@ impl<'a> Cpu<'a>{
             name: "RST 1 8H",
             len: 1,
             cycles: 16,
-            execute: |cpu|{ PushStack(cpu, cpu.regs.PC); cpu.regs.set_PC(0x18);},
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x18);},
             jump: true,
         };
         cpu.opcodes[0xE0] = Opcode {
@@ -2209,6 +2211,13 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{ let imm = imm8(cpu); alu_and(cpu, imm); },
             jump: false,
         };
+        cpu.opcodes[0xE7] = Opcode {
+            name: "RST 20h",
+            len: 1,
+            cycles: 16,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x20);},
+            jump: true,
+        };
         cpu.opcodes[0xE8] = Opcode {
             name: "DEC SP",
             len: 2,
@@ -2241,7 +2250,7 @@ impl<'a> Cpu<'a>{
             name: "RST 28h",
             len: 1,
             cycles: 16,
-            execute: RST28h,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x28);},
             jump: true,
         };
         cpu.opcodes[0xF0] = Opcode {
@@ -2285,6 +2294,13 @@ impl<'a> Cpu<'a>{
             cycles: 8,
             execute: ORd8,
             jump: false,
+        };
+        cpu.opcodes[0xF7] = Opcode {
+            name: "RST 30h",
+            len: 1,
+            cycles: 16,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x30);},
+            jump: true,
         };
         cpu.opcodes[0xF8] = Opcode {
             name: "LD HL,SP+r8",
@@ -2330,7 +2346,7 @@ impl<'a> Cpu<'a>{
             name: "RST 38h",
             len: 1,
             cycles: 16,
-            execute: RST38h,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC+1); cpu.regs.set_PC(0x38);},
             jump: true,
         };
 
@@ -2758,16 +2774,11 @@ impl<'a> Cpu<'a>{
         if self.regs.PC > 0x00FF {
   //          self.print_status_small();
         }
-        if self.regs.PC > 0x00FF {
+        if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
             self.print_dump();
         }
 
-        if self.regs.PC == 0xC83D {
-//        process::exit(3);
-        }
-
         (opcode.execute)(self);
-
 
         self.total_cyles = self.total_cyles + opcode.cycles as u64;
         if !opcode.jump {
