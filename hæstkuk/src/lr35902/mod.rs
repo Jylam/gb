@@ -2572,9 +2572,98 @@ impl<'a> Cpu<'a>{
             name: "RLC B",
             len: 2,
             cycles: 8,
-            execute: |cpu| {
-                cpu.regs.B = alu_rlc(cpu, cpu.regs.B);
-            },
+            execute: |cpu| {cpu.regs.B = alu_rlc(cpu, cpu.regs.B);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x01] = Opcode {
+            name: "RLC C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.C = alu_rlc(cpu, cpu.regs.C);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x02] = Opcode {
+            name: "RLC D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.D = alu_rlc(cpu, cpu.regs.D);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x03] = Opcode {
+            name: "RLC E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.E = alu_rlc(cpu, cpu.regs.E);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x04] = Opcode {
+            name: "RLC H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.H = alu_rlc(cpu, cpu.regs.H);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x05] = Opcode {
+            name: "RLC L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.L = alu_rlc(cpu, cpu.regs.L);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x07] = Opcode {
+            name: "RLC A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.A = alu_rlc(cpu, cpu.regs.A);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x08] = Opcode {
+            name: "RRC B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.B = alu_rrc(cpu, cpu.regs.B);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x09] = Opcode {
+            name: "RRC C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.C = alu_rrc(cpu, cpu.regs.C);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x0A] = Opcode {
+            name: "RRC D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.D = alu_rrc(cpu, cpu.regs.D);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x0B] = Opcode {
+            name: "RRC E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.E = alu_rrc(cpu, cpu.regs.E);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x0C] = Opcode {
+            name: "RRC H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.H = alu_rrc(cpu, cpu.regs.H);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x0D] = Opcode {
+            name: "RRC L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.L = alu_rrc(cpu, cpu.regs.L);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x0F] = Opcode {
+            name: "RRC A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.A = alu_rrc(cpu, cpu.regs.A);},
             jump: false,
         };
         cpu.alt_opcodes[0x11] = Opcode {
@@ -2855,6 +2944,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCF] = Opcode {
+            name: "SET 1, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 1);},
             jump: false,
         };
         cpu.alt_opcodes[0xE6] = Opcode {
