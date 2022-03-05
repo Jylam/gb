@@ -430,11 +430,6 @@ pub fn CPd8(cpu: &mut Cpu) {
     debug!("CP {:02X}", imm)
 }
 
-pub fn LDade(cpu: &mut Cpu) {
-    let addr = cpu.regs.get_DE();
-    cpu.regs.A = cpu.mem.read8(addr);
-    debug!("LD A, (DE) ({:04X})", addr);
-}
 pub fn LDlhl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
     cpu.regs.L = cpu.mem.read8(addr);
@@ -821,6 +816,16 @@ impl<'a> Cpu<'a>{
             },
             jump: false,
         };
+        cpu.opcodes[0x0A] = Opcode {
+            name: "LD A, (BC)",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{
+                let addr = cpu.regs.get_BC();
+                cpu.regs.A = cpu.mem.read8(addr);
+            },
+            jump: false,
+        };
         cpu.opcodes[0x0B] = Opcode {
             name: "DEC BC",
             len: 1,
@@ -946,7 +951,10 @@ impl<'a> Cpu<'a>{
             name: "LD A, (DE)",
             len: 1,
             cycles: 8,
-            execute: LDade,
+            execute: |cpu|{
+                let addr = cpu.regs.get_DE();
+                cpu.regs.A = cpu.mem.read8(addr);
+            },
             jump: false,
         };
         cpu.opcodes[0x1B] = Opcode {
