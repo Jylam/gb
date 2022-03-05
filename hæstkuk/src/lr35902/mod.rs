@@ -1979,6 +1979,13 @@ impl<'a> Cpu<'a>{
             execute: ADDad8,
             jump: false,
         };
+        cpu.opcodes[0xC7] = Opcode {
+            name: "RST 00H",
+            len: 1,
+            cycles: 16,
+            execute: |cpu|{ PushStack(cpu, cpu.regs.PC); cpu.regs.set_PC(0x00);},
+            jump: true,
+        };
         cpu.opcodes[0xC8] = Opcode {
             name: "RET Z",
             len: 1,
@@ -2064,6 +2071,33 @@ impl<'a> Cpu<'a>{
             execute: POPde,
             jump: false,
         };
+        cpu.opcodes[0xD2] = Opcode {
+            name: "JPNC a16",
+            len: 3,
+            cycles: 16,
+            execute: |cpu|{
+                let addr = imm16(cpu);
+                let pc = cpu.regs.get_PC();
+                if !cpu.regs.get_FC() { cpu.regs.set_PC(addr); } else {cpu.regs.set_PC(pc+3);}
+            },
+            jump: true,
+        };
+        cpu.opcodes[0xD4] = Opcode {
+            name: "CALL NC a16",
+            len: 3,
+            cycles: 24,
+            execute: |cpu|{
+                let addr = imm16(cpu);
+                if !cpu.regs.get_FC() == true {
+                    let next = cpu.regs.PC + 3;
+                    PushStack(cpu, next);
+                    cpu.regs.PC = addr;
+                } else {
+                    cpu.regs.PC = cpu.regs.PC.wrapping_add(3);
+                }
+            },
+            jump: true,
+        };
         cpu.opcodes[0xD5] = Opcode {
             name: "PUSH DE",
             len: 1,
@@ -2076,6 +2110,33 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 20,
             execute: RETI,
+            jump: true,
+        };
+        cpu.opcodes[0xDA] = Opcode {
+            name: "JP C a16",
+            len: 3,
+            cycles: 16,
+            execute: |cpu|{
+                let addr = imm16(cpu);
+                let pc = cpu.regs.get_PC();
+                if cpu.regs.get_FC() { cpu.regs.set_PC(addr); } else {cpu.regs.set_PC(pc+3);}
+            },
+            jump: true,
+        };
+        cpu.opcodes[0xDC] = Opcode {
+            name: "CALL C a16",
+            len: 3,
+            cycles: 24,
+            execute: |cpu|{
+                let addr = imm16(cpu);
+                if cpu.regs.get_FC() == true {
+                    let next = cpu.regs.PC + 3;
+                    PushStack(cpu, next);
+                    cpu.regs.PC = addr;
+                } else {
+                    cpu.regs.PC = cpu.regs.PC.wrapping_add(3);
+                }
+            },
             jump: true,
         };
         cpu.opcodes[0xD6] = Opcode {
