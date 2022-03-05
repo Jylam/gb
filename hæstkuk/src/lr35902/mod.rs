@@ -701,13 +701,13 @@ pub fn SRLl(cpu: &mut Cpu) {
 
 
 pub fn PushStack(cpu: &mut Cpu, v: u16) {
-    cpu.mem.write16(cpu.regs.SP, v);
     cpu.regs.SP = cpu.regs.SP.wrapping_sub(2);
+    cpu.mem.write16(cpu.regs.SP, v);
 }
 pub fn PopStack(cpu: &mut Cpu) -> u16 {
+    let v = cpu.mem.read16(cpu.regs.SP);
     cpu.regs.SP = cpu.regs.SP.wrapping_add(2);
-    let addr = cpu.mem.read16(cpu.regs.SP);
-    addr
+    v
 }
 
 
@@ -1916,21 +1916,6 @@ impl<'a> Cpu<'a>{
             execute: |cpu| {alu_cp(cpu, cpu.regs.A);},
             jump: false,
         };
-        cpu.opcodes[0xCA] = Opcode {
-            name: "JP Z a16",
-            len: 3,
-            cycles: 16,
-            execute: |cpu|{
-                let addr = imm16(cpu);
-                if cpu.regs.get_FZ() == true {
-                    cpu.regs.PC = addr;
-                } else {
-                    let pc = cpu.regs.get_PC();
-                    cpu.regs.set_PC(pc+2);
-                }
-            },
-            jump: true,
-        };
         cpu.opcodes[0xC0] = Opcode {
             name: "RET NZ",
             len: 1,
@@ -1953,7 +1938,7 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{
                 let addr = imm16(cpu);
                 let pc = cpu.regs.get_PC();
-                if !cpu.regs.get_FZ() { cpu.regs.set_PC(addr); } else {cpu.regs.set_PC(pc+2);}
+                if !cpu.regs.get_FZ() { cpu.regs.set_PC(addr); } else {cpu.regs.set_PC(pc+3);}
             },
             jump: true,
         };
@@ -2006,6 +1991,21 @@ impl<'a> Cpu<'a>{
             len: 1,
             cycles: 16,
             execute: RET,
+            jump: true,
+        };
+        cpu.opcodes[0xCA] = Opcode {
+            name: "JP Z a16",
+            len: 3,
+            cycles: 16,
+            execute: |cpu|{
+                let addr = imm16(cpu);
+                if cpu.regs.get_FZ() == true {
+                    cpu.regs.PC = addr;
+                } else {
+                    let pc = cpu.regs.get_PC();
+                    cpu.regs.set_PC(pc+3);
+                }
+            },
             jump: true,
         };
         cpu.opcodes[0xCC] = Opcode {
