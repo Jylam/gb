@@ -198,6 +198,12 @@ fn alu_add16imm(cpu: &mut Cpu, a: u16) -> u16 {
     return a.wrapping_add(b)
 }
 
+fn alu_rlc(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x80 == 0x80;
+    let r = (a << 1) | (if c { 1 } else { 0 });
+    alu_srflagupdate(cpu, r, c);
+    r
+}
 fn alu_daa(cpu: &mut Cpu) {
     let mut a = cpu.regs.A;
     let mut adjust = if cpu.regs.get_FC() { 0x60 } else { 0x00 };
@@ -2562,6 +2568,15 @@ impl<'a> Cpu<'a>{
 
 
         /************ Alternative (PREFIX) opcodes **************/
+        cpu.alt_opcodes[0x00] = Opcode {
+            name: "RLC B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {
+                cpu.regs.B = alu_rlc(cpu, cpu.regs.B);
+            },
+            jump: false,
+        };
         cpu.alt_opcodes[0x11] = Opcode {
             name: "RL C",
             len: 2,
