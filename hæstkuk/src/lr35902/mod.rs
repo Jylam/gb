@@ -276,6 +276,12 @@ fn alu_srflagupdate(cpu: &mut Cpu, r: u8, c: bool) {
 }
 
 
+fn alu_sla(cpu: &mut Cpu, a: u8) -> u8 {
+    let c = a & 0x80 == 0x80;
+    let r = a << 1;
+    alu_srflagupdate(cpu, r, c);
+    return r
+}
 fn alu_sra(cpu: &mut Cpu, a: u8) -> u8 {
     let c = a & 0x01 == 0x01;
     let r = a >> 1  | (a & 0x80) ;
@@ -2759,6 +2765,69 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{cpu.regs.A = alu_rr(cpu, cpu.regs.A);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x20] = Opcode {
+            name: "SLA B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = alu_sla(cpu, cpu.regs.B);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x21] = Opcode {
+            name: "SLA C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = alu_sla(cpu, cpu.regs.C);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x22] = Opcode {
+            name: "SLA D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = alu_sla(cpu, cpu.regs.D);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x23] = Opcode {
+            name: "SLA E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = alu_sla(cpu, cpu.regs.E);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x24] = Opcode {
+            name: "SLA H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = alu_sla(cpu, cpu.regs.H);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x25] = Opcode {
+            name: "SLA L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = alu_sla(cpu, cpu.regs.L);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x27] = Opcode {
+            name: "SLA A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = alu_sla(cpu, cpu.regs.A);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x28] = Opcode {
+            name: "SRA B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = alu_sra(cpu, cpu.regs.B);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x29] = Opcode {
+            name: "SRA C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = alu_sra(cpu, cpu.regs.C);},
             jump: false,
         };
         cpu.alt_opcodes[0x41] = Opcode {
