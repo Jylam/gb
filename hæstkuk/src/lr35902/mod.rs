@@ -959,7 +959,7 @@ impl<'a> Cpu<'a>{
             cycles: 4,
             execute: |cpu| {
                 let de = cpu.regs.get_DE();
-                cpu.regs.set_BC(de.wrapping_sub(1)) },
+                cpu.regs.set_DE(de.wrapping_sub(1)) },
                 jump: false,
         };
         cpu.opcodes[0x1C] = Opcode {
