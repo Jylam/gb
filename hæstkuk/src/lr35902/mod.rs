@@ -3026,6 +3026,48 @@ impl<'a> Cpu<'a>{
             execute: SRLa,
             jump: false,
         };
+        cpu.alt_opcodes[0x40] = Opcode {
+            name: "BIT 0,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x41] = Opcode {
+            name: "BIT 0,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x42] = Opcode {
+            name: "BIT 0,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x43] = Opcode {
+            name: "BIT 0,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x44] = Opcode {
+            name: "BIT 0,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x45] = Opcode {
+            name: "BIT 0,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 0);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x46] = Opcode {
             name: "BIT 0, (HL)",
             len: 2,
@@ -3280,7 +3322,7 @@ impl<'a> Cpu<'a>{
   //          self.print_status_small();
         }
         if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
-            self.print_dump();
+          //  self.print_dump();
         }
 
         (opcode.execute)(self);
