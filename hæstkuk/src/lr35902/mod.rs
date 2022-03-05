@@ -638,9 +638,6 @@ pub fn SWAPa(cpu: &mut Cpu) {
 
     debug!("SWAP A");
 }
-pub fn RLc(cpu: &mut Cpu) {
-    cpu.regs.C = alu_rl(cpu, cpu.regs.C);
-}
 pub fn RLa(cpu: &mut Cpu) {
     cpu.regs.A = alu_rl(cpu, cpu.regs.A);
 }
@@ -2666,18 +2663,53 @@ impl<'a> Cpu<'a>{
             execute: |cpu| {cpu.regs.A = alu_rrc(cpu, cpu.regs.A);},
             jump: false,
         };
+        cpu.alt_opcodes[0x10] = Opcode {
+            name: "RL B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.B = alu_rl(cpu, cpu.regs.B);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x11] = Opcode {
             name: "RL C",
             len: 2,
             cycles: 8,
-            execute: RLc,
+            execute: |cpu| {cpu.regs.C = alu_rl(cpu, cpu.regs.C);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x12] = Opcode {
+            name: "RL D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.D = alu_rl(cpu, cpu.regs.D);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x13] = Opcode {
+            name: "RL E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.E = alu_rl(cpu, cpu.regs.E);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x14] = Opcode {
+            name: "RL H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.H = alu_rl(cpu, cpu.regs.H);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x15] = Opcode {
+            name: "RL L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {cpu.regs.L = alu_rl(cpu, cpu.regs.L);},
             jump: false,
         };
         cpu.alt_opcodes[0x17] = Opcode {
             name: "RL A",
             len: 2,
             cycles: 8,
-            execute: RLa,
+            execute: |cpu| {cpu.regs.A = alu_rl(cpu, cpu.regs.A);},
             jump: false,
         };
         cpu.alt_opcodes[0x18] = Opcode {
@@ -2720,6 +2752,13 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{cpu.regs.L = alu_rr(cpu, cpu.regs.L);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x1F] = Opcode {
+            name: "RR A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = alu_rr(cpu, cpu.regs.A);},
             jump: false,
         };
         cpu.alt_opcodes[0x41] = Opcode {
