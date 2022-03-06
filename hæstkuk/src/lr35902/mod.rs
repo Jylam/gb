@@ -3075,11 +3075,81 @@ impl<'a> Cpu<'a>{
             execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 0);},
             jump: false,
         };
+        cpu.alt_opcodes[0x80] = Opcode {
+            name: "RES 0, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x81] = Opcode {
+            name: "RES 0, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x82] = Opcode {
+            name: "RES 0, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x83] = Opcode {
+            name: "RES 0, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x84] = Opcode {
+            name: "RES 0, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x85] = Opcode {
+            name: "RES 0, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x86] = Opcode {
+            name: "RES 0, (HL)",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 0); cpu.mem.write8(a, v);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x87] = Opcode {
             name: "RES 0, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 0);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x88] = Opcode {
+            name: "RES 1, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x89] = Opcode {
+            name: "RES 1, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x8A] = Opcode {
+            name: "RES 1, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 1);},
             jump: false,
         };
         cpu.alt_opcodes[0x8B] = Opcode {
@@ -3089,10 +3159,24 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 1);},
             jump: false,
         };
+        cpu.alt_opcodes[0x8C] = Opcode {
+            name: "RES 1, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x8D] = Opcode {
+            name: "RES 1, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 1);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x8E] = Opcode {
             name: "RES 1, (HL)",
             len: 2,
-            cycles: 16,
+            cycles: 8,
             execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 1); cpu.mem.write8(a, v);},
             jump: false,
         };
@@ -3103,10 +3187,53 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 1);},
             jump: false,
         };
+
+        cpu.alt_opcodes[0x90] = Opcode {
+            name: "RES 2, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x91] = Opcode {
+            name: "RES 2, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x92] = Opcode {
+            name: "RES 2, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x93] = Opcode {
+            name: "RES 2, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x94] = Opcode {
+            name: "RES 2, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x95] = Opcode {
+            name: "RES 2, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 2);},
+            jump: false,
+        };
         cpu.alt_opcodes[0x96] = Opcode {
             name: "RES 2, (HL)",
             len: 2,
-            cycles: 16,
+            cycles: 8,
             execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 2); cpu.mem.write8(a, v);},
             jump: false,
         };
@@ -3114,7 +3241,49 @@ impl<'a> Cpu<'a>{
             name: "RES 2, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 2);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x98] = Opcode {
+            name: "RES 3, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x99] = Opcode {
+            name: "RES 3, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x9A] = Opcode {
+            name: "RES 3, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x9B] = Opcode {
+            name: "RES 3, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x9C] = Opcode {
+            name: "RES 3, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x9D] = Opcode {
+            name: "RES 3, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 3);},
             jump: false,
         };
         cpu.alt_opcodes[0x9E] = Opcode {
@@ -3131,10 +3300,53 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 3);},
             jump: false,
         };
+
+        cpu.alt_opcodes[0xA0] = Opcode {
+            name: "RES 4, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA1] = Opcode {
+            name: "RES 4, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA2] = Opcode {
+            name: "RES 4, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA3] = Opcode {
+            name: "RES 4, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA4] = Opcode {
+            name: "RES 4, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA5] = Opcode {
+            name: "RES 4, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 4);},
+            jump: false,
+        };
         cpu.alt_opcodes[0xA6] = Opcode {
             name: "RES 4, (HL)",
             len: 2,
-            cycles: 16,
+            cycles: 8,
             execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 4); cpu.mem.write8(a, v);},
             jump: false,
         };
@@ -3142,21 +3354,161 @@ impl<'a> Cpu<'a>{
             name: "RES 4, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 4);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA8] = Opcode {
+            name: "RES 7, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xA9] = Opcode {
+            name: "RES 7, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xAA] = Opcode {
+            name: "RES 7, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xAB] = Opcode {
+            name: "RES 7, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xAC] = Opcode {
+            name: "RES 7, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xAD] = Opcode {
+            name: "RES 7, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 5);},
             jump: false,
         };
         cpu.alt_opcodes[0xAE] = Opcode {
-            name: "RES 5, (HL)",
+            name: "RES 7, (HL)",
             len: 2,
-            cycles: 16,
-            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 5); cpu.mem.write8(a, v);},
+            cycles: 8,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 7); cpu.mem.write8(a, v);},
             jump: false,
         };
         cpu.alt_opcodes[0xAF] = Opcode {
-            name: "RES 5, A",
+            name: "RES 7, A",
             len: 2,
             cycles: 8,
             execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB0] = Opcode {
+            name: "RES 6, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB1] = Opcode {
+            name: "RES 6, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB2] = Opcode {
+            name: "RES 6, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB3] = Opcode {
+            name: "RES 6, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB4] = Opcode {
+            name: "RES 6, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB5] = Opcode {
+            name: "RES 6, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB6] = Opcode {
+            name: "RES 6, (HL)",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 6); cpu.mem.write8(a, v);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB7] = Opcode {
+            name: "RES 6, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB8] = Opcode {
+            name: "RES 7, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B & !(1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xB9] = Opcode {
+            name: "RES 7, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C & !(1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xBA] = Opcode {
+            name: "RES 7, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D & !(1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xBB] = Opcode {
+            name: "RES 7, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E & !(1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xBC] = Opcode {
+            name: "RES 7, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H & !(1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xBD] = Opcode {
+            name: "RES 7, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L & !(1 << 7);},
             jump: false,
         };
         cpu.alt_opcodes[0xBE] = Opcode {
@@ -3166,6 +3518,14 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{let a = cpu.regs.get_HL(); let v = cpu.mem.read8(a) & !(1 << 7); cpu.mem.write8(a, v);},
             jump: false,
         };
+        cpu.alt_opcodes[0xBF] = Opcode {
+            name: "RES 7, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 7);},
+            jump: false,
+        };
+
         cpu.alt_opcodes[0xC0] = Opcode {
             name: "SET 0, B",
             len: 2,
@@ -3225,6 +3585,67 @@ impl<'a> Cpu<'a>{
             len: 2,
             cycles: 8,
             execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xC8] = Opcode {
+            name: "SET 1, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B | (1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xC9] = Opcode {
+            name: "SET 1, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C | (1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCA] = Opcode {
+            name: "SET 1, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D | (1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCB] = Opcode {
+            name: "SET 1, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E | (1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCC] = Opcode {
+            name: "SET 1, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H | (1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCD] = Opcode {
+            name: "SET 1, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L | (1 << 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCE] = Opcode {
+            name: "SET 1, (HL)",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{
+                let hl = cpu.regs.get_HL();
+                let mut v =  cpu.mem.read8(hl);
+                v|=1<<1;
+                cpu.mem.write8(hl, v);
+            },
+            jump: false,
+        };
+        cpu.alt_opcodes[0xCF] = Opcode {
+            name: "SET 1, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 1);},
             jump: false,
         };
         cpu.alt_opcodes[0xD0] = Opcode {
@@ -3288,6 +3709,67 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 2);},
             jump: false,
         };
+        cpu.alt_opcodes[0xD8] = Opcode {
+            name: "SET 3, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B | (1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xD9] = Opcode {
+            name: "SET 3, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C | (1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xDA] = Opcode {
+            name: "SET 3, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D | (1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xDB] = Opcode {
+            name: "SET 3, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E | (1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xDC] = Opcode {
+            name: "SET 3, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H | (1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xDD] = Opcode {
+            name: "SET 3, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L | (1 << 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xDE] = Opcode {
+            name: "SET 3, (HL)",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{
+                let hl = cpu.regs.get_HL();
+                let mut v =  cpu.mem.read8(hl);
+                v|=1<<3;
+                cpu.mem.write8(hl, v);
+            },
+            jump: false,
+        };
+        cpu.alt_opcodes[0xDF] = Opcode {
+            name: "SET 3, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 3);},
+            jump: false,
+        };
         cpu.alt_opcodes[0xE0] = Opcode {
             name: "SET 4, B",
             len: 2,
@@ -3349,6 +3831,67 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 4);},
             jump: false,
         };
+        cpu.alt_opcodes[0xE8] = Opcode {
+            name: "SET 5, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B | (1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xE9] = Opcode {
+            name: "SET 5, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C | (1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xEA] = Opcode {
+            name: "SET 5, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D | (1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xEB] = Opcode {
+            name: "SET 5, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E | (1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xEC] = Opcode {
+            name: "SET 5, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H | (1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xED] = Opcode {
+            name: "SET 5, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L | (1 << 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xEE] = Opcode {
+            name: "SET 7, (HL)",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{
+                let hl = cpu.regs.get_HL();
+                let mut v =  cpu.mem.read8(hl);
+                v|=1<<5;
+                cpu.mem.write8(hl, v);
+            },
+            jump: false,
+        };
+        cpu.alt_opcodes[0xEF] = Opcode {
+            name: "SET 5, A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 5);},
+            jump: false,
+        };
         cpu.alt_opcodes[0xF0] = Opcode {
             name: "SET 6, B",
             len: 2,
@@ -3407,7 +3950,49 @@ impl<'a> Cpu<'a>{
             name: "SET 6, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 6);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xF8] = Opcode {
+            name: "SET 7, B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.B = cpu.regs.B | (1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xF9] = Opcode {
+            name: "SET 7, C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.C = cpu.regs.C | (1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xFA] = Opcode {
+            name: "SET 7, D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.D = cpu.regs.D | (1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xFB] = Opcode {
+            name: "SET 7, E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.E = cpu.regs.E | (1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xFC] = Opcode {
+            name: "SET 7, H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.H = cpu.regs.H | (1 << 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0xFD] = Opcode {
+            name: "SET 7, L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu|{cpu.regs.L = cpu.regs.L | (1 << 7);},
             jump: false,
         };
         cpu.alt_opcodes[0xFE] = Opcode {
