@@ -3075,6 +3075,407 @@ impl<'a> Cpu<'a>{
             execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 0);},
             jump: false,
         };
+        cpu.alt_opcodes[0x47] = Opcode {
+            name: "BIT 0,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 0);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x48] = Opcode {
+            name: "BIT 1,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x49] = Opcode {
+            name: "BIT 1,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x4A] = Opcode {
+            name: "BIT 1,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x4B] = Opcode {
+            name: "BIT 1,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x4C] = Opcode {
+            name: "BIT 1,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x4D] = Opcode {
+            name: "BIT 1,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x4E] = Opcode {
+            name: "BIT 1, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x4F] = Opcode {
+            name: "BIT 1,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 1);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x50] = Opcode {
+            name: "BIT 2,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x51] = Opcode {
+            name: "BIT 2,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x52] = Opcode {
+            name: "BIT 2,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x53] = Opcode {
+            name: "BIT 2,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x54] = Opcode {
+            name: "BIT 2,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x55] = Opcode {
+            name: "BIT 2,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x56] = Opcode {
+            name: "BIT 2, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x57] = Opcode {
+            name: "BIT 2,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 2);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x58] = Opcode {
+            name: "BIT 3,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x59] = Opcode {
+            name: "BIT 3,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x5A] = Opcode {
+            name: "BIT 3,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x5B] = Opcode {
+            name: "BIT 3,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x5C] = Opcode {
+            name: "BIT 3,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x5D] = Opcode {
+            name: "BIT 3,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x5E] = Opcode {
+            name: "BIT 3, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x5F] = Opcode {
+            name: "BIT 3,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 3);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x60] = Opcode {
+            name: "BIT 4,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x61] = Opcode {
+            name: "BIT 4,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x62] = Opcode {
+            name: "BIT 4,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x63] = Opcode {
+            name: "BIT 4,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x64] = Opcode {
+            name: "BIT 4,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x65] = Opcode {
+            name: "BIT 4,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x66] = Opcode {
+            name: "BIT 4, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x67] = Opcode {
+            name: "BIT 4,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 4);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x68] = Opcode {
+            name: "BIT 5,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x69] = Opcode {
+            name: "BIT 5,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6A] = Opcode {
+            name: "BIT 5,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6B] = Opcode {
+            name: "BIT 5,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6C] = Opcode {
+            name: "BIT 5,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6D] = Opcode {
+            name: "BIT 5,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6E] = Opcode {
+            name: "BIT 5, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x6F] = Opcode {
+            name: "BIT 5,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 5);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x70] = Opcode {
+            name: "BIT 6,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x71] = Opcode {
+            name: "BIT 6,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x72] = Opcode {
+            name: "BIT 6,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x73] = Opcode {
+            name: "BIT 6,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x74] = Opcode {
+            name: "BIT 6,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x75] = Opcode {
+            name: "BIT 6,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x76] = Opcode {
+            name: "BIT 6, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x77] = Opcode {
+            name: "BIT 6,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 6);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x78] = Opcode {
+            name: "BIT 7,B",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.B, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x79] = Opcode {
+            name: "BIT 7,C",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.C, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7A] = Opcode {
+            name: "BIT 7,D",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.D, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7B] = Opcode {
+            name: "BIT 7,E",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.E, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7C] = Opcode {
+            name: "BIT 7,H",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7D] = Opcode {
+            name: "BIT 7,L",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.L, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7E] = Opcode {
+            name: "BIT 7, (HL)",
+            len: 2,
+            cycles: 16,
+            execute: |cpu| {let hl = cpu.mem.read8(cpu.regs.get_HL()); alu_bit(cpu, hl, 7);},
+            jump: false,
+        };
+        cpu.alt_opcodes[0x7F] = Opcode {
+            name: "BIT 7,A",
+            len: 2,
+            cycles: 8,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.A, 7);},
+            jump: false,
+        };
+
+
         cpu.alt_opcodes[0x80] = Opcode {
             name: "RES 0, B",
             len: 2,
@@ -3128,7 +3529,7 @@ impl<'a> Cpu<'a>{
             name: "RES 0, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 1);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 0);},
             jump: false,
         };
         cpu.alt_opcodes[0x88] = Opcode {
@@ -3241,7 +3642,7 @@ impl<'a> Cpu<'a>{
             name: "RES 2, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 3);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 2);},
             jump: false,
         };
         cpu.alt_opcodes[0x98] = Opcode {
@@ -3354,7 +3755,7 @@ impl<'a> Cpu<'a>{
             name: "RES 4, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 5);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 4);},
             jump: false,
         };
         cpu.alt_opcodes[0xA8] = Opcode {
@@ -3466,7 +3867,7 @@ impl<'a> Cpu<'a>{
             name: "RES 6, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 7);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A & !(1 << 6);},
             jump: false,
         };
         cpu.alt_opcodes[0xB8] = Opcode {
@@ -3950,7 +4351,7 @@ impl<'a> Cpu<'a>{
             name: "SET 6, A",
             len: 2,
             cycles: 8,
-            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 7);},
+            execute: |cpu|{cpu.regs.A = cpu.regs.A | (1 << 6);},
             jump: false,
         };
         cpu.alt_opcodes[0xF8] = Opcode {
