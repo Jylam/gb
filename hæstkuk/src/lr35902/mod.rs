@@ -761,6 +761,15 @@ impl<'a> Cpu<'a>{
             },
             jump: false,
         };
+        cpu.opcodes[0x02] = Opcode {
+            name: "LD (BC), A",
+            len: 1,
+            cycles: 8,
+            execute: |cpu|{
+                cpu.mem.write8(cpu.regs.get_BC(), cpu.regs.A);
+            },
+            jump: false,
+        };
         cpu.opcodes[0x03] = Opcode {
             name: "INC BC",
             len: 1,
