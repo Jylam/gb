@@ -1,6 +1,6 @@
 // Sharp LR35902 CPU emulator
 #![allow(non_snake_case)]
-#![allow(dead_code)]
+//#![allow(dead_code)]
 
 use std::thread::sleep;
 use std::time::Duration;
@@ -362,22 +362,10 @@ pub fn ADDad8(cpu: &mut Cpu) {
     alu_add(cpu, imm, false);
     debug!("ADD A, {:02X}", imm);
 }
-pub fn ADDaa(cpu: &mut Cpu) {
-    alu_add(cpu, cpu.regs.A, false);
-    debug!("ADD A,A");
-}
 pub fn ADDahl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
     alu_add(cpu, hl, false);
     debug!("ADD A, (HL)");
-}
-pub fn ADDab(cpu: &mut Cpu) {
-    alu_add(cpu, cpu.regs.B, false);
-    debug!("ADD A,B");
-}
-pub fn ADDac(cpu: &mut Cpu) {
-    alu_add(cpu, cpu.regs.C, false);
-    debug!("ADD A,C");
 }
 pub fn ADDhlde(cpu: &mut Cpu) {
     let de = cpu.regs.get_DE();
@@ -400,39 +388,10 @@ pub fn INCsp(cpu: &mut Cpu) {
     cpu.regs.set_SP(sp.wrapping_add(1));
     debug!("INC SP");
 }
-pub fn INC_hl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    cpu.mem.write8(cpu.regs.get_HL(), hl.wrapping_add(1));
-    debug!("INC (HL)");
-}
 pub fn INCde(cpu: &mut Cpu) {
     let de = cpu.regs.get_DE();
     cpu.regs.set_DE(de.wrapping_add(1));
     debug!("INC DE");
-}
-pub fn INCa(cpu: &mut Cpu) {
-    cpu.regs.A = alu_inc(cpu, cpu.regs.A);
-    debug!("INC A");
-}
-pub fn INCh(cpu: &mut Cpu) {
-    cpu.regs.H = alu_inc(cpu, cpu.regs.H);
-    debug!("INC H");
-}
-pub fn INCl(cpu: &mut Cpu) {
-    cpu.regs.L = alu_inc(cpu, cpu.regs.L);
-    debug!("INC L");
-}
-pub fn INCc(cpu: &mut Cpu) {
-    cpu.regs.C = alu_inc(cpu, cpu.regs.C);
-    debug!("INC C");
-}
-pub fn INCd(cpu: &mut Cpu) {
-    cpu.regs.D = alu_inc(cpu, cpu.regs.D);
-    debug!("INC D");
-}
-pub fn INCe(cpu: &mut Cpu) {
-    cpu.regs.E = alu_inc(cpu, cpu.regs.E);
-    debug!("INC E");
 }
 pub fn CPc(cpu: &mut Cpu) {
     alu_cp(cpu, cpu.regs.C);
@@ -448,7 +407,6 @@ pub fn CPd8(cpu: &mut Cpu) {
     alu_cp(cpu, imm);
     debug!("CP {:02X}", imm)
 }
-
 pub fn LDlhl(cpu: &mut Cpu) {
     let addr = cpu.regs.get_HL();
     cpu.regs.L = cpu.mem.read8(addr);
@@ -469,11 +427,6 @@ pub fn LDhld16(cpu: &mut Cpu) {
     cpu.regs.set_HL(imm);
     debug!("LD HL, {:04X}", imm)
 }
-pub fn LDhla(cpu: &mut Cpu) {
-    let hl = cpu.regs.get_HL();
-    cpu.mem.write8(hl, cpu.regs.A);
-    debug!("LD {:04X}, A", hl);
-}
 pub fn LDhlpa(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.mem.write8(hl, cpu.regs.A);
@@ -484,21 +437,6 @@ pub fn LDhhl(cpu: &mut Cpu) {
     let hl = cpu.regs.get_HL();
     cpu.regs.H = cpu.mem.read8(hl);
     debug!("LD H, (HL)")
-}
-pub fn LDhlb(cpu: &mut Cpu) {
-    let B = cpu.regs.B;
-    cpu.regs.set_HL(B as u16);
-    debug!("LD (HL), B")
-}
-pub fn LDhlc(cpu: &mut Cpu) {
-    let C = cpu.regs.C;
-    cpu.regs.set_HL(C as u16);
-    debug!("LD (HL), C")
-}
-pub fn LDhld(cpu: &mut Cpu) {
-    let D = cpu.regs.D;
-    cpu.regs.set_HL(D as u16);
-    debug!("LD (HL), D")
 }
 pub fn LDpca(cpu: &mut Cpu) {
     let C = cpu.regs.C as u16;
@@ -545,26 +483,6 @@ pub fn LDa16a(cpu: &mut Cpu) {
     let imm = imm16(cpu);
     cpu.mem.write8(imm, cpu.regs.A);
     debug!("LD ({:04X}), A", imm)
-}
-pub fn LDal(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.L;
-    debug!("LDH A, L")
-}
-pub fn LDba(cpu: &mut Cpu) {
-    cpu.regs.B = cpu.regs.A;
-    debug!("LD B, A")
-}
-pub fn LDbb(cpu: &mut Cpu) {
-    cpu.regs.B = cpu.regs.B;
-    debug!("LD B, B")
-}
-pub fn LDea(cpu: &mut Cpu) {
-    cpu.regs.E = cpu.regs.A;
-    debug!("LD E, A")
-}
-pub fn LDah(cpu: &mut Cpu) {
-    cpu.regs.A = cpu.regs.H;
-    debug!("LDH A, H")
 }
 pub fn LDehl(cpu: &mut Cpu) {
     let m = cpu.mem.read8(cpu.regs.get_HL());
@@ -617,16 +535,6 @@ pub fn RETI(cpu: &mut Cpu) {
     EI(cpu);
     debug!("RETI (-> {:04X})", addr)
 }
-pub fn RETC(cpu: &mut Cpu) {
-    if cpu.regs.get_FC() == true {
-        let addr = PopStack(cpu);
-        cpu.regs.PC = addr;
-        debug!("RET NC (-> {:04X})", addr)
-    } else {
-        cpu.regs.PC = cpu.regs.PC.wrapping_add(1);
-        debug!("RET NC (-> continue)")
-    }
-}
 pub fn DI(cpu: &mut Cpu) {
     cpu.regs.I = false;
     debug!("DI")
@@ -636,35 +544,10 @@ pub fn EI(cpu: &mut Cpu) {
     debug!("EI")
 }
 
-pub fn SWAPa(cpu: &mut Cpu) {
-    cpu.regs.A = ((cpu.regs.A&0xF0)>>4)|(cpu.regs.A<<4);
-    cpu.regs.set_FZ(cpu.regs.A == 0);
-    cpu.regs.set_FN(false);
-    cpu.regs.set_FH(false);
-    cpu.regs.set_FC(false);
-
-    debug!("SWAP A");
-}
-pub fn RLa(cpu: &mut Cpu) {
-    cpu.regs.A = alu_rl(cpu, cpu.regs.A);
-}
 pub fn RLA(cpu: &mut Cpu) {
     cpu.regs.A = alu_rl(cpu, cpu.regs.A);
     cpu.regs.set_FZ(false);
 }
-pub fn BIT5a(cpu: &mut Cpu) {
-    alu_bit(cpu, cpu.regs.A, 5);
-    debug!("BIT5, A")
-}
-pub fn BIT6a(cpu: &mut Cpu) {
-    alu_bit(cpu, cpu.regs.A, 6);
-    debug!("BIT6, A")
-}
-pub fn BIT7h(cpu: &mut Cpu) {
-    alu_bit(cpu, cpu.regs.H, 7);
-    debug!("BIT7, H")
-}
-
 
 pub fn SRLa(cpu: &mut Cpu) {
     cpu.regs.A = alu_srl(cpu, cpu.regs.A);
@@ -1478,7 +1361,7 @@ impl<'a> Cpu<'a>{
             name: "LD E, A",
             len: 1,
             cycles: 4,
-            execute: LDea,
+            execute: |cpu|{cpu.regs.E = cpu.regs.A;},
             jump: false,
         };
         cpu.opcodes[0x60] = Opcode {
@@ -1639,7 +1522,7 @@ impl<'a> Cpu<'a>{
             name: "HALT",
             len: 1,
             cycles: 8,
-            execute: |_|{println!("HALT"); loop{}},
+            execute: |_|{println!("HALT"); },
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
@@ -3103,7 +2986,7 @@ impl<'a> Cpu<'a>{
             name: "BIT 7,H",
             len: 2,
             cycles: 8,
-            execute: BIT7h,
+            execute: |cpu| {alu_bit(cpu, cpu.regs.H, 7);},
             jump: false,
         };
         cpu.alt_opcodes[0x7F] = Opcode {
