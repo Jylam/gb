@@ -15,15 +15,17 @@ pub struct Mem<'a> {
     rom:  rom::ROM<'a>,
     ram: Vec<u8>,
     pub lcd:  lcd::LCD<'a>,
+    pub joypad: joypad::Joypad<'a>,
 }
 
 impl<'a> Mem<'a>{
-    pub fn new(arom: rom::ROM<'a>, alcd: lcd::LCD<'a>) -> Mem<'a> {
+    pub fn new(arom: rom::ROM<'a>, alcd: lcd::LCD<'a>, ajoypad: joypad::Joypad<'a>) -> Mem<'a> {
         let mut mem = Mem{
             _size: 0xFFFF,
             rom: arom,
             ram: vec![0x00; 65536],
             lcd: alcd,
+            joypad: ajoypad,
             bootrom_enable: true,
         ..Default::default()
         };
@@ -40,7 +42,8 @@ impl<'a> Mem<'a>{
         match addr {
             0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] } else {self.rom.buffer[addr as usize]},
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
-            0xFF40..=0xFF4F => { self.lcd.read8(addr)},
+            0xFF40..=0xFF4F => { self.lcd.read8(addr) },
+            0xFF00          => { self.joypad.read8() },
             _ => {self.ram[addr as usize]},
         }
     }
@@ -50,6 +53,7 @@ impl<'a> Mem<'a>{
             0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
             0xFF40..=0xFF4F => { self.lcd.write8(addr, v)},
             0xFF50 => {self.bootrom_enable = false; println!("Disabling BOOTROM");}
+            0xFF00 => {self.joypad.write8(v);},
             _ => {self.ram[addr as usize] = v;},
         }
     }

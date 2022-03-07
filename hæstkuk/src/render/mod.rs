@@ -64,7 +64,15 @@ impl<'a> Render<'a> {
 
     }
     pub fn get_events(&mut self, cpu: &mut Cpu<'a>) -> bool {
+        cpu.mem.joypad.set_a(self.window.is_key_down(Key::A));
+        cpu.mem.joypad.set_b(self.window.is_key_down(Key::B));
+        cpu.mem.joypad.set_select(self.window.is_key_down(Key::Space));
+        cpu.mem.joypad.set_start(self.window.is_key_down(Key::Enter));
 
+        cpu.mem.joypad.set_up(self.window.is_key_down(Key::Up));
+        cpu.mem.joypad.set_down(self.window.is_key_down(Key::Down));
+        cpu.mem.joypad.set_left(self.window.is_key_down(Key::Left));
+        cpu.mem.joypad.set_right(self.window.is_key_down(Key::Right));
 
         self.window.is_key_down(Key::Escape) || self.tiles.is_key_down(Key::Escape)
     }

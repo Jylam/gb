@@ -20,6 +20,7 @@ fn main() {
     env_logger::init();
 
     let lcd: lcd::LCD;
+    let joypad: joypad::Joypad;
     let rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
     let mem: mem::Mem;
@@ -46,7 +47,8 @@ fn main() {
     rom.print_infos();
 
     lcd = lcd::LCD::new();
-    mem = mem::Mem::new(rom, lcd);
+    joypad = joypad::Joypad::new();
+    mem = mem::Mem::new(rom, lcd, joypad);
     cpu = lr35902::Cpu::new(mem);
 
     render = render::Render::new();

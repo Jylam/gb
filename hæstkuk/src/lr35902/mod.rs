@@ -1,6 +1,6 @@
 // Sharp LR35902 CPU emulator
 #![allow(non_snake_case)]
-//#![allow(dead_code)]
+#![allow(dead_code)]
 
 use std::thread::sleep;
 use std::time::Duration;
@@ -1522,7 +1522,7 @@ impl<'a> Cpu<'a>{
             name: "HALT",
             len: 1,
             cycles: 8,
-            execute: |_|{println!("HALT"); },
+            execute: |_|{ },
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
