@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::Read;
 use rom;
 use lcd;
+use joypad;
 
 // Memory controller
 #[derive(Clone, Debug, Default)]

@@ -26,7 +26,6 @@ pub struct Render<'a> {
     height: usize,
     buffer_bg: Vec<u32>,
     buffer_tiles: Vec<u32>,
-    lcd_regs: Vec<u8>,
     phantom: PhantomData<&'a u8>,
 }
 
@@ -59,13 +58,14 @@ impl<'a> Render<'a> {
             height: 256,
             buffer_bg:    vec![0x00; 256*256],
             buffer_tiles: vec![0x00; 256*256],
-            lcd_regs: vec![0x00; 0x15],
             phantom: PhantomData,
         };
         render
 
     }
-    pub fn get_events(&mut self) -> bool {
+    pub fn get_events(&mut self, cpu: &mut Cpu<'a>) -> bool {
+
+
         self.window.is_key_down(Key::Escape) || self.tiles.is_key_down(Key::Escape)
     }
 

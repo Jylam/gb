@@ -10,7 +10,7 @@ mod rom;
 mod lr35902;
 mod lcd;
 mod render;
-
+mod joypad;
 
 extern crate minifb;
 
@@ -69,8 +69,7 @@ fn main() {
         cpu.step();
         cpu.mem.lcd.update();
 
-
-        if render.get_events() {
+        if render.get_events(&mut cpu) {
             println!("EXIT");
             break;
         }

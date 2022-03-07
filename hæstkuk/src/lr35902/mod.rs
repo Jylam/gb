@@ -4612,7 +4612,7 @@ impl<'a> Cpu<'a>{
         }
 
         if self.mem.read8(0xFF02) == 0x81 {
-            let c = self.mem.read8(0xFF01);
+            let _c = self.mem.read8(0xFF01);
             //println!("SERIAL got {}", c as char);
 //            print!("{}", c as char);
             self.mem.write8(0xff02, 0x0);
