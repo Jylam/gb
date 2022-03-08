@@ -44,6 +44,10 @@ impl<'a> Mem<'a>{
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
             0xFF40..=0xFF4F => { self.lcd.read8(addr) },
             0xFF00          => { self.joypad.read8() },
+
+            0xFF0F          => { self.ram[addr as usize]}, // IF - Interrupt Flag (R/W)
+            0xFFFF          => { self.ram[addr as usize]}, // IE - Interrupt Enable (R/W)
+
             _ => {self.ram[addr as usize]},
         }
     }

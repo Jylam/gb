@@ -63,6 +63,8 @@ impl<'a> Render<'a> {
         render
 
     }
+
+    // Handle key pressed, returns true on quit
     pub fn get_events(&mut self, cpu: &mut Cpu<'a>) -> bool {
         cpu.mem.joypad.set_a(self.window.is_key_down(Key::A));
         cpu.mem.joypad.set_b(self.window.is_key_down(Key::B));

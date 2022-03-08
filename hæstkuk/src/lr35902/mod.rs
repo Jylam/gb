@@ -4598,7 +4598,7 @@ impl<'a> Cpu<'a>{
             opcode = self.opcodes[code];
         }
         if self.regs.PC > 0x00FF {
-  //          self.print_status_small();
+          //  self.print_status_small();
         }
         if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
           //  self.print_dump();
@@ -4614,9 +4614,53 @@ impl<'a> Cpu<'a>{
         if self.mem.read8(0xFF02) == 0x81 {
             let _c = self.mem.read8(0xFF01);
             //println!("SERIAL got {}", c as char);
-//            print!("{}", c as char);
+            // print!("{}", c as char);
             self.mem.write8(0xff02, 0x0);
         }
+
+        /* Interrupts */
+        let mut ie = self.mem.read8(0xFFFF);
+        let iflag = self.mem.read8(0xFF0F);
+
+        if self.regs.I {
+            if (ie&0b0000_0001)!=0 &&
+                (self.mem.lcd.int_vblank() || (iflag&0b0000_0001)!=0) { // VBLANK
+                println!("INT VBLANK");
+                ie = ie & !(1 << 0);
+                self.mem.write8(0xFFFF, ie);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0040;
+            }
+            if ((ie&0b0000_0010)!=0) && (iflag&0b0000_0010)!=0 { // LCD STAT
+                println!("INT LCD STAT");
+                ie = ie & !(1 << 1);
+                self.mem.write8(0xFFFF, ie);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0048;
+            }
+            if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
+                println!("INT Timer");
+                ie = ie & !(1 << 2);
+                self.mem.write8(0xFFFF, ie);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0050;
+            }
+            if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
+                println!("INT Serial");
+                ie = ie & !(1 << 3);
+                self.mem.write8(0xFFFF, ie);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0058;
+            }
+            if ((ie&0b0001_0000)!=0) && (iflag&0b0001_0000)!=0 { // Joypad
+                println!("INT Joypad");
+                ie = ie & !(1 << 4);
+                self.mem.write8(0xFFFF, ie);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0060;
+            }
+        }
+
         opcode.cycles as u8
     }
 
