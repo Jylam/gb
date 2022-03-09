@@ -4583,7 +4583,7 @@ impl<'a> Cpu<'a>{
 
         /* Interrupts */
 
-        let mut ie = self.mem.read8(0xFFFF);
+        let ie = self.mem.read8(0xFFFF);
         let mut iflag = self.mem.read8(0xFF0F);
 
         if self.mem.lcd.int_vblank() {

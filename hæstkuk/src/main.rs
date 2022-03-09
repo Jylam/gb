@@ -16,12 +16,13 @@ mod timer;
 extern crate minifb;
 
 const VBLANK_FREQ_CYCLES : u64 = 17555;
-const CPU_MHZ: u64 = 4_194_304_000;
+const CPU_MHZ: u64 = 4_194_304;
 // 4.194304 MHz
 fn main() {
     env_logger::init();
 
     let lcd: lcd::LCD;
+    let timer: timer::Timer;
     let joypad: joypad::Joypad;
     let rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
@@ -48,15 +49,15 @@ fn main() {
     }
     rom.print_infos();
 
+    timer = timer::Timer::new(CPU_MHZ);
     lcd = lcd::LCD::new();
     joypad = joypad::Joypad::new();
-    mem = mem::Mem::new(rom, lcd, joypad);
+    mem = mem::Mem::new(rom, lcd, joypad, timer);
     cpu = lr35902::Cpu::new(mem);
 
     render = render::Render::new();
 
     let mut vblank_counter: u64 = 1;
-    let mut timer_counter: u64 = 0;
     let mut total_cycles: u64 = 0;
 
     cpu.reset();
@@ -72,12 +73,8 @@ fn main() {
 
         let cur_cycles = cpu.step() as u64;
         total_cycles += cur_cycles;
-        timer_counter+= cur_cycles;
 
-        if total_cycles >= CPU_MHZ {
-            println!("{}", total_cycles);
-            total_cycles = 0;
-        }
+        cpu.mem.timer.update(cur_cycles);
 
         if render.get_events(&mut cpu) {
             println!("EXIT");
