@@ -11,10 +11,11 @@ mod lr35902;
 mod lcd;
 mod render;
 mod joypad;
+mod timer;
 
 extern crate minifb;
 
-const VBLANK_FREQ_CYCLES : u32 = 17555;
+const VBLANK_FREQ_CYCLES : u64 = 17555;
 const CPU_MHZ: u64 = 4_194_304_000;
 // 4.194304 MHz
 fn main() {
