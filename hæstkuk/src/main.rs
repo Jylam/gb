@@ -15,7 +15,8 @@ mod joypad;
 extern crate minifb;
 
 const VBLANK_FREQ_CYCLES : u32 = 17555;
-
+const CPU_MHZ: u64 = 4_194_304_000;
+// 4.194304 MHz
 fn main() {
     env_logger::init();
 
@@ -31,8 +32,8 @@ fn main() {
     /* Parse arguments */
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-            println!("Usage:\n\t{} <rom.gb>", args[0]);
-            process::exit(2);
+        println!("Usage:\n\t{} <rom.gb>", args[0]);
+        process::exit(2);
     }
 
     let v: io::Result<rom::ROM> = rom::ROM::new(String::from(args[1].clone()));
@@ -53,7 +54,9 @@ fn main() {
 
     render = render::Render::new();
 
-    let mut vblank_counter: u32 = 1;
+    let mut vblank_counter: u64 = 1;
+    let mut timer_counter: u64 = 0;
+    let mut total_cycles: u64 = 0;
 
     cpu.reset();
 
@@ -63,13 +66,17 @@ fn main() {
             vblank_counter = VBLANK_FREQ_CYCLES;
             render.display_BG_map(&mut cpu);
             render.display_tile_pattern_tables (&mut cpu);
-            if cpu.interrupts_enabled() {
-                cpu.irq_vblank();
-            }
+            cpu.mem.lcd.update();
         }
 
-        cpu.step();
-        cpu.mem.lcd.update();
+        let cur_cycles = cpu.step() as u64;
+        total_cycles += cur_cycles;
+        timer_counter+= cur_cycles;
+
+        if total_cycles >= CPU_MHZ {
+            println!("{}", total_cycles);
+            total_cycles = 0;
+        }
 
         if render.get_events(&mut cpu) {
             println!("EXIT");

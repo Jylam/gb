@@ -43,6 +43,7 @@ impl<'a> LCD<'a>{
 	}
 
     pub fn int_vblank(&mut self) -> bool {
+        return self.vblank; // ??
         if self.vblank {
             self.vblank = false;
             return true;

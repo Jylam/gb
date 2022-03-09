@@ -182,7 +182,7 @@ pub fn alu_inc(cpu: &mut Cpu, a: u8) -> u8 {
 pub fn alu_add16(cpu: &mut Cpu, b: u16) {
     let a = cpu.regs.get_HL();
     let r = a.wrapping_add(b);
-//    cpu.regs.set_FH((a & 0x07FF) + (b & 0x07FF) > 0x07FF);
+    //    cpu.regs.set_FH((a & 0x07FF) + (b & 0x07FF) > 0x07FF);
     cpu.regs.set_FH(((cpu.regs.get_HL()&0xFFF) + (b&0xFFF)) > 0xFFF);
     cpu.regs.set_FN(false);
     cpu.regs.set_FC(a > 0xFFFF - b);
@@ -321,81 +321,12 @@ fn cpu_jr(cpu: &mut Cpu) {
     cpu.regs.set_PC((((cpu.regs.get_PC()+2) as u32 as i32) + (n as i32)) as u16);
 }
 
-pub fn XORd8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    alu_xor(cpu, imm);
-    debug!("XOR {:02X}", imm);
-}
-pub fn XOR_hl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    alu_xor(cpu, hl);
-    debug!("XOR A, [HL]");
-}
-pub fn ORhl(cpu: &mut Cpu) {
-    let v = cpu.mem.read8(cpu.regs.get_HL());
-    alu_or(cpu, v);
-    debug!("OR (hl)");
-}
-pub fn ORd8(cpu: &mut Cpu) {
-    let v = imm8(cpu);
-    alu_or(cpu, v);
-    debug!("OR imm8");
-}
-pub fn ANDhl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    alu_and(cpu, hl);
-    debug!("AND A");
-}
-pub fn SUBad8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    alu_sub(cpu, imm, false);
-    debug!("SUB A, {:02X}", imm);
-}
 
-pub fn ADCad8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    alu_add(cpu, imm, true);
-    debug!("ADC A, {:02X}", imm);
-}
-pub fn ADDad8(cpu: &mut Cpu) {
-    let imm = imm8(cpu);
-    alu_add(cpu, imm, false);
-    debug!("ADD A, {:02X}", imm);
-}
-pub fn ADDahl(cpu: &mut Cpu) {
-    let hl = cpu.mem.read8(cpu.regs.get_HL());
-    alu_add(cpu, hl, false);
-    debug!("ADD A, (HL)");
-}
-pub fn ADDhlde(cpu: &mut Cpu) {
-    let de = cpu.regs.get_DE();
-    alu_add16(cpu, de);
-    debug!("ADD HL,DE");
-}
 
 pub fn ADDhlsp(cpu: &mut Cpu) {
     let sp = cpu.regs.get_SP();
     alu_add16(cpu, sp);
     debug!("ADD HL,SP");
-}
-pub fn INChl(cpu: &mut Cpu) {
-    let hl = cpu.regs.get_HL();
-    cpu.regs.set_HL(hl.wrapping_add(1));
-    debug!("INC HL");
-}
-pub fn INCsp(cpu: &mut Cpu) {
-    let sp = cpu.regs.get_SP();
-    cpu.regs.set_SP(sp.wrapping_add(1));
-    debug!("INC SP");
-}
-pub fn INCde(cpu: &mut Cpu) {
-    let de = cpu.regs.get_DE();
-    cpu.regs.set_DE(de.wrapping_add(1));
-    debug!("INC DE");
-}
-pub fn CPc(cpu: &mut Cpu) {
-    alu_cp(cpu, cpu.regs.C);
-    debug!("CP C")
 }
 pub fn CPhl(cpu: &mut Cpu) {
     let hl = cpu.mem.read8(cpu.regs.get_HL());
@@ -512,9 +443,6 @@ pub fn POPaf(cpu: &mut Cpu) {
     cpu.regs.set_AF(sp&0xFFF0);
     debug!("POP AF");
 }
-pub fn JRncr8(cpu: &mut Cpu) {
-    if !cpu.regs.get_FC() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
-}
 pub fn JRnzr8(cpu: &mut Cpu) {
     if !cpu.regs.get_FZ() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
@@ -533,7 +461,7 @@ pub fn RETI(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
     EI(cpu);
-    debug!("RETI (-> {:04X})", addr)
+   // println!("RETI (-> {:04X})", addr)
 }
 pub fn DI(cpu: &mut Cpu) {
     cpu.regs.I = false;
@@ -793,7 +721,10 @@ impl<'a> Cpu<'a>{
             name: "INC DE",
             len: 1,
             cycles: 8,
-            execute: INCde,
+            execute: |cpu|{
+                let de = cpu.regs.get_DE();
+                cpu.regs.set_DE(de.wrapping_add(1));
+            },
             jump: false,
         };
         cpu.opcodes[0x14] = Opcode {
@@ -839,7 +770,10 @@ impl<'a> Cpu<'a>{
             name: "ADD HL, DE",
             len: 1,
             cycles: 8,
-            execute: ADDhlde,
+            execute: |cpu| {
+                let de = cpu.regs.get_DE();
+                alu_add16(cpu, de);
+            },
             jump: false,
         };
         cpu.opcodes[0x1A] = Opcode {
@@ -918,7 +852,10 @@ impl<'a> Cpu<'a>{
             name: "INC HL",
             len: 1,
             cycles: 8,
-            execute: INChl,
+            execute: |cpu|{
+                let hl = cpu.regs.get_HL();
+                cpu.regs.set_HL(hl.wrapping_add(1));
+            },
             jump: false,
         };
         cpu.opcodes[0x24] = Opcode {
@@ -1016,7 +953,9 @@ impl<'a> Cpu<'a>{
             name: "JR NC, r8",
             len: 2,
             cycles: 12,
-            execute: JRncr8,
+            execute: |cpu|{
+                if !cpu.regs.get_FC() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
+            },
             jump: true,
         };
         cpu.opcodes[0x31] = Opcode {
@@ -1037,7 +976,10 @@ impl<'a> Cpu<'a>{
             name: "INC SP",
             len: 1,
             cycles: 8,
-            execute: INCsp,
+            execute: |cpu|{
+                let sp = cpu.regs.get_SP();
+                cpu.regs.set_SP(sp.wrapping_add(1));
+            },
             jump: false,
         };
         cpu.opcodes[0x34] = Opcode {
@@ -1049,7 +991,7 @@ impl<'a> Cpu<'a>{
                 let v = cpu.mem.read8(hl);
                 let v2 = alu_inc(cpu, v);
                 cpu.mem.write8(hl, v2); },
-            jump: false,
+                jump: false,
         };
         cpu.opcodes[0x35] = Opcode {
             name: "DEC (hl)",
@@ -1060,7 +1002,7 @@ impl<'a> Cpu<'a>{
                 let v = cpu.mem.read8(hl);
                 let v2 = alu_dec(cpu, v);
                 cpu.mem.write8(hl, v2); },
-            jump: false,
+                jump: false,
         };
         cpu.opcodes[0x36] = Opcode {
             name: "LD (HL), d8",
@@ -1634,7 +1576,10 @@ impl<'a> Cpu<'a>{
             name: "ADD A, (HL)",
             len: 1,
             cycles: 8,
-            execute: ADDahl,
+            execute: |cpu|{
+                let hl = cpu.mem.read8(cpu.regs.get_HL());
+                alu_add(cpu, hl, false);
+            },
             jump: false,
         };
         cpu.opcodes[0x87] = Opcode {
@@ -1858,7 +1803,10 @@ impl<'a> Cpu<'a>{
             name: "AND (HL)",
             len: 1,
             cycles: 4,
-            execute: ANDhl,
+            execute: |cpu|{
+                let hl = cpu.mem.read8(cpu.regs.get_HL());
+                alu_and(cpu, hl);
+            },
             jump: false,
         };
         cpu.opcodes[0xA7] = Opcode {
@@ -1914,7 +1862,10 @@ impl<'a> Cpu<'a>{
             name: "XOR A, (HL)",
             len: 1,
             cycles: 8,
-            execute: XOR_hl,
+            execute: |cpu|{
+                let hl = cpu.mem.read8(cpu.regs.get_HL());
+                alu_xor(cpu, hl);
+            },
             jump: false,
         };
         cpu.opcodes[0xAF] = Opcode {
@@ -1970,7 +1921,10 @@ impl<'a> Cpu<'a>{
             name: "OR [HL]",
             len: 1,
             cycles: 8,
-            execute: ORhl,
+            execute: |cpu| {
+                let v = cpu.mem.read8(cpu.regs.get_HL());
+                alu_or(cpu, v);
+            },
             jump: false,
         };
         cpu.opcodes[0xB7] = Opcode {
@@ -1991,7 +1945,9 @@ impl<'a> Cpu<'a>{
             name: "CPC",
             len: 1,
             cycles: 4,
-            execute: CPc,
+            execute: |cpu|{
+                alu_cp(cpu, cpu.regs.C);
+            },
             jump: false,
         };
         cpu.opcodes[0xBA] = Opcode {
@@ -2096,7 +2052,10 @@ impl<'a> Cpu<'a>{
             name: "ADD A,d8",
             len: 2,
             cycles: 8,
-            execute: ADDad8,
+            execute: |cpu| {
+                let imm = imm8(cpu);
+                alu_add(cpu, imm, false);
+            },
             jump: false,
         };
         cpu.opcodes[0xC7] = Opcode {
@@ -2141,12 +2100,12 @@ impl<'a> Cpu<'a>{
             cycles: 24,
             execute: |cpu|{
                 if cpu.regs.get_FZ() {
-                let addr = imm16(cpu);
-                let next = cpu.regs.PC + 3;
-                PushStack(cpu, next);
-                cpu.regs.PC = addr;
+                    let addr = imm16(cpu);
+                    let next = cpu.regs.PC + 3;
+                    PushStack(cpu, next);
+                    cpu.regs.PC = addr;
                 } else {
-                cpu.regs.PC = cpu.regs.PC+3;
+                    cpu.regs.PC = cpu.regs.PC+3;
                 };
             },
             jump: true,
@@ -2167,7 +2126,10 @@ impl<'a> Cpu<'a>{
             name: "ADC d8",
             len: 2,
             cycles: 8,
-            execute: ADCad8,
+            execute: |cpu| {
+                let imm = imm8(cpu);
+                alu_add(cpu, imm, true);
+            },
             jump: false,
         };
         cpu.opcodes[0xCF] = Opcode {
@@ -2270,7 +2232,10 @@ impl<'a> Cpu<'a>{
             name: "SUB A,d8",
             len: 2,
             cycles: 8,
-            execute: SUBad8,
+            execute: |cpu|{
+                let imm = imm8(cpu);
+                alu_sub(cpu, imm, false);
+            },
             jump: false,
         };
         cpu.opcodes[0xD7] = Opcode {
@@ -2375,7 +2340,10 @@ impl<'a> Cpu<'a>{
             name: "XOR d8",
             len: 2,
             cycles: 8,
-            execute: XORd8,
+            execute: |cpu| {
+                let imm = imm8(cpu);
+                alu_xor(cpu, imm);
+            },
             jump: false,
         };
         cpu.opcodes[0xEF] = Opcode {
@@ -2424,7 +2392,10 @@ impl<'a> Cpu<'a>{
             name: "OR d8",
             len: 2,
             cycles: 8,
-            execute: ORd8,
+            execute: |cpu|{
+                let v = imm8(cpu);
+                alu_or(cpu, v);
+            },
             jump: false,
         };
         cpu.opcodes[0xF7] = Opcode {
@@ -4566,20 +4537,13 @@ impl<'a> Cpu<'a>{
     pub fn print_dump(&mut self) {
         let pc = self.regs.get_PC();
         println!("A: {:02X} F: {:02X} B: {:02X} C: {:02X} D: {:02X} E: {:02X} H: {:02X} L: {:02X} SP: {:04X} PC: 00:{:04X} ({:02X} {:02X} {:02X} {:02X})",
-                 self.regs.A, self.regs.F, self.regs.B,self.regs.C,self.regs.D,
-                 self.regs.E,self.regs.H,self.regs.L, self.regs.get_SP(), self.regs.get_PC(),
-                 self.mem.read8(pc), self.mem.read8(pc+1),self.mem.read8(pc+2),self.mem.read8(pc+3));
+        self.regs.A, self.regs.F, self.regs.B,self.regs.C,self.regs.D,
+        self.regs.E,self.regs.H,self.regs.L, self.regs.get_SP(), self.regs.get_PC(),
+        self.mem.read8(pc), self.mem.read8(pc+1),self.mem.read8(pc+2),self.mem.read8(pc+3));
 
     }
     pub fn interrupts_enabled(&mut self) -> bool {
         self.regs.I
-    }
-
-    pub fn irq_vblank(&mut self) {
-        DI(self);
-        let addr = self.regs.PC;
-        PushStack(self, addr);
-        self.regs.PC = 0x0040;
     }
 
     pub fn reset(&mut self) {
@@ -4597,11 +4561,10 @@ impl<'a> Cpu<'a>{
         } else {
             opcode = self.opcodes[code];
         }
-        if self.regs.PC > 0x00FF {
-          //  self.print_status_small();
-        }
         if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
-          //  self.print_dump();
+            //self.print_dump();
+        //    self.print_status_small();
+        //    println!("I: {}  IFLAG {:08b} ", self.regs.I, self.mem.read8(0xFF0F));
         }
 
         (opcode.execute)(self);
@@ -4619,46 +4582,52 @@ impl<'a> Cpu<'a>{
         }
 
         /* Interrupts */
+
         let mut ie = self.mem.read8(0xFFFF);
-        let iflag = self.mem.read8(0xFF0F);
+        let mut iflag = self.mem.read8(0xFF0F);
+
+        if self.mem.lcd.int_vblank() {
+            iflag = iflag | (1 << 0);
+        }
 
         if self.regs.I {
-            if (ie&0b0000_0001)!=0 &&
-                (self.mem.lcd.int_vblank() || (iflag&0b0000_0001)!=0) { // VBLANK
-                println!("INT VBLANK");
-                ie = ie & !(1 << 0);
-                self.mem.write8(0xFFFF, ie);
+            if (ie&0b0000_0001)!=0 && (iflag&0b0000_0001)!=0 { // VBLANK
+               // println!("INT VBLANK");
+                iflag = iflag & !(1 << 0);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0040;
-            }
-            if ((ie&0b0000_0010)!=0) && (iflag&0b0000_0010)!=0 { // LCD STAT
-                println!("INT LCD STAT");
-                ie = ie & !(1 << 1);
-                self.mem.write8(0xFFFF, ie);
-                PushStack(self, self.regs.PC);
-                self.regs.PC = 0x0048;
-            }
-            if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
-                println!("INT Timer");
-                ie = ie & !(1 << 2);
-                self.mem.write8(0xFFFF, ie);
-                PushStack(self, self.regs.PC);
-                self.regs.PC = 0x0050;
-            }
-            if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
-                println!("INT Serial");
-                ie = ie & !(1 << 3);
-                self.mem.write8(0xFFFF, ie);
-                PushStack(self, self.regs.PC);
-                self.regs.PC = 0x0058;
-            }
-            if ((ie&0b0001_0000)!=0) && (iflag&0b0001_0000)!=0 { // Joypad
-                println!("INT Joypad");
-                ie = ie & !(1 << 4);
-                self.mem.write8(0xFFFF, ie);
-                PushStack(self, self.regs.PC);
-                self.regs.PC = 0x0060;
-            }
+                DI(self);
+            } else
+                if ((ie&0b0000_0010)!=0) && (iflag&0b0000_0010)!=0 { // LCD STAT
+                    println!("INT LCD STAT");
+                    iflag = iflag & !(1 << 1);
+                    PushStack(self, self.regs.PC);
+                    self.regs.PC = 0x0048;
+                    DI(self);
+                } else
+                    if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
+                        println!("INT Timer");
+                        iflag = iflag & !(1 << 2);
+                        PushStack(self, self.regs.PC);
+                        self.regs.PC = 0x0050;
+                        DI(self);
+                    } else
+                        if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
+                            println!("INT Serial");
+                            iflag = iflag & !(1 << 3);
+                            PushStack(self, self.regs.PC);
+                            self.regs.PC = 0x0058;
+                            DI(self);
+                        } else
+                            if ((ie&0b0001_0000)!=0) && (iflag&0b0001_0000)!=0 { // Joypad
+                                println!("INT Joypad");
+                                iflag = iflag & !(1 << 4);
+                                PushStack(self, self.regs.PC);
+                                self.regs.PC = 0x0060;
+                                DI(self);
+                            }
+            self.mem.write8(0xFF0F, iflag);
+            self.regs.I = false;
         }
 
         opcode.cycles as u8
