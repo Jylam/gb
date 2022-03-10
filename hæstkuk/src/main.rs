@@ -58,7 +58,6 @@ fn main() {
     render = render::Render::new();
 
     let mut vblank_counter: u64 = 1;
-    let mut total_cycles: u64 = 0;
 
     cpu.reset();
 
@@ -72,7 +71,6 @@ fn main() {
         }
 
         let cur_cycles = cpu.step() as u64;
-        total_cycles += cur_cycles;
 
         cpu.mem.timer.update(cur_cycles);
 

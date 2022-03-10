@@ -4589,6 +4589,9 @@ impl<'a> Cpu<'a>{
         if self.mem.lcd.int_vblank() {
             iflag = iflag | (1 << 0);
         }
+        if self.mem.timer.int_timer() {
+            iflag = iflag | (1 << 2);
+        }
 
         if self.regs.I {
             if (ie&0b0000_0001)!=0 && (iflag&0b0000_0001)!=0 { // VBLANK
