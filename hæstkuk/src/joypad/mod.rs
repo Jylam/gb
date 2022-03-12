@@ -67,7 +67,6 @@ impl<'a> Joypad<'a>{
     pub fn set_start(&mut self, val: bool) {
         self.btn_start = val;
     }
-
     pub fn set_left(&mut self, val: bool) {
         self.btn_left = val;
     }
@@ -80,9 +79,6 @@ impl<'a> Joypad<'a>{
     pub fn set_down(&mut self, val: bool) {
         self.btn_down = val;
     }
-
-
-
 }
 
 

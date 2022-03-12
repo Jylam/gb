@@ -8,91 +8,100 @@ pub struct LCD<'a> {
 	phantom: PhantomData<&'a u8>,
     debug: bool,
     vblank: bool,
+    vblank_max_cycles: u64,
+    vblank_counter: i64,
 }
 
 
 impl<'a> LCD<'a>{
-	pub fn new() -> LCD<'a> {
-		LCD{
-			regs: vec![0x00; 0x15],
-			phantom: PhantomData,
+    pub fn new() -> LCD<'a> {
+        LCD{
+            regs: vec![0x00; 0x15],
+            phantom: PhantomData,
             debug: false,
             vblank: false,
-		}
-	}
-	pub fn write8(&mut self, addr: u16, v: u8)  {
+            vblank_max_cycles: 1755,
+            vblank_counter: 0,
+        }
+    }
+    pub fn write8(&mut self, addr: u16, v: u8)  {
         let addr = addr-0xFF40;
-		if self.debug {
+        if self.debug {
             println!("LCD write8 {:02X} at {:04X}", v, addr);
         }
-		match addr {
-			0..=15 => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
-			_ => {error!("LCD write8 range error")}
-		}
-	}
-
-	pub fn read8(&self, addr: u16) -> u8 {
-        let addr = addr-0xFF40;
-		if self.debug {
-            println!("LCD read8 at {:04X}", addr);
+        match addr {
+            0..=15 => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
+            _ => {error!("LCD write8 range error")}
         }
-		match addr {
-			0..=15 => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
-			_ => {error!("LCD read8 range error"); 0}
-		}
-	}
-
-    pub fn int_vblank(&mut self) -> bool {
-        return self.vblank; // ??
-        if self.vblank {
-            self.vblank = false;
-            return true;
-        }
-        return false;
     }
 
-	pub fn update(&mut self) {
-
-        // Update LY at FF44
-        let mut ly = self.read8(0xFF44) as u8;
-        if ly==153 {
-            ly = 0;
-        } else {
-            ly = ly.wrapping_add(1);
+    pub fn read8(&self, addr: u16) -> u8 {
+        let addr = addr-0xFF40;
+        if self.debug {
+            println!("LCD read8 at {:04X}", addr);
         }
-        self.write8(0xFF44, ly);
-        //self.write8(0xFF44, 0x90);
-
-
-        // Update LYC 0xFF45  at STAT 0xFF41
-        let lyc = self.read8(0xFF45) as u8;
-        let mut stat = self.read8(0xFF41) as u8;
-        if ly == lyc {
-            stat = stat | (1 << 2);
-        } else {
-            stat = stat & !(1 << 2)
+        match addr {
+            0..=15 => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
+            _ => {error!("LCD read8 range error"); 0}
         }
+    }
 
-        // Update mode
-        if ly>=144 {
-            stat = stat | 0x01;
-        } else {
-            stat = stat & !0x01;
-        }
-
-        if ly == 144 {
-            self.vblank = true;
-        }
-        if ly == 0 {
+    pub fn int_vblank(&mut self) -> bool {
+        if self.vblank {
             self.vblank = false;
+            true
+        } else {
+            false
         }
+    }
 
-        self.write8(0xFF45, stat);
+    pub fn update(&mut self, cur_cycles: u64) {
+
+        self.vblank_counter -= cur_cycles as i64;
+        if self.vblank_counter <= 0 {
+            self.vblank_counter = self.vblank_max_cycles as i64;
+
+            // Update LY at FF44
+            let mut ly = self.read8(0xFF44) as u8;
+            if ly==153 {
+                ly = 0;
+            } else {
+                ly = ly.wrapping_add(1);
+            }
+            self.write8(0xFF44, ly);
+            //self.write8(0xFF44, 0x90);
+
+
+            // Update LYC 0xFF45  at STAT 0xFF41
+            let lyc = self.read8(0xFF45) as u8;
+            let mut stat = self.read8(0xFF41) as u8;
+            if ly == lyc {
+                stat = stat | (1 << 2);
+            } else {
+                stat = stat & !(1 << 2)
+            }
+
+            // Update mode
+            if ly>=144 {
+                stat = stat | 0x01;
+            } else {
+                stat = stat & !0x01;
+            }
+
+            if ly == 144 {
+                self.vblank = true;
+            }
+            if ly == 0 {
+                self.vblank = false;
+            }
+
+            self.write8(0xFF45, stat);
+        }
 
     }
 
     // Get palette and return the color between 0..3 (3 being white, 0 black)
-	pub fn get_bw_palette(&mut self) -> Vec<u8> {
+    pub fn get_bw_palette(&mut self) -> Vec<u8> {
         let pal = self.read8(0xFF47) as u8;
         let col3 = (pal&0b11000000) >> 6;
         let col2 = (pal&0b00110000) >> 4;

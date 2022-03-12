@@ -110,9 +110,20 @@ impl<'a> Render<'a> {
     }
 
 
+    pub fn put_pixel24(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, r: u8, g: u8, b: u8) {
+        if x+y*self.width > 65535 {
+            return;
+        };
+
+
+        buf[x+y*self.width] = (((r as u32)<<16) |
+                               (( g as u32)<<8) |
+                               (( b as u32))) as u32;
+
+    }
     pub fn put_pixel8(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, c: u8) {
         if x+y*self.width > 65535 {
-        //    println!("put_pixel8 error");
+            //    println!("put_pixel8 error");
             return;
         };
 
@@ -234,19 +245,19 @@ impl<'a> Render<'a> {
         let cury = cpu.mem.read8(0xFF44) as usize;
 
         for y in SCY..SCY+144 {
-            self.put_pixel8(buf, SCX, y, 3);
+            self.put_pixel24(buf, SCX, y, 255, 0, 0);
         }
         for y in SCY..SCY+144 {
-            self.put_pixel8(buf, SCX+160, y , 3);
+            self.put_pixel24(buf, SCX+160, y , 255, 0, 0);
         }
         for x in SCX..SCX+160 {
-            self.put_pixel8(buf, x, SCY, 3);
+            self.put_pixel24(buf, x, SCY, 255, 0, 0);
         }
         for x in SCX..SCX+160 {
-            self.put_pixel8(buf, x, SCY+144, 3);
+            self.put_pixel24(buf, x, SCY+144, 255, 0, 0);
         }
         for x in 0..255 {
-            self.put_pixel8(buf, x, cury, 3);
+            self.put_pixel24(buf, x, cury, 0, 0, 255);
         }
 
     }

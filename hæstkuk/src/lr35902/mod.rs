@@ -423,26 +423,6 @@ pub fn LDehl(cpu: &mut Cpu) {
 pub fn JRr8(cpu: &mut Cpu) {
     cpu_jr(cpu);
 }
-pub fn POPhl(cpu: &mut Cpu) {
-    let sp = PopStack(cpu);
-    cpu.regs.set_HL(sp);
-    debug!("POP HL");
-}
-pub fn POPde(cpu: &mut Cpu) {
-    let de = PopStack(cpu);
-    cpu.regs.set_DE(de);
-    debug!("POP DE");
-}
-pub fn POPbc(cpu: &mut Cpu) {
-    let sp = PopStack(cpu);
-    cpu.regs.set_BC(sp);
-    debug!("POP BC");
-}
-pub fn POPaf(cpu: &mut Cpu) {
-    let sp = PopStack(cpu);
-    cpu.regs.set_AF(sp&0xFFF0);
-    debug!("POP AF");
-}
 pub fn JRnzr8(cpu: &mut Cpu) {
     if !cpu.regs.get_FZ() { cpu_jr(cpu); } else { let pc = cpu.regs.get_PC(); cpu.regs.set_PC(pc+2); }
 }
@@ -461,7 +441,7 @@ pub fn RETI(cpu: &mut Cpu) {
     let addr = PopStack(cpu);
     cpu.regs.PC = addr;
     EI(cpu);
-   // println!("RETI (-> {:04X})", addr)
+    //println!("RETI (-> {:04X})", addr)
 }
 pub fn DI(cpu: &mut Cpu) {
     cpu.regs.I = false;
@@ -2003,7 +1983,7 @@ impl<'a> Cpu<'a>{
             name: "POP BC",
             len: 1,
             cycles: 12,
-            execute: POPbc,
+            execute: |cpu| { let sp = PopStack(cpu); cpu.regs.set_BC(sp); },
             jump: false,
         };
 
@@ -2157,7 +2137,7 @@ impl<'a> Cpu<'a>{
             name: "POP DE",
             len: 1,
             cycles: 12,
-            execute: POPde,
+            execute: |cpu| { let sp = PopStack(cpu); cpu.regs.set_DE(sp); },
             jump: false,
         };
         cpu.opcodes[0xD2] = Opcode {
@@ -2284,7 +2264,7 @@ impl<'a> Cpu<'a>{
             name: "POP HL",
             len: 1,
             cycles: 12,
-            execute: POPhl,
+            execute: |cpu| { let sp = PopStack(cpu); cpu.regs.set_HL(sp); },
             jump: false,
         };
         cpu.opcodes[0xE2] = Opcode {
@@ -2364,7 +2344,7 @@ impl<'a> Cpu<'a>{
             name: "POP AF",
             len: 1,
             cycles: 12,
-            execute: POPaf,
+            execute: |cpu| { let sp = PopStack(cpu); cpu.regs.set_AF(sp); },
             jump: false,
         };
         cpu.opcodes[0xF2] = Opcode {
@@ -4564,7 +4544,7 @@ impl<'a> Cpu<'a>{
         if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
             //self.print_dump();
         //    self.print_status_small();
-        //    println!("I: {}  IFLAG {:08b} ", self.regs.I, self.mem.read8(0xFF0F));
+//            println!("I: {}  IFLAG {:08b} ", self.regs.I, self.mem.read8(0xFF0F));
         }
 
         (opcode.execute)(self);
@@ -4595,7 +4575,7 @@ impl<'a> Cpu<'a>{
 
         if self.regs.I {
             if (ie&0b0000_0001)!=0 && (iflag&0b0000_0001)!=0 { // VBLANK
-               // println!("INT VBLANK");
+                //println!("INT VBLANK");
                 iflag = iflag & !(1 << 0);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0040;
@@ -4609,7 +4589,7 @@ impl<'a> Cpu<'a>{
                     DI(self);
                 } else
                     if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
-                        println!("INT Timer");
+        //                println!("INT Timer");
                         iflag = iflag & !(1 << 2);
                         PushStack(self, self.regs.PC);
                         self.regs.PC = 0x0050;
@@ -4629,9 +4609,8 @@ impl<'a> Cpu<'a>{
                                 self.regs.PC = 0x0060;
                                 DI(self);
                             }
-            self.mem.write8(0xFF0F, iflag);
-            self.regs.I = false;
         }
+        self.mem.write8(0xFF0F, iflag);
 
         opcode.cycles as u8
     }

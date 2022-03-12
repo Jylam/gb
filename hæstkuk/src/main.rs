@@ -15,8 +15,9 @@ mod timer;
 
 extern crate minifb;
 
-const VBLANK_FREQ_CYCLES : u64 = 17555;
 const CPU_MHZ: u64 = 4_194_304;
+const REFRESH_CYCLES : u64 = CPU_MHZ / 60;
+
 // 4.194304 MHz
 fn main() {
     env_logger::init();
@@ -57,23 +58,24 @@ fn main() {
 
     render = render::Render::new();
 
-    let mut vblank_counter: u64 = 1;
+    let mut refresh_counter: i64 = REFRESH_CYCLES as i64;
 
     cpu.reset();
 
     loop {
-        vblank_counter-=1;
-        if vblank_counter == 0 {
-            vblank_counter = VBLANK_FREQ_CYCLES;
-            render.display_BG_map(&mut cpu);
-            render.display_tile_pattern_tables (&mut cpu);
-            cpu.mem.lcd.update();
-        }
 
         let cur_cycles = cpu.step() as u64;
 
         cpu.mem.timer.update(cur_cycles);
+        cpu.mem.lcd.update(cur_cycles);
 
+
+        refresh_counter-=cur_cycles as i64;
+        if refresh_counter <= 0 {
+            refresh_counter = REFRESH_CYCLES as i64;
+            render.display_BG_map(&mut cpu);
+            render.display_tile_pattern_tables (&mut cpu);
+        }
         if render.get_events(&mut cpu) {
             println!("EXIT");
             break;
