@@ -68,6 +68,7 @@ fn main() {
 
         cpu.mem.timer.update(cur_cycles);
         cpu.mem.lcd.update(cur_cycles);
+        cpu.mem.joypad.update();
 
 
         refresh_counter-=cur_cycles as i64;

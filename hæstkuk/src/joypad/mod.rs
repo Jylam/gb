@@ -15,6 +15,7 @@ pub struct Joypad<'a> {
     btn_right:   bool,
     btn_up:      bool,
     btn_down:    bool,
+    interrupt:   bool,
 }
 
 
@@ -32,6 +33,7 @@ impl<'a> Joypad<'a>{
             btn_right:  false,
             btn_up:     false,
             btn_down:   false,
+            interrupt:  false,
 		}
 	}
 	pub fn write8(&mut self, v: u8)  {
@@ -39,20 +41,40 @@ impl<'a> Joypad<'a>{
     }
 
     pub fn read8(&mut self) -> u8 {
+        self.input
+    }
+
+    pub fn update(&mut self) {
         if ((self.input&0b0010_0000) >> 5) == 0 { // Action
+            let old_input = self.input;
             self.input = (self.input&0b1111_0000) |
                 ((!self.btn_start  as u8) << 3) |
                 ((!self.btn_select as u8) << 2) |
                 ((!self.btn_b      as u8) << 1) |
                 !self.btn_a        as u8;
+            if self.input&0b0000_1111 != old_input&0b0000_1111 {
+                self.interrupt = true;
+            } else {
+                self.interrupt = false;
+            }
+
         } else if ((self.input&0b0001_0000) >> 4) == 0 {  // Direction
+            let old_input = self.input;
             self.input = (self.input&0b1111_0000) |
                 ((!self.btn_down  as u8) << 3) |
                 ((!self.btn_up as u8) << 2) |
                 ((!self.btn_left      as u8) << 1) |
                 !self.btn_right        as u8;
+            if self.input&0b0000_1111 != old_input&0b0000_1111 {
+                self.interrupt = true;
+            } else {
+                self.interrupt = false;
+            }
         }
-        self.input
+    }
+
+    pub fn int_joypad(&mut self) -> bool {
+        self.interrupt
     }
 
     pub fn set_a(&mut self, val: bool) {

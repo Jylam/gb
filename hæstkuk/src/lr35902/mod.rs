@@ -4572,43 +4572,42 @@ impl<'a> Cpu<'a>{
         if self.mem.timer.int_timer() {
             iflag = iflag | (1 << 2);
         }
+        if self.mem.joypad.int_joypad() {
+            iflag = iflag | (1 << 4);
+        }
 
         if self.regs.I {
             if (ie&0b0000_0001)!=0 && (iflag&0b0000_0001)!=0 { // VBLANK
-                //println!("INT VBLANK");
+                                                               //println!("INT VBLANK");
                 iflag = iflag & !(1 << 0);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0040;
                 DI(self);
-            } else
-                if ((ie&0b0000_0010)!=0) && (iflag&0b0000_0010)!=0 { // LCD STAT
-                    println!("INT LCD STAT");
-                    iflag = iflag & !(1 << 1);
-                    PushStack(self, self.regs.PC);
-                    self.regs.PC = 0x0048;
-                    DI(self);
-                } else
-                    if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
-        //                println!("INT Timer");
-                        iflag = iflag & !(1 << 2);
-                        PushStack(self, self.regs.PC);
-                        self.regs.PC = 0x0050;
-                        DI(self);
-                    } else
-                        if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
-                            println!("INT Serial");
-                            iflag = iflag & !(1 << 3);
-                            PushStack(self, self.regs.PC);
-                            self.regs.PC = 0x0058;
-                            DI(self);
-                        } else
-                            if ((ie&0b0001_0000)!=0) && (iflag&0b0001_0000)!=0 { // Joypad
-                                println!("INT Joypad");
-                                iflag = iflag & !(1 << 4);
-                                PushStack(self, self.regs.PC);
-                                self.regs.PC = 0x0060;
-                                DI(self);
-                            }
+            } else if ((ie&0b0000_0010)!=0) && (iflag&0b0000_0010)!=0 { // LCD STAT
+                println!("INT LCD STAT");
+                iflag = iflag & !(1 << 1);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0048;
+                DI(self);
+            } else if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
+                                                                        //                println!("INT Timer");
+                iflag = iflag & !(1 << 2);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0050;
+                DI(self);
+            } else if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
+                println!("INT Serial");
+                iflag = iflag & !(1 << 3);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0058;
+                DI(self);
+            } else if ((ie&0b0001_0000)!=0) && (iflag&0b0001_0000)!=0 { // Joypad
+                println!("INT Joypad");
+                iflag = iflag & !(1 << 4);
+                PushStack(self, self.regs.PC);
+                self.regs.PC = 0x0060;
+                DI(self);
+            }
         }
         self.mem.write8(0xFF0F, iflag);
 
