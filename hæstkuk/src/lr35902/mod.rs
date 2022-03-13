@@ -4538,7 +4538,7 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn reset(&mut self) {
-        println!("JYJY RESET");
+        println!("RESET");
         self.regs.PC = 0x0000;
     }
 
@@ -4594,7 +4594,6 @@ impl<'a> Cpu<'a>{
 
         if self.regs.I {
             if (ie&0b0000_0001)!=0 && (iflag&0b0000_0001)!=0 { // VBLANK
-                                                               //println!("INT VBLANK");
                 iflag = iflag & !(1 << 0);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0040;
@@ -4606,7 +4605,6 @@ impl<'a> Cpu<'a>{
                 self.regs.PC = 0x0048;
                 DI(self);
             } else if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
-                println!("INT Timer");
                 iflag = iflag & !(1 << 2);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0050;

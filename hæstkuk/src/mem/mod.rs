@@ -43,13 +43,19 @@ impl<'a> Mem<'a>{
     }
     pub fn read8(&mut self, addr: u16) -> u8 {
         match addr {
+            // BOOTROM or Interrupt Vectors
             0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] } else {self.rom.buffer[addr as usize]},
+            // Cartridge ROM
             0x0100..=0x7FFF => self.rom.buffer[addr as usize],
+            // LCD
             0xFF40..=0xFF4F => { self.lcd.read8(addr) },
+            // Joypad
             0xFF00          => { self.joypad.read8() },
+            // Timer
             0xFF04..=0xFF07 => { self.timer.read8(addr) },
-
+            // IF
             0xFF0F          => { self.ram[addr as usize]}, // IF - Interrupt Flag (R/W)
+            // IE
             0xFFFF          => { self.ram[addr as usize]}, // IE - Interrupt Enable (R/W)
 
             _ => {self.ram[addr as usize]},
@@ -58,10 +64,10 @@ impl<'a> Mem<'a>{
     pub fn write8(&mut self, addr: u16, v: u8)  {
         match addr {
             0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] = v;} else {self.rom.buffer[addr as usize] = v;},
-            0x0100..=0x7FFF => { self.rom.buffer[addr as usize] = v;},
+            0x0100..=0x7FFF => { println!("WRITE ROM AT {:04X}", addr); self.rom.buffer[addr as usize] = v;},
             0xFF40..=0xFF4F => { self.lcd.write8(addr, v)},
-            0xFF50 => {self.bootrom_enable = false; println!("Disabling BOOTROM");}
-            0xFF00 => {self.joypad.write8(v);},
+            0xFF50 =>          {self.bootrom_enable = false; println!("Disabling BOOTROM");}
+            0xFF00 =>          {self.joypad.write8(v);},
             0xFF04..=0xFF07 => { self.timer.write8(addr, v) },
             _ => {self.ram[addr as usize] = v;},
         }

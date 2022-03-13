@@ -109,19 +109,19 @@ impl<'a> ROM<'a> {
         }
         ret
     }
-    #[allow(dead_code)]
-    pub fn validate_checkchum(&self) {
+    pub fn validate_checkchum(&self) -> bool{
         let orig = self.buffer[0x14D];
-        let mut new: u8 = 0x01;
-        for i in self.buffer[0x134..0x14C].to_vec() {
+        let mut new: u8 = 0x00;
+        for i in self.buffer[0x134..0x14D].to_vec() {
             new = new-i-1;
         }
         println!("Read: {:02X}  Computed: {:02X}", orig, new);
+        orig==new
     }
 
     pub fn print_infos(&self) {
         /* Print informations about the loaded ROM */
-        // FIXME self.validate_checkchum();
+        println!("Checksum valid:\t {}", self.validate_checkchum());
         println!("ROM Size:\t {:?}",         self.get_size());
         println!("ROM Name:\t '{}'",         self.get_name());
         println!("RAM Size:\t {}kB",         self.get_ram_size_kb());
