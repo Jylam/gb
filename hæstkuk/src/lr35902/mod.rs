@@ -684,9 +684,7 @@ impl<'a> Cpu<'a>{
             name: "STOP",
             len: 2,
             cycles: 12,
-            execute: |_| {
-                // Do nothing FIXME
-            },
+            execute: |cpu|{ cpu.halted = true; },
             jump: false,
         };
         cpu.opcodes[0x11] = Opcode {
