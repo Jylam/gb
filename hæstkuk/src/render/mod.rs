@@ -32,8 +32,8 @@ pub struct Render<'a> {
 
 impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
-        let window = Window::new(
-            "BGMap - ESC to exit",
+        let tiles = Window::new(
+            "Tiles - ESC to exit",
             256,
             256,
             WindowOptions::default(),
@@ -41,8 +41,8 @@ impl<'a> Render<'a> {
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
-        let tiles = Window::new(
-            "Tiles - ESC to exit",
+        let window = Window::new(
+            "BGMap - ESC to exit",
             256,
             256,
             WindowOptions::default(),
@@ -81,14 +81,15 @@ impl<'a> Render<'a> {
 
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
         let mut offset: u16 = 0xFE00;
-        for _i in 0..=40 {
+        for i in 0..=40 {
             let x = cpu.readMem8(offset);
             let y = cpu.readMem8(offset+1);
             let pattern_number = cpu.readMem8(offset+2);
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
-                println!("X: {:02X}", x);
-                println!("Y: {:02X}", y);
+                println!("Sprite {}", i);
+                println!("X: {:02X} {}", x, x);
+                println!("Y: {:02X} {}", y, y);
                 println!("Pattern Number: {:02X}", pattern_number);
                 println!("Flags: {:02X}", flags);
             }

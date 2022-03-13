@@ -124,6 +124,7 @@ pub struct Cpu<'a> {
     total_cyles: u64,
     opcodes: Vec<Opcode>,
     alt_opcodes: Vec<Opcode>,
+    halted: bool,
 }
 
 pub fn imm16(cpu: &mut Cpu) -> u16 {
@@ -526,7 +527,8 @@ impl<'a> Cpu<'a>{
                         cycles: 4,
                         execute: ALTUNK,
                         jump: false,
-                    }; 256]
+                    }; 256],
+                halted: false,
 
         };
         cpu.opcodes[0] = Opcode {
@@ -675,6 +677,15 @@ impl<'a> Cpu<'a>{
             execute: |cpu|{
                 cpu.regs.A = alu_rrc(cpu, cpu.regs.A);
                 cpu.regs.set_FZ(false);
+            },
+            jump: false,
+        };
+        cpu.opcodes[0x10] = Opcode {
+            name: "STOP",
+            len: 2,
+            cycles: 12,
+            execute: |_| {
+                // Do nothing FIXME
             },
             jump: false,
         };
@@ -1444,7 +1455,7 @@ impl<'a> Cpu<'a>{
             name: "HALT",
             len: 1,
             cycles: 8,
-            execute: |_|{ },
+            execute: |cpu|{ cpu.halted = true; },
             jump: false,
         };
         cpu.opcodes[0x77] = Opcode {
@@ -4532,35 +4543,37 @@ impl<'a> Cpu<'a>{
     }
 
     pub fn step(&mut self) -> u8 {
-        let code = self.mem.read8(self.regs.PC) as usize;
+        let mut cycles = 1;
+        if self.halted == false {
+            let code = self.mem.read8(self.regs.PC) as usize;
 
-        let opcode;
-        if code == 0xCB {
-            let code = self.mem.read8(self.regs.PC+1) as usize;
-            opcode = self.alt_opcodes[code];
-        } else {
-            opcode = self.opcodes[code];
+            let opcode;
+            if code == 0xCB {
+                let code = self.mem.read8(self.regs.PC+1) as usize;
+                opcode = self.alt_opcodes[code];
+            } else {
+                opcode = self.opcodes[code];
+            }
+            if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
+                //self.print_dump();
+                //    self.print_status_small();
+                //            println!("I: {}  IFLAG {:08b} ", self.regs.I, self.mem.read8(0xFF0F));
+            }
+
+            (opcode.execute)(self);
+
+            self.total_cyles = self.total_cyles + opcode.cycles as u64;
+            if !opcode.jump {
+                self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
+            }
+
+            if self.mem.read8(0xFF02) == 0x81 {
+                let _c = self.mem.read8(0xFF01);
+                //println!("SERIAL got {}", c as char);
+                self.mem.write8(0xff02, 0x0);
+            }
+            cycles = opcode.cycles;
         }
-        if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
-            //self.print_dump();
-        //    self.print_status_small();
-//            println!("I: {}  IFLAG {:08b} ", self.regs.I, self.mem.read8(0xFF0F));
-        }
-
-        (opcode.execute)(self);
-
-        self.total_cyles = self.total_cyles + opcode.cycles as u64;
-        if !opcode.jump {
-            self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
-        }
-
-        if self.mem.read8(0xFF02) == 0x81 {
-            let _c = self.mem.read8(0xFF01);
-            //println!("SERIAL got {}", c as char);
-            // print!("{}", c as char);
-            self.mem.write8(0xff02, 0x0);
-        }
-
         /* Interrupts */
 
         let ie = self.mem.read8(0xFFFF);
@@ -4574,6 +4587,9 @@ impl<'a> Cpu<'a>{
         }
         if self.mem.joypad.int_joypad() {
             iflag = iflag | (1 << 4);
+        }
+        if iflag&0b00011111 != 0 {
+            self.halted = false;
         }
 
         if self.regs.I {
@@ -4590,7 +4606,7 @@ impl<'a> Cpu<'a>{
                 self.regs.PC = 0x0048;
                 DI(self);
             } else if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
-                                                                        //                println!("INT Timer");
+                println!("INT Timer");
                 iflag = iflag & !(1 << 2);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0050;
@@ -4611,7 +4627,7 @@ impl<'a> Cpu<'a>{
         }
         self.mem.write8(0xFF0F, iflag);
 
-        opcode.cycles as u8
+        cycles as u8
     }
 
 

@@ -50,7 +50,7 @@ impl<'a> Timer<'a>{
             if self.tima_cycle >= (self.mhz / self.tima_freq) {
                 self.tima_cycle = 0;
                 self.tima = self.tima.wrapping_add(1);
-                if self.div == 0x00 { // Overflow
+                if self.tima == 0x00 { // Overflow
                     self.tima = self.tma;
                     self.interrupt = true;
                 } else {
@@ -58,11 +58,14 @@ impl<'a> Timer<'a>{
                 }
             }
         }
-
-
     }
     pub fn int_timer(&mut self) -> bool {
-        return self.interrupt;
+        if self.interrupt {
+            self.interrupt = false;
+            true
+        } else {
+            false
+        }
     }
     pub fn read8(&mut self, addr: u16) -> u8 {
         match addr {

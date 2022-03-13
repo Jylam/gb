@@ -53,6 +53,41 @@ impl<'a> ROM<'a> {
         let t = self.buffer[0x147];
         t
     }
+    pub fn get_cartridge_type_str(&self) -> &str {
+        let t = self.buffer[0x147];
+        // From https://gbdev.io/pandocs/The_Cartridge_Header.html#0147---cartridge-type
+        match t {
+            0x00 => "ROM Only",
+            0x01 => "MBC1",
+            0x02 => "MBC1+RAM",
+            0x03 => "MBC1+RAM+BATTERY",
+            0x05 => "MBC2",
+            0x06 => "MBC2+BATTERY",
+            0x08 => "ROM+RAM",
+            0x09 => "ROM+RAM+BATTERY",
+            0x0B => "MMM01",
+            0x0C => "MMM01+RAM",
+            0x0D => "MMM01+RAM+BATTERY",
+            0x0F => "MBC3+TIMER+BATTERY",
+            0x10 => "MBC3+TIMER+RAM+BATTERY",
+            0x11 => "MBC3",
+            0x12 => "MBC3+RAM",
+            0x13 => "MBC3+RAM+BATTERY",
+            0x19 => "MBC5",
+            0x1A => "MBC5+RAM",
+            0x1B => "MBC5+RAM+BATTERY",
+            0x1C => "MBC5+RUMBLE",
+            0x1D => "MBC5+RUMBLE+RAM",
+            0x1E => "MBC5+RUMBLE+RAM+BATTERY",
+            0x20 => "MBC6",
+            0x22 => "MBC7+SENSOR+RUMBLE+RAM+BATTERY",
+            0xFC => "POCKET CAMERA",
+            0xFD => "BANDAI TAMA5",
+            0xFE => "HuC3",
+            0xFF => "HuC1+RAM+BATTERY",
+            _ => "UNK"
+        }
+    }
     pub fn get_cartridge_size_kb(&self) -> u32 {
         let t = 32<<self.buffer[0x148];
         t
@@ -92,7 +127,7 @@ impl<'a> ROM<'a> {
         println!("RAM Size:\t {}kB",         self.get_ram_size_kb());
         println!("Logo:\t\t {:02X?}",        self.get_logo());
         println!("CGB Flag:\t {:02X}",       self.get_cgb_flag());
-        println!("Cartridge Type:\t {:02X}", self.get_cartridge_type());
+        println!("Cartridge Type:\t {:02X} {}", self.get_cartridge_type(), self.get_cartridge_type_str());
         println!("Cartridge Size:\t {}kB",   self.get_cartridge_size_kb());
         println!("Destination:\t {}",        self.get_destination_code());
 

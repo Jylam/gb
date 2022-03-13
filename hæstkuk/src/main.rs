@@ -69,7 +69,7 @@ fn main() {
         cpu.mem.timer.update(cur_cycles);
         cpu.mem.lcd.update(cur_cycles);
         cpu.mem.joypad.update();
-
+        render.oam(&mut cpu);
 
         refresh_counter-=cur_cycles as i64;
         if refresh_counter <= 0 {
