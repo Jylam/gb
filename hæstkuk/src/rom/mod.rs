@@ -54,14 +54,12 @@ impl<'a> ROM<'a> {
     pub fn get_cartridge_type(&mut self) -> u8 {
         let t = self.buffer[0x147];
         match t {
-            0x01 => {self.mbc = 1;},
-            0x02 => {self.mbc = 1;},
-            0x03 => {self.mbc = 1;},
+            0x01..=0x03 => {self.mbc = 1;},
             _ => {}
         }
         t
     }
-    pub fn get_mbc(self) -> u8 {
+    pub fn get_mbc(&mut self) -> u8 {
         self.mbc
     }
     pub fn get_cartridge_type_str(&self) -> &str {
