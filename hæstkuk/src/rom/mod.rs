@@ -124,7 +124,7 @@ impl<'a> ROM<'a> {
         let orig = self.buffer[0x14D];
         let mut new: u8 = 0x00;
         for i in self.buffer[0x134..0x14D].to_vec() {
-            new = new-i-1;
+            new = new.wrapping_sub(i).wrapping_sub(1);
         }
         println!("Read: {:02X}  Computed: {:02X}", orig, new);
         orig==new
