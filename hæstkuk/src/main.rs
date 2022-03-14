@@ -25,7 +25,7 @@ fn main() {
     let lcd: lcd::LCD;
     let timer: timer::Timer;
     let joypad: joypad::Joypad;
-    let rom: rom::ROM;
+    let mut rom: rom::ROM;
     let mut cpu: lr35902::Cpu;
     let mem: mem::Mem;
     let mut render: render::Render;

@@ -64,7 +64,11 @@ impl<'a> Mem<'a>{
     pub fn write8(&mut self, addr: u16, v: u8)  {
         match addr {
             0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] = v;} else {self.rom.buffer[addr as usize] = v;},
-            0x0100..=0x7FFF => { println!("WRITE ROM AT {:04X}", addr); self.rom.buffer[addr as usize] = v;},
+            0x2000..=0x3FFF => {
+                if self.rom.mbc == 0x01 {
+                    println!("WRITE MBC {:02X}", v);
+                }
+            }
             0xFF40..=0xFF4F => { self.lcd.write8(addr, v)},
             0xFF50 =>          {self.bootrom_enable = false; println!("Disabling BOOTROM");}
             0xFF00 =>          {self.joypad.write8(v);},

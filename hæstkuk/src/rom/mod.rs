@@ -10,6 +10,7 @@ pub struct ROM<'a> {
     filename: Cow<'a, str>,
     size:     usize,
     pub buffer:   Vec<u8>,
+    pub mbc: u8,
 }
 
 
@@ -20,6 +21,7 @@ impl<'a> ROM<'a> {
         let rom: ROM = ROM {
             filename: Cow::Owned(filename.clone()),
             size: 0,
+            mbc: 0,
             ..Default::default()
         };
         match rom.read_from_file() {
@@ -49,9 +51,18 @@ impl<'a> ROM<'a> {
         let cgb = self.buffer[0x143];
         cgb
     }
-    pub fn get_cartridge_type(&self) -> u8 {
+    pub fn get_cartridge_type(&mut self) -> u8 {
         let t = self.buffer[0x147];
+        match t {
+            0x01 => {self.mbc = 1;},
+            0x02 => {self.mbc = 1;},
+            0x03 => {self.mbc = 1;},
+            _ => {}
+        }
         t
+    }
+    pub fn get_mbc(self) -> u8 {
+        self.mbc
     }
     pub fn get_cartridge_type_str(&self) -> &str {
         let t = self.buffer[0x147];
@@ -119,7 +130,7 @@ impl<'a> ROM<'a> {
         orig==new
     }
 
-    pub fn print_infos(&self) {
+    pub fn print_infos(&mut self) {
         /* Print informations about the loaded ROM */
         println!("Checksum valid:\t {}", self.validate_checkchum());
         println!("ROM Size:\t {:?}",         self.get_size());
