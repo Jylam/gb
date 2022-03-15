@@ -51,7 +51,7 @@ impl<'a> Mem<'a>{
                 }  else if self.rom.get_mbc() == 0x01 {
                     self.read8_mbc1(addr)
                 } else {
-                    self.read8_mbc1(addr)
+                    self.read8_mbc1(addr) // Use MBC1 FIXME
                 }
             }
             // LCD
@@ -69,6 +69,7 @@ impl<'a> Mem<'a>{
         }
     }
 
+    // Read from the ROM without any MBC
     pub fn read8_rom(&mut self, addr: u16) -> u8 {
         match addr {
             // BOOTROM or Interrupt Vectors
@@ -78,6 +79,8 @@ impl<'a> Mem<'a>{
             _ => {println!("ERROR READING AT {:02X}", addr); 0x00}
         }
     }
+
+    // Read from MBC1
     pub fn read8_mbc1(&mut self, addr: u16) -> u8 {
         match addr {
             // BOOTROM or Interrupt Vectors
@@ -92,7 +95,9 @@ impl<'a> Mem<'a>{
 
     pub fn write8(&mut self, addr: u16, v: u8)  {
         match addr {
+            // Either BOOTROM or Bank1, shouldn't happen
             0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] = v;} else {self.rom.buffer[addr as usize] = v;},
+            // Bank select register
             0x2000..=0x3FFF => {
                 if self.rom.get_mbc() == 0x01 {
                     self.mbc1_bank = if v&0b0001_1111==0x00 {0x01} else {v&0b0001_1111} ;
@@ -102,8 +107,8 @@ impl<'a> Mem<'a>{
                 }
             }
             0xFF40..=0xFF4F => { self.lcd.write8(addr, v)},
-            0xFF50 =>          {self.bootrom_enable = false; println!("Disabling BOOTROM");}
-            0xFF00 =>          {self.joypad.write8(v);},
+            0xFF50 =>          { self.bootrom_enable = false; println!("Disabling BOOTROM");}
+            0xFF00 =>          { self.joypad.write8(v);},
             0xFF04..=0xFF07 => { self.timer.write8(addr, v) },
             _ => {self.ram[addr as usize] = v;},
         }

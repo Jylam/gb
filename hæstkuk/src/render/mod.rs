@@ -20,10 +20,12 @@ const SCALE : u32 = 3;
 
 #[allow(dead_code)]
 pub struct Render<'a> {
-    window: Window,
-    tiles: Window,
+    render_window: Window,
+    bg_window: Window,
+    tiles_window: Window,
     width: usize,
     height: usize,
+    buffer_render: Vec<u32>,
     buffer_bg: Vec<u32>,
     buffer_tiles: Vec<u32>,
     phantom: PhantomData<&'a u8>,
@@ -32,7 +34,7 @@ pub struct Render<'a> {
 
 impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
-        let tiles = Window::new(
+        let tiles_window = Window::new(
             "Tiles - ESC to exit",
             256,
             256,
@@ -41,7 +43,16 @@ impl<'a> Render<'a> {
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
-        let window = Window::new(
+        let render_window = Window::new(
+            "Render - ESC to exit",
+            256,
+            256,
+            WindowOptions::default(),
+            )
+            .unwrap_or_else(|e| {
+                panic!("{}", e);
+            });
+        let bg_window = Window::new(
             "BGMap - ESC to exit",
             256,
             256,
@@ -52,10 +63,12 @@ impl<'a> Render<'a> {
             });
         //window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         let render = Render {
-            window: window,
-            tiles: tiles,
+            render_window: render_window,
+            bg_window: bg_window,
+            tiles_window: tiles_window,
             width: 256,
             height: 256,
+            buffer_render:    vec![0x00; 256*256],
             buffer_bg:    vec![0x00; 256*256],
             buffer_tiles: vec![0x00; 256*256],
             phantom: PhantomData,
@@ -66,17 +79,28 @@ impl<'a> Render<'a> {
 
     // Handle key pressed, returns true on quit
     pub fn get_events(&mut self, cpu: &mut Cpu<'a>) -> bool {
-        cpu.mem.joypad.set_a(self.window.is_key_down(Key::A));
-        cpu.mem.joypad.set_b(self.window.is_key_down(Key::B));
-        cpu.mem.joypad.set_select(self.window.is_key_down(Key::Space));
-        cpu.mem.joypad.set_start(self.window.is_key_down(Key::Enter));
+        cpu.mem.joypad.set_a(self.render_window.is_key_down(Key::A));
+        cpu.mem.joypad.set_b(self.render_window.is_key_down(Key::B));
+        cpu.mem.joypad.set_select(self.render_window.is_key_down(Key::Space));
+        cpu.mem.joypad.set_start(self.render_window.is_key_down(Key::Enter));
 
-        cpu.mem.joypad.set_up(self.window.is_key_down(Key::Up));
-        cpu.mem.joypad.set_down(self.window.is_key_down(Key::Down));
-        cpu.mem.joypad.set_left(self.window.is_key_down(Key::Left));
-        cpu.mem.joypad.set_right(self.window.is_key_down(Key::Right));
+        cpu.mem.joypad.set_up(self.render_window.is_key_down(Key::Up));
+        cpu.mem.joypad.set_down(self.render_window.is_key_down(Key::Down));
+        cpu.mem.joypad.set_left(self.render_window.is_key_down(Key::Left));
+        cpu.mem.joypad.set_right(self.render_window.is_key_down(Key::Right));
 
-        self.window.is_key_down(Key::Escape) || self.tiles.is_key_down(Key::Escape)
+        self.bg_window.is_key_down(Key::Escape) ||
+            self.tiles_window.is_key_down(Key::Escape) ||
+            self.render_window.is_key_down(Key::Escape)
+
+    }
+
+    pub fn put_sprite(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>, x: u8, y: u8) {
+        for py in y..y+8 {
+            for px in x..x+8 {
+                self.put_pixel24(buf, px as usize, py as usize, 0, 0, 255);
+            }
+        }
     }
 
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
@@ -97,18 +121,6 @@ impl<'a> Render<'a> {
         }
     }
 
-    pub fn show_memory(&mut self, cpu: &mut Cpu<'a> ) {
-        let mut buffer = vec![0x0 as u32, (self.width*self.height) as u32];
-        for i in 0..0xFFFF {
-            let b = cpu.readMem8(i);
-            buffer[i as usize] = (b as u32)+((b as u32)<<8)+((b as u32)<<16);
-        }
-        self.window.update_with_buffer(&buffer, self.width, self.height)
-            .unwrap();
-    }
-
-    pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
-    }
 
 
     pub fn put_pixel24(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, r: u8, g: u8, b: u8) {
@@ -196,7 +208,7 @@ impl<'a> Render<'a> {
             }
         }
 
-        self.tiles.update_with_buffer(&mut buffer, self.width, self.height)
+        self.tiles_window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
 
@@ -217,7 +229,7 @@ impl<'a> Render<'a> {
             }
         }
         self.display_scroll(cpu, &mut buffer);
-        self.window.update_with_buffer(&mut buffer, self.width, self.height)
+        self.bg_window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
     pub fn display_WIN_map(&mut self, cpu: &mut Cpu<'a> ) {
@@ -236,8 +248,29 @@ impl<'a> Render<'a> {
                 y += 8;
             }
         }
-        self.window.update_with_buffer(&mut buffer, self.width, self.height)
+        self.bg_window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
+    }
+
+    pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
+        let mut buffer = vec![0x00; self.width*self.height];
+
+        let mut offset: u16 = 0xFE00;
+        for i in 0..=40 {
+            let x = cpu.readMem8(offset);
+            let y = cpu.readMem8(offset+1);
+            let pattern_number = cpu.readMem8(offset+2);
+            let flags = cpu.readMem8(offset+3);
+            if x!=0 {
+                self.put_sprite(cpu, &mut buffer, x, y);
+            }
+            offset+=4;
+        }
+
+        self.render_window.update_with_buffer(&mut buffer, self.width, self.height)
+            .unwrap();
+
+
     }
 
     pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>) {
@@ -260,7 +293,6 @@ impl<'a> Render<'a> {
         for x in 0..255 {
             self.put_pixel24(buf, x, cury, 0, 0, 255);
         }
-
     }
 
 
