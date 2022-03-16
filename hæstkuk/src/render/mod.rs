@@ -253,16 +253,33 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
+        let mut x = 0;
+        let mut y = 0;
         let mut buffer = vec![0x00; self.width*self.height];
 
+        // BG
+        for offset in 0x9800..=0x9BFF {
+            let id = cpu.readMem8(offset);
+            let tile = self.get_tile_by_id(cpu, id);
+            self.display_tile(&mut buffer, x, y, tile);
+
+            x+=8;
+            if x>=255 {
+                x = 0;
+                y += 8;
+            }
+        }
+
+        // OAM
         let mut offset: u16 = 0xFE00;
         for i in 0..=40 {
-            let x = cpu.readMem8(offset);
-            let y = cpu.readMem8(offset+1);
+            let y = cpu.readMem8(offset) as usize;
+            let x = cpu.readMem8(offset+1) as usize;
             let pattern_number = cpu.readMem8(offset+2);
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
-                self.put_sprite(cpu, &mut buffer, x, y);
+                let tile = self.get_tile_by_id(cpu, pattern_number);
+                self.display_tile(&mut buffer, x, y, tile);
             }
             offset+=4;
         }
@@ -294,10 +311,4 @@ impl<'a> Render<'a> {
             self.put_pixel24(buf, x, cury, 0, 0, 255);
         }
     }
-
-
-
-
-
-
 }
