@@ -76,7 +76,7 @@ fn main() {
             refresh_counter = REFRESH_CYCLES as i64;
             render.render_screen(&mut cpu);
             render.display_BG_map(&mut cpu);
-            render.display_tile_pattern_tables (&mut cpu);
+    //        render.display_tile_pattern_tables (&mut cpu);
         }
         if render.get_events(&mut cpu) {
             println!("EXIT");

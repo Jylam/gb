@@ -31,6 +31,7 @@ impl<'a> LCD<'a>{
         }
         match addr {
             // DMA OAM, handled in mem.rs
+            0 => {println!("LCD Control : {:08b} {}", v, if v&0b0001_0000 != 0 {"8000-8FFF"} else {"8800-97FF"});}
             6 => {println!("ERROR OAM DMA {:04X} -> {:02X}", addr, v);}
             _ => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
         }

@@ -95,14 +95,6 @@ impl<'a> Render<'a> {
 
     }
 
-    pub fn put_sprite(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>, x: u8, y: u8) {
-        for py in y..y+8 {
-            for px in x..x+8 {
-                self.put_pixel24(buf, px as usize, py as usize, 0, 0, 255);
-            }
-        }
-    }
-
     pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
         let mut offset: u16 = 0xFE00;
         for i in 0..=40 {
@@ -147,11 +139,11 @@ impl<'a> Render<'a> {
 
     }
 
-    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8) -> Vec<u8> {
-        self.get_tile_at_addr(cpu, 0x8000+((id as usize)*16) as u16)
+    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool) -> Vec<u8> {
+        self.get_tile_at_addr(cpu, 0x8000+((id as usize)*16) as u16, is_sprite)
     }
 
-    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16) -> Vec<u8> {
+    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16, is_sprite: bool) -> Vec<u8> {
 
         let colors = cpu.mem.lcd.get_bw_palette();
         let mut ret = vec![0; 8*8];
@@ -171,14 +163,14 @@ impl<'a> Render<'a> {
 
             offset+=2;
 
-            ret[0+i*8] = colors[p1 as usize];
-            ret[1+i*8] = colors[p2 as usize];
-            ret[2+i*8] = colors[p3 as usize];
-            ret[3+i*8] = colors[p4 as usize];
-            ret[4+i*8] = colors[p5 as usize];
-            ret[5+i*8] = colors[p6 as usize];
-            ret[6+i*8] = colors[p7 as usize];
-            ret[7+i*8] = colors[p8 as usize];
+            ret[0+i*8] = if is_sprite && p1==0 {0xFF}else{colors[p1 as usize]};
+            ret[1+i*8] = if is_sprite && p2==0 {0xFF}else{colors[p2 as usize]};
+            ret[2+i*8] = if is_sprite && p3==0 {0xFF}else{colors[p3 as usize]};
+            ret[3+i*8] = if is_sprite && p4==0 {0xFF}else{colors[p4 as usize]};
+            ret[4+i*8] = if is_sprite && p5==0 {0xFF}else{colors[p5 as usize]};
+            ret[5+i*8] = if is_sprite && p6==0 {0xFF}else{colors[p6 as usize]};
+            ret[6+i*8] = if is_sprite && p7==0 {0xFF}else{colors[p7 as usize]};
+            ret[7+i*8] = if is_sprite && p8==0 {0xFF}else{colors[p8 as usize]};
         }
 
         ret
@@ -199,7 +191,7 @@ impl<'a> Render<'a> {
 
         let mut buffer = vec![0x00; self.width*self.height];
         for j in (0x8000..0x8FFF).step_by(16) {
-            let tile = self.get_tile_at_addr(cpu, j);
+            let tile = self.get_tile_at_addr(cpu, j, false);
             self.display_tile(&mut buffer, x, y, tile);
             x = x+8;
             if x > 200 {
@@ -212,26 +204,31 @@ impl<'a> Render<'a> {
             .unwrap();
     }
 
-    pub fn display_BG_map(&mut self, cpu: &mut Cpu<'a> ) {
+    pub fn gen_BG_map(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
         let mut x = 0;
         let mut y = 0;
 
-        let mut buffer = vec![0x00; self.width*self.height];
         for offset in 0x9800..=0x9BFF {
             let id = cpu.readMem8(offset);
-            let tile = self.get_tile_by_id(cpu, id);
-            self.display_tile(&mut buffer, x, y, tile);
-
+            let tile = self.get_tile_by_id(cpu, id, false);
+            self.display_tile(buffer, x, y, tile);
             x+=8;
             if x>=255 {
                 x = 0;
                 y += 8;
             }
         }
+
+    }
+
+    pub fn display_BG_map(&mut self, cpu: &mut Cpu<'a> ) {
+        let mut buffer = vec![0x00; self.width*self.height];
+        self.gen_BG_map(cpu, &mut buffer);
         self.display_scroll(cpu, &mut buffer);
         self.bg_window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
+
     pub fn display_WIN_map(&mut self, cpu: &mut Cpu<'a> ) {
         let mut x = 0;
         let mut y = 0;
@@ -239,7 +236,7 @@ impl<'a> Render<'a> {
         let mut buffer = vec![0x00; self.width*self.height];
         for offset in 0x9C00..0x9FFF {
             let id = cpu.readMem8(offset);
-            let tile = self.get_tile_by_id(cpu, id);
+            let tile = self.get_tile_by_id(cpu, id, false);
             self.display_tile(&mut buffer, x, y, tile);
 
             x+=8;
@@ -285,7 +282,9 @@ impl<'a> Render<'a> {
             tx = sx;
             ix = 0;
             while ix<8 {
+                if buft[(tx+ty*8) as usize] != 0xFF {
                 self.put_pixel8(buf, (x+ix-8) as usize, (y+iy-16) as usize, buft[(tx+ty*8) as usize]);
+                }
                 tx+=stepx;
                 ix+=1;
             }
@@ -295,24 +294,13 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
-        let mut x = 0;
-        let mut y = 0;
         let mut buffer = vec![0x00; self.width*self.height];
+        self.gen_BG_map(cpu, &mut buffer);
 
-        // BG
-        for offset in 0x9800..=0x9BFF {
-            let id = cpu.readMem8(offset);
-            let tile = self.get_tile_by_id(cpu, id);
-            self.display_tile(&mut buffer, x, y, tile);
-
-            x+=8;
-            if x>=255 {
-                x = 0;
-                y += 8;
-            }
-        }
 
         // OAM
+        let SCY = cpu.mem.read8(0xFF42) as usize;
+        let SCX = cpu.mem.read8(0xFF43) as usize;
         let mut offset: u16 = 0xFE00;
         for i in 0..=40 {
             let y = cpu.readMem8(offset) as usize;
@@ -320,8 +308,8 @@ impl<'a> Render<'a> {
             let pattern_number = cpu.readMem8(offset+2);
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
-                let tile = self.get_tile_by_id(cpu, pattern_number);
-                self.display_sprite(&mut buffer, x, y, tile, flags);
+                let tile = self.get_tile_by_id(cpu, pattern_number, true);
+                self.display_sprite(&mut buffer, x+SCX, y+SCY, tile, flags);
             }
             offset+=4;
         }
