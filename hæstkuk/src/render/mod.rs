@@ -251,6 +251,48 @@ impl<'a> Render<'a> {
         self.bg_window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
     }
+    pub fn display_sprite(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, buft: Vec<u8>, flags: u8) {
+        let xflip = flags&0b0010_0000 != 0;
+        let yflip = flags&0b0100_0000 != 0;
+
+        let sx: i32;
+        let sy: i32;
+        let stepx: i32;
+        let stepy: i32;
+
+
+        if !xflip {
+            sx = 0;
+            stepx = 1;
+        } else {
+            sx = 7;
+            stepx = -1;
+        }
+        if !yflip {
+            sy = 0;
+            stepy = 1;
+        } else {
+            sy = 7;
+            stepy = -1;
+        }
+
+        let mut ty = sy;
+        let mut tx;
+        let mut iy = 0;
+        let mut ix;
+
+        while iy<8 {
+            tx = sx;
+            ix = 0;
+            while ix<8 {
+                self.put_pixel8(buf, x+ix as usize, y+iy as usize, buft[(tx+ty*8) as usize]);
+                tx+=stepx;
+                ix+=1;
+            }
+            ty+=stepy;
+            iy+=1;
+        }
+    }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let mut x = 0;
@@ -279,7 +321,7 @@ impl<'a> Render<'a> {
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
                 let tile = self.get_tile_by_id(cpu, pattern_number);
-                self.display_tile(&mut buffer, x, y, tile);
+                self.display_sprite(&mut buffer, x, y, tile, flags);
             }
             offset+=4;
         }
