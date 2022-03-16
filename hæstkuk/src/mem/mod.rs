@@ -107,6 +107,7 @@ impl<'a> Mem<'a>{
                 }
             }
             0xFF40..=0xFF4F => {
+                // OAM DMA
                 if addr == 0xFF46 {
                     let start = (v as u16)<<8;
                     for i in 0x00..0x9F {

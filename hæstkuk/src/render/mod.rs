@@ -285,7 +285,7 @@ impl<'a> Render<'a> {
             tx = sx;
             ix = 0;
             while ix<8 {
-                self.put_pixel8(buf, x+ix as usize, y+iy as usize, buft[(tx+ty*8) as usize]);
+                self.put_pixel8(buf, (x+ix-8) as usize, (y+iy-16) as usize, buft[(tx+ty*8) as usize]);
                 tx+=stepx;
                 ix+=1;
             }
