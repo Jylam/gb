@@ -30,8 +30,9 @@ impl<'a> LCD<'a>{
             println!("LCD write8 {:02X} at {:04X}", v, addr);
         }
         match addr {
-            0..=15 => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
-            _ => {error!("LCD write8 range error")}
+            // DMA OAM
+            6 => {println!("{:04X} -> {:02X}", addr, v);}
+            _ => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
         }
     }
 
