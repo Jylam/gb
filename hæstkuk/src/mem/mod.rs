@@ -106,7 +106,17 @@ impl<'a> Mem<'a>{
                     println!("WRITE ROM WITH NO MBC {:02X}", addr);
                 }
             }
-            0xFF40..=0xFF4F => { self.lcd.write8(addr, v)},
+            0xFF40..=0xFF4F => {
+                if addr == 0xFF46 {
+                    let start = (v as u16)<<8;
+                    for i in 0x00..0x9F {
+                        let value = self.read8(start+i);
+                        self.write8(0xFE00+i, value);
+                    }
+                } else {
+                    self.lcd.write8(addr, v)
+                }
+            },
             0xFF50 =>          { self.bootrom_enable = false; println!("Disabling BOOTROM");}
             0xFF00 =>          { self.joypad.write8(v);},
             0xFF04..=0xFF07 => { self.timer.write8(addr, v) },
