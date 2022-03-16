@@ -132,11 +132,12 @@ impl<'a> Render<'a> {
             return;
         };
 
-
-        buf[x+y*self.width] = (((c as u32*64)<<16) |
-                                      (( c as u32*64)<<8) |
-                                      (( c as u32*64))) as u32;
-
+        let v;
+        if c == 0x00 {v=0x00;}
+        else if c == 0x01 {v=0x55;}
+        else if c == 0x02 {v=0xAA;}
+        else {v=0xFF;}
+        self.put_pixel24(buf, x, y, v, v, v);
     }
 
     pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool) -> Vec<u8> {
@@ -163,6 +164,7 @@ impl<'a> Render<'a> {
 
             offset+=2;
 
+            // Put 0xFF if the color is transparent
             ret[0+i*8] = if is_sprite && p1==0 {0xFF}else{colors[p1 as usize]};
             ret[1+i*8] = if is_sprite && p2==0 {0xFF}else{colors[p2 as usize]};
             ret[2+i*8] = if is_sprite && p3==0 {0xFF}else{colors[p3 as usize]};
@@ -257,21 +259,8 @@ impl<'a> Render<'a> {
         let stepx: i32;
         let stepy: i32;
 
-
-        if !xflip {
-            sx = 0;
-            stepx = 1;
-        } else {
-            sx = 7;
-            stepx = -1;
-        }
-        if !yflip {
-            sy = 0;
-            stepy = 1;
-        } else {
-            sy = 7;
-            stepy = -1;
-        }
+        if !xflip { sx = 0; stepx = 1; } else { sx = 7; stepx = -1; }
+        if !yflip { sy = 0; stepy = 1; } else { sy = 7; stepy = -1; }
 
         let mut ty = sy;
         let mut tx;
@@ -282,6 +271,7 @@ impl<'a> Render<'a> {
             tx = sx;
             ix = 0;
             while ix<8 {
+                // If the color is 0xFF, it is transparent
                 if buft[(tx+ty*8) as usize] != 0xFF {
                 self.put_pixel8(buf, (x+ix-8) as usize, (y+iy-16) as usize, buft[(tx+ty*8) as usize]);
                 }
