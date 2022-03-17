@@ -6,7 +6,6 @@ use rom;
 use lcd;
 use joypad;
 use timer;
-
 // Memory controller
 #[derive(Clone, Debug, Default)]
 pub struct Mem<'a> {

@@ -4580,6 +4580,9 @@ impl<'a> Cpu<'a>{
         if self.mem.lcd.int_vblank() {
             iflag = iflag | (1 << 0);
         }
+        if self.mem.lcd.int_stat() {
+            iflag = iflag | (1 << 1);
+        }
         if self.mem.timer.int_timer() {
             iflag = iflag | (1 << 2);
         }

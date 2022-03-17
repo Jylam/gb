@@ -314,8 +314,8 @@ impl<'a> Render<'a> {
     }
 
     pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>) {
-        let SCY = cpu.mem.read8(0xFF42) as usize;
-        let SCX = cpu.mem.read8(0xFF43) as usize;
+        let SCY  = cpu.mem.read8(0xFF42) as usize;
+        let SCX  = cpu.mem.read8(0xFF43) as usize;
         let cury = cpu.mem.read8(0xFF44) as usize;
 
         for y in SCY..SCY+144 {

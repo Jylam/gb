@@ -10,6 +10,7 @@ pub struct LCD<'a> {
     vblank: bool,
     vblank_max_cycles: u64,
     vblank_counter: i64,
+    t: u32,
 }
 
 
@@ -22,27 +23,25 @@ impl<'a> LCD<'a>{
             vblank: false,
             vblank_max_cycles: 1755,
             vblank_counter: 0,
+            t: 0
         }
     }
     pub fn write8(&mut self, addr: u16, v: u8)  {
-        let addr = addr-0xFF40;
-        if self.debug {
-            println!("LCD write8 {:02X} at {:04X}", v, addr);
-        }
+        //println!("LCD write8 {:02X} at {:04X}", v, addr);
         match addr {
             // DMA OAM, handled in mem.rs
-            6 => {println!("ERROR OAM DMA {:04X} -> {:02X}", addr, v);}
-            _ => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
+            0xFF46 => {println!("ERROR OAM DMA {:04X} -> {:02X}", addr, v);}
+            0xFF42..=0xFF43 => {
+                self.regs[(addr-0xFF40) as usize] = v;
+            }
+            _ => {self.regs[(addr-0xFF40) as usize] = v;}
         }
     }
 
     pub fn read8(&self, addr: u16) -> u8 {
-        let addr = addr-0xFF40;
-        if self.debug {
-            println!("LCD read8 at {:04X}", addr);
-        }
+        //println!("LCD read8 at {:04X}", addr);
         match addr {
-            0..=15 => {if self.debug {println!("LCD read8 {:02X} at {:04X}", self.regs[addr as usize], addr+0xFF40);}; self.regs[addr as usize]}
+            0xFF40..=0xFF4F => {self.regs[addr as usize -0xFF40 as usize]}
             _ => {error!("LCD read8 range error"); 0}
         }
     }
@@ -110,9 +109,13 @@ impl<'a> LCD<'a>{
                 self.vblank = false;
             }
 
-            self.write8(0xFF45, stat);
+            self.write8(0xFF41, stat);
         }
 
+    }
+
+    pub fn int_stat(&mut self) -> bool {
+        (self.read8(0xFF41) & 0x01) != 0
     }
 
     // Get palette and return the color between 0..3 (3 being white, 0 black)
