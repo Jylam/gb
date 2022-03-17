@@ -141,7 +141,10 @@ impl<'a> Render<'a> {
     }
 
     pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool) -> Vec<u8> {
-        self.get_tile_at_addr(cpu, 0x8000+((id as usize)*16) as u16, is_sprite)
+
+        let addr = cpu.mem.lcd.get_tile_addr(id, is_sprite);
+
+        self.get_tile_at_addr(cpu, addr, is_sprite)
     }
 
     pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16, is_sprite: bool) -> Vec<u8> {
@@ -192,7 +195,7 @@ impl<'a> Render<'a> {
         let mut y = 0;
 
         let mut buffer = vec![0x00; self.width*self.height];
-        for j in (0x8000..0x8FFF).step_by(16) {
+        for j in (0x8000..0x97FF).step_by(16) {
             let tile = self.get_tile_at_addr(cpu, j, false);
             self.display_tile(&mut buffer, x, y, tile);
             x = x+8;

@@ -31,7 +31,6 @@ impl<'a> LCD<'a>{
         }
         match addr {
             // DMA OAM, handled in mem.rs
-            0 => {println!("LCD Control : {:08b} {}", v, if v&0b0001_0000 != 0 {"8000-8FFF"} else {"8800-97FF"});}
             6 => {println!("ERROR OAM DMA {:04X} -> {:02X}", addr, v);}
             _ => {if self.debug {println!("LCD write8 {:02X} at {:04X}", v, addr+0xFF40);}; self.regs[(addr) as usize] = v;}
         }
@@ -55,6 +54,21 @@ impl<'a> LCD<'a>{
         } else {
             false
         }
+    }
+
+    pub fn get_tile_addr(&mut self, id: u8, is_sprite: bool) -> u16 {
+        if is_sprite {
+            0x8000+((id as usize)*16) as u16
+        } else {
+            if self.regs[0]&0b0001_0000 == 0 {
+                let offset = ((id as i8) as i16 *16 as i16) as i16;
+                let a = ((0x9000 as i32 + offset as i32) as u32) as u16;
+                a
+            } else {
+                0x8000+((id as usize)*16) as u16
+            }
+        }
+        //println!("LCD Control : {:08b} {}", v, if v&0b0001_0000 != 0 {"8000-8FFF"} else {"8800-97FF"});
     }
 
     pub fn update(&mut self, cur_cycles: u64) {
