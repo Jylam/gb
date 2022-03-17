@@ -68,7 +68,6 @@ impl<'a> LCD<'a>{
                 0x8000+((id as usize)*16) as u16
             }
         }
-        //println!("LCD Control : {:08b} {}", v, if v&0b0001_0000 != 0 {"8000-8FFF"} else {"8800-97FF"});
     }
 
     pub fn update(&mut self, cur_cycles: u64) {
