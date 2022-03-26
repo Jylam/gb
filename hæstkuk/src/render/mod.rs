@@ -223,7 +223,6 @@ impl<'a> Render<'a> {
                 y += 8;
             }
         }
-
     }
 
     pub fn display_BG_map(&mut self, cpu: &mut Cpu<'a> ) {

@@ -68,6 +68,17 @@ impl<'a> Mem<'a>{
         }
     }
 
+    pub fn dump_mem(&mut self, addr: u16, len: u16) {
+        print!("{:04X}: ", addr);
+        for i in addr..addr+len {
+            if i%16==0 {
+                print!("\n{:04X}: ", i);
+            }
+            print!("{:02X} ", self.read8(i));
+        }
+        println!("");
+    }
+
     // Read from the ROM without any MBC
     pub fn read8_rom(&mut self, addr: u16) -> u8 {
         match addr {
@@ -87,7 +98,10 @@ impl<'a> Mem<'a>{
             // Cartridge ROM, Bank 0
             0x0100..=0x3FFF => self.rom.buffer[addr as usize],
             // Cartridge ROM, selected bank
-            0x4000..=0x7FFF => self.rom.buffer[((addr-0x4000)+(0x4000*self.mbc1_bank as u16)) as usize],
+            0x4000..=0x7FFF => {
+                let offset = (addr as u32 - 0x4000)+(0x4000*self.mbc1_bank as u32);
+                self.rom.buffer[offset as usize]
+            },
             _ => {println!("ERROR READING AT {:02X}", addr); 0x00}
         }
     }
@@ -99,11 +113,25 @@ impl<'a> Mem<'a>{
             // Bank select register
             0x2000..=0x3FFF => {
                 if self.rom.get_mbc() == 0x01 {
-                    self.mbc1_bank = if v&0b0001_1111==0x00 {0x01} else {v&0b0001_1111} ;
-                    //println!("WRITE MBC {:04X} {:02X}, selected bank {:02X}", addr, v, self.mbc1_bank);
+                    self.mbc1_bank = (self.mbc1_bank & 0x60) | (v & 0x1F);
+                    if (self.mbc1_bank == 0x20) ||
+                       (self.mbc1_bank == 0x40) ||
+                       (self.mbc1_bank == 0x60) {
+                        self.mbc1_bank+=1;
+                    }
+
+                    //self.mbc1_bank = if v&0b0001_1111==0x00 {0x01} else {v&0b0001_1111} ;
+                    println!("WRITE MBC {:04X} {:02X}, selected bank {:02X}", addr, v, self.mbc1_bank);
+                    //self.dump_mem(0x6C21, 64);
                 } else {
                     println!("WRITE ROM WITH NO MBC {:02X}", addr);
                 }
+            }
+                0x4000..=0x5FFF => {
+                println!("JYJY ROM BANKING");
+            },
+            0x6000..=0x7FFF => {
+                println!("JYJY 6000-7FFF - Banking Mode Select (Write Only)");
             }
             0xFF40..=0xFF4F => {
                 // OAM DMA

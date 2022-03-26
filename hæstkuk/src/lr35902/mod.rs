@@ -503,7 +503,7 @@ impl<'a> Cpu<'a>{
                 D: 0,
                 H: 1,
                 F: 0xB0,
-                C: 0,
+                C: 0x0d,
                 E: 0xD8,
                 L: 0x4D,
                 I: false,
@@ -4542,6 +4542,7 @@ impl<'a> Cpu<'a>{
 
     pub fn step(&mut self) -> u8 {
         let mut cycles = 1;
+
         if self.halted == false {
             let code = self.mem.read8(self.regs.PC) as usize;
 
@@ -4553,8 +4554,8 @@ impl<'a> Cpu<'a>{
                 opcode = self.opcodes[code];
             }
             if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
-                //self.print_dump();
-                //    self.print_status_small();
+//                self.print_dump();
+                    //self.print_status_small();
                 //            println!("I: {}  IFLAG {:08b} ", self.regs.I, self.mem.read8(0xFF0F));
             }
 
