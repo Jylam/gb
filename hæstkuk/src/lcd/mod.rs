@@ -83,8 +83,6 @@ impl<'a> LCD<'a>{
                 ly = ly.wrapping_add(1);
             }
             self.write8(0xFF44, ly);
-            //self.write8(0xFF44, 0x90);
-
 
             // Update LYC 0xFF45  at STAT 0xFF41
             let lyc = self.read8(0xFF45) as u8;
@@ -96,16 +94,13 @@ impl<'a> LCD<'a>{
             }
 
             // Update mode
-            if ly>=144 {
-                stat = stat | 0x01;
-            } else {
-                stat = stat & !0x01;
-            }
 
             if ly == 144 {
+                stat = stat | 0x01;
                 self.vblank = true;
             }
             if ly == 0 {
+                stat = stat & !0x01;
                 self.vblank = false;
             }
 
@@ -115,7 +110,17 @@ impl<'a> LCD<'a>{
     }
 
     pub fn int_stat(&mut self) -> bool {
-        (self.read8(0xFF41) & 0x01) != 0
+        let mut s = self.read8(0xFF41) & 0x01;
+
+          if s != 0 {
+            s = s & !0x01;
+            self.write8(0xFF41, s);
+            true
+        } else {
+            false
+        }
+
+        //s != 0x00
     }
 
     // Get palette and return the color between 0..3 (3 being white, 0 black)

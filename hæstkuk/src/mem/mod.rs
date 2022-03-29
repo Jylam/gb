@@ -94,7 +94,11 @@ impl<'a> Mem<'a>{
     pub fn read8_mbc1(&mut self, addr: u16) -> u8 {
         match addr {
             // BOOTROM or Interrupt Vectors
-            0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] } else {self.rom.buffer[addr as usize]},
+            0x0000..=0x00FF => if self.bootrom_enable {
+                self.bootrom[addr as usize]
+            } else {
+                self.rom.buffer[addr as usize]
+            },
             // Cartridge ROM, Bank 0
             0x0100..=0x3FFF => self.rom.buffer[addr as usize],
             // Cartridge ROM, selected bank
@@ -120,9 +124,7 @@ impl<'a> Mem<'a>{
                         self.mbc1_bank+=1;
                     }
 
-                    //self.mbc1_bank = if v&0b0001_1111==0x00 {0x01} else {v&0b0001_1111} ;
-                    println!("WRITE MBC {:04X} {:02X}, selected bank {:02X}", addr, v, self.mbc1_bank);
-                    //self.dump_mem(0x6C21, 64);
+                    //println!("WRITE MBC {:04X} {:02X}, selected bank {:02X}", addr, v, self.mbc1_bank);
                 } else {
                     println!("WRITE ROM WITH NO MBC {:02X}", addr);
                 }
