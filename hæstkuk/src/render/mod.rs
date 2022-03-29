@@ -286,6 +286,7 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
+        let lcdc = cpu.mem.read8(0xFF40);
         let mut buffer = vec![0x00; self.width*self.height];
         self.gen_BG_map(cpu, &mut buffer);
 
@@ -302,14 +303,15 @@ impl<'a> Render<'a> {
             if x!=0 {
                 let tile = self.get_tile_by_id(cpu, pattern_number, true);
                 self.display_sprite(&mut buffer, x+SCX, y+SCY, tile, flags);
+                if (lcdc&0b0000_0100)!=0 {
+                    let tile = self.get_tile_by_id(cpu, pattern_number+1, true);
+                    self.display_sprite(&mut buffer, x+SCX, y+SCY+8, tile, flags);
+                }
             }
             offset+=4;
         }
-
         self.render_window.update_with_buffer(&mut buffer, self.width, self.height)
             .unwrap();
-
-
     }
 
     pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>) {
