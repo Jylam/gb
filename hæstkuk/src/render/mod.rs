@@ -226,8 +226,11 @@ impl<'a> Render<'a> {
         // Get Tile data
         let tile = self.get_tile_by_id(cpu, id, false);
         // Get Pixel value
-        //println!("X {} Y {}   XOFF {} YOFF {} XREST {}, YREST {}", x,y, xoff, yoff, xrest, yrest);
-        tile[(xrest)+(yrest)*8]
+        if xrest<8 && yrest<8 { // FIXME
+            tile[xrest+yrest*8]
+        } else {
+            0
+        }
     }
 
     pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
@@ -336,10 +339,10 @@ impl<'a> Render<'a> {
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
                 let tile = self.get_tile_by_id(cpu, pattern_number, true);
-                self.display_sprite(&mut buffer, x+SCX, y+SCY, tile, flags);
+                self.display_sprite(&mut buffer, x, y, tile, flags);
                 if (lcdc&0b0000_0100)!=0 {
                     let tile = self.get_tile_by_id(cpu, pattern_number+1, true);
-                    self.display_sprite(&mut buffer, x+SCX, y+SCY+8, tile, flags);
+                    self.display_sprite(&mut buffer, x, y+8, tile, flags);
                 }
             }
             offset+=4;
