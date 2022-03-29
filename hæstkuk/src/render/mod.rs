@@ -214,11 +214,11 @@ impl<'a> Render<'a> {
         let bgmap = 0x9800; // End at 0x9BFF, 32x32 of 8x8 tiles
 
         // X and Y offset in the 32x32 BGMAP
-        let xoff = (x / 8)%160;
-        let yoff = (y / 8)%144;
+        let xoff = (x / 8)%32;
+        let yoff = (y / 8)%32;
         // Pixel in the tile
-        let xrest = (x%256)-(xoff*8);
-        let yrest = (y%256)-(yoff*8);
+        let xrest = ((x)-(xoff*8))%256;
+        let yrest = ((y)-(yoff*8))%256;
         // Offset in the BGMAP
         let bgoff = xoff+yoff*32;
         // Get ID
@@ -226,11 +226,7 @@ impl<'a> Render<'a> {
         // Get Tile data
         let tile = self.get_tile_by_id(cpu, id, false);
         // Get Pixel value
-        if xrest<8 && yrest<8 { // FIXME
-            tile[xrest+yrest*8]
-        } else {
-            0
-        }
+        tile[xrest+yrest*8]
     }
 
     pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
