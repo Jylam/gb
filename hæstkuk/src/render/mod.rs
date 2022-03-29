@@ -209,6 +209,31 @@ impl<'a> Render<'a> {
             .unwrap();
     }
 
+
+    pub fn get_bg_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: usize, y: usize) {
+        let bgmap = 0x9800; // End at 0x9BFF, 32x32 of 8x8 tiles
+        let xoff = (x / 8)%160;
+        let yoff = (y / 8)%144;
+        let xrest = (xoff * 8) - xoff as usize;
+        let yrest = (yoff * 8) - yoff as usize;
+        println!("{}x{} -> {} {}     {} {}", x, y, xoff, yoff, xrest, yrest);
+
+        let bgoff = x+y*32;
+        let id = cpu.readMem8(bgoff as u16);
+        let tile = self.get_tile_by_id(cpu, id, false);
+    }
+
+    pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
+        let SCY  = cpu.mem.read8(0xFF42) as usize;
+        let SCX  = cpu.mem.read8(0xFF43) as usize;
+
+        for y in 0..144 {
+            for x in 0..160 {
+                self.get_bg_pixel_at(cpu, x + SCX, y + SCY);
+            }
+        }
+    }
+
     pub fn gen_BG_map(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
         let mut x = 0;
         let mut y = 0;
@@ -288,7 +313,8 @@ impl<'a> Render<'a> {
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let lcdc = cpu.mem.read8(0xFF40);
         let mut buffer = vec![0x00; self.width*self.height];
-        self.gen_BG_map(cpu, &mut buffer);
+//        self.gen_BG_map(cpu, &mut buffer);
+        self.gen_BG_map_pixel(cpu, &mut buffer);
 
 
         // OAM

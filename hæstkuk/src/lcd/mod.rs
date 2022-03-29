@@ -109,6 +109,13 @@ impl<'a> LCD<'a>{
 
     }
 
+    pub fn get_scy(self) -> u8 {
+        self.regs[2]
+    }
+    pub fn get_scx(self) -> u8 {
+        self.regs[3]
+    }
+
     pub fn int_stat(&mut self) -> bool {
         let mut s = self.read8(0xFF41) & 0x01;
 
