@@ -18,6 +18,9 @@ pub struct Mem<'a> {
     pub joypad: joypad::Joypad<'a>,
     pub timer: timer::Timer<'a>,
     mbc1_bank: u8,
+    ram_bank: u8,
+    ram_mode: bool,
+    ram_enabled: bool,
 }
 
 impl<'a> Mem<'a>{
@@ -25,13 +28,16 @@ impl<'a> Mem<'a>{
         let mut mem = Mem{
             _size: 0xFFFF,
             rom: arom,
-            ram: vec![0x00; 65536],
+            ram: vec![0x00; 16384*200],
             lcd: alcd,
             joypad: ajoypad,
             timer: atimer,
             bootrom_enable: true,
             mbc1_bank: 0x01,
-        ..Default::default()
+            ram_bank: 0x00,
+            ram_mode: false,
+            ram_enabled: false,
+            ..Default::default()
         };
 
         let mut f = File::open("./DMG_ROM.bin".to_string()).expect("File not found");
@@ -61,7 +67,7 @@ impl<'a> Mem<'a>{
             0xFF04..=0xFF07 => { self.timer.read8(addr) },
             // IF
             0xFF0F          => { self.ram[addr as usize]}, // IF - Interrupt Flag (R/W)
-            // IE
+                                                           // IE
             0xFFFF          => { self.ram[addr as usize]}, // IE - Interrupt Enable (R/W)
 
             _ => {self.ram[addr as usize]},
@@ -106,6 +112,17 @@ impl<'a> Mem<'a>{
                 let offset = (addr as u32 - 0x4000)+(0x4000*self.mbc1_bank as u32);
                 self.rom.buffer[offset as usize]
             },
+            0xA000..= 0xBFFF=>
+            {
+                if self.ram_enabled == false {
+                    return 0;
+                }
+                let mut bank = 0;
+                if self.ram_mode {
+                    bank = self.ram_bank
+                }
+                self.ram[(bank as usize * 0x2000) | ((addr & 0x1FFF) as usize)]
+            },
             _ => {println!("ERROR READING AT {:02X}", addr); 0x00}
         }
     }
@@ -113,28 +130,53 @@ impl<'a> Mem<'a>{
     pub fn write8(&mut self, addr: u16, v: u8)  {
         match addr {
             // Either BOOTROM or Bank1, shouldn't happen
-            0x0000..=0x00FF => if self.bootrom_enable {self.bootrom[addr as usize] = v;} else {self.rom.buffer[addr as usize] = v;},
+            0x0000..=0x00FF => {
+                if addr<=0x00FF {
+                    if self.bootrom_enable {self.bootrom[addr as usize] = v; return}
+                }
+                if v == 0x00 {
+                    self.ram_enabled = false;
+                } else if (v&0x0F) == 0x0A {
+                    self.ram_enabled = true;
+                } else {
+
+                }
+            },
             // Bank select register
             0x2000..=0x3FFF => {
                 if self.rom.get_mbc() == 0x01 {
                     self.mbc1_bank = (self.mbc1_bank & 0x60) | (v & 0x1F);
                     if (self.mbc1_bank == 0x20) ||
-                       (self.mbc1_bank == 0x40) ||
-                       (self.mbc1_bank == 0x60) {
-                        self.mbc1_bank+=1;
-                    }
+                        (self.mbc1_bank == 0x40) ||
+                            (self.mbc1_bank == 0x60) {
+                                self.mbc1_bank+=1;
+                       }
 
                     //println!("WRITE MBC {:04X} {:02X}, selected bank {:02X}", addr, v, self.mbc1_bank);
                 } else {
                     println!("WRITE ROM WITH NO MBC {:02X}", addr);
                 }
             }
-                0x4000..=0x5FFF => {
-                println!("JYJY ROM BANKING");
+            0x4000..=0x5FFF => {
+                if !self.ram_mode {
+                    self.mbc1_bank = self.mbc1_bank & 0x1F | (((v as u8) & 0x03) << 5);
+                } else {
+                    self.ram_bank = (v as u8) & 0x03;
+                }
             },
             0x6000..=0x7FFF => {
-                println!("JYJY 6000-7FFF - Banking Mode Select (Write Only)");
+                self.ram_mode = (v & 0x01) == 0x01;
             }
+            0xA000..= 0xBFFF=> {
+                if self.ram_enabled == false {
+                    return;
+                }
+                let mut bank = 0;
+                if self.ram_mode {
+                    bank = self.ram_bank
+                }
+                self.ram[(bank as usize * 0x2000) | ((addr & 0x1FFF) as usize)] = v
+            },
             0xFF40..=0xFF4F => {
                 // OAM DMA
                 if addr == 0xFF46 {

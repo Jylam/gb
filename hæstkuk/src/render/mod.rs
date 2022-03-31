@@ -221,9 +221,9 @@ impl<'a> Render<'a> {
         let yrest = ((y)-(yoff*8))%256;
         // Offset in the BGMAP
         let bgoff = xoff+yoff*32;
-        // Get ID
+        // Tile ID
         let id = cpu.readMem8(bgmap+bgoff as u16);
-        // Get Tile data
+        // Tile Pixels
         let tile = self.get_tile_by_id(cpu, id, false);
         // Get Pixel value
         tile[xrest+yrest*8]
