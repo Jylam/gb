@@ -119,26 +119,24 @@ impl<'a> LCD<'a>{
     pub fn int_stat(&mut self) -> bool {
         let mut s = self.read8(0xFF41) & 0x01;
 
-          if s != 0 {
+        if s != 0 {
             s = s & !0x01;
             self.write8(0xFF41, s);
             true
         } else {
             false
         }
-
-        //s != 0x00
     }
 
-    // Get palette and return the color between 0..3 (3 being white, 0 black)
+    // Get palette and return the color between 0..3 (0 White, 1 Light gray, 2 Dark gray, 3 Black)
     pub fn get_bw_palette(&mut self) -> Vec<u8> {
         let pal = self.read8(0xFF47) as u8;
-        let col3 = (pal&0b11000000) >> 6;
-        let col2 = (pal&0b00110000) >> 4;
-        let col1 = (pal&0b00001100) >> 2;
         let col0 = (pal&0b00000011) >> 0;
+        let col1 = (pal&0b00001100) >> 2;
+        let col2 = (pal&0b00110000) >> 4;
+        let col3 = (pal&0b11000000) >> 6;
 
-        let convert = vec![0b11, 0b10, 0b01, 0b00];
+        let convert = vec![0b11, 0b01, 0b10, 0b00];
 
         vec![convert[col0 as usize], convert[col1 as usize], convert[col2 as usize], convert[col3 as usize]]
     }

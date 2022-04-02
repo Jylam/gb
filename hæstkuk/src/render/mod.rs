@@ -5,7 +5,9 @@
 #![allow(dead_code)]
 
 extern crate minifb;
-use minifb::{Key, Window, WindowOptions};
+extern crate image;
+
+use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use std::thread::sleep;
 
 use std::marker::PhantomData;
@@ -17,7 +19,12 @@ use lr35902::Cpu;
 
 const SCALE : u32 = 3;
 
-
+#[derive(Clone, Debug, Copy)]
+pub enum PixelBuffer {
+        Render,
+        BG,
+        Tiles,
+}
 #[allow(dead_code)]
 pub struct Render<'a> {
     render_window: Window,
@@ -28,6 +35,7 @@ pub struct Render<'a> {
     buffer_render: Vec<u32>,
     buffer_bg: Vec<u32>,
     buffer_tiles: Vec<u32>,
+    f1_pressed: bool,
     phantom: PhantomData<&'a u8>,
 }
 
@@ -71,6 +79,7 @@ impl<'a> Render<'a> {
             buffer_render:    vec![0x00; 256*256],
             buffer_bg:    vec![0x00; 256*256],
             buffer_tiles: vec![0x00; 256*256],
+            f1_pressed: false,
             phantom: PhantomData,
         };
         render
@@ -88,6 +97,17 @@ impl<'a> Render<'a> {
         cpu.mem.joypad.set_down(self.render_window.is_key_down(Key::Down));
         cpu.mem.joypad.set_left(self.render_window.is_key_down(Key::Left));
         cpu.mem.joypad.set_right(self.render_window.is_key_down(Key::Right));
+
+        if self.render_window.is_key_pressed(Key::F1, KeyRepeat::No) {
+            if self.f1_pressed == false {
+                println!("Saving image");
+                //image::save_buffer("kuk.png", self.buffer_render.as_slice(), 256, 256, image::ColorType::Rgb8).unwrap();
+                self.f1_pressed = true;
+            }
+        }
+        if self.render_window.is_key_released(Key::F1) {
+            self.f1_pressed = false;
+        }
 
         self.bg_window.is_key_down(Key::Escape) ||
             self.tiles_window.is_key_down(Key::Escape) ||
@@ -115,27 +135,32 @@ impl<'a> Render<'a> {
 
 
 
-    pub fn put_pixel24(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, r: u8, g: u8, b: u8) {
+    pub fn put_pixel24(&mut self, buf: PixelBuffer, x: usize, y: usize, r: u8, g: u8, b: u8) {
         if x+y*self.width > 65535 {
             return;
         };
 
+        let c = (((r as u32)<<16) |
+                 (( g as u32)<<8) |
+                 (( b as u32))) as u32;
 
-        buf[x+y*self.width] = (((r as u32)<<16) |
-                               (( g as u32)<<8) |
-                               (( b as u32))) as u32;
-
+        match buf {
+            PixelBuffer::BG => { self.buffer_bg[x+y*self.width] = c },
+            PixelBuffer::Render => { self.buffer_render[x+y*self.width] = c },
+            PixelBuffer::Tiles => { self.buffer_tiles[x+y*self.width] = c },
+        }
     }
-    pub fn put_pixel8(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, c: u8) {
+    pub fn put_pixel8(&mut self, buf: PixelBuffer, x: usize, y: usize, c: u8) {
         if x+y*self.width > 65535 {
             //    println!("put_pixel8 error");
             return;
         };
 
         let v;
-        if c == 0x00 {v=0x00;}
+        if      c == 0x00 {v=0x00;}
         else if c == 0x01 {v=0x55;}
         else if c == 0x02 {v=0xAA;}
+        else if c == 0x03 {v=0xFF;}
         else {v=0xFF;}
         self.put_pixel24(buf, x, y, v, v, v);
     }
@@ -181,7 +206,7 @@ impl<'a> Render<'a> {
         ret
     }
 
-    pub fn display_tile(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, buft: Vec<u8>) {
+    pub fn display_tile(&mut self, buf: PixelBuffer, x: usize, y: usize, buft: Vec<u8>) {
 
         for ty in 0..8 {
             for tx in 0..8 {
@@ -194,10 +219,9 @@ impl<'a> Render<'a> {
         let mut x = 0;
         let mut y = 0;
 
-        let mut buffer = vec![0x00; self.width*self.height];
         for j in (0x8000..0x97FF).step_by(16) {
             let tile = self.get_tile_at_addr(cpu, j, false);
-            self.display_tile(&mut buffer, x, y, tile);
+            self.display_tile(PixelBuffer::Tiles, x, y, tile);
             x = x+8;
             if x > 200 {
                 x = 0;
@@ -205,7 +229,7 @@ impl<'a> Render<'a> {
             }
         }
 
-        self.tiles_window.update_with_buffer(&mut buffer, self.width, self.height)
+        self.tiles_window.update_with_buffer(&mut self.buffer_tiles, self.width, self.height)
             .unwrap();
     }
 
@@ -229,19 +253,24 @@ impl<'a> Render<'a> {
         tile[xrest+yrest*8]
     }
 
-    pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
+    pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
         let SCY  = cpu.mem.read8(0xFF42) as usize;
         let SCX  = cpu.mem.read8(0xFF43) as usize;
 
-        for y in 0..144 {
-            for x in 0..160 {
-                let c = self.get_bg_pixel_at(cpu, x + SCX, y + SCY);
-                self.put_pixel8(buffer, x, y, c);
-            }
+        for x in 0..160 {
+            let c = self.get_bg_pixel_at(cpu, x + SCX, line + SCY);
+//            self.buffer_render[x+line*256] = c as u8;
+            self.put_pixel8(buffer, x, line, c);
         }
     }
 
-    pub fn gen_BG_map(&mut self, cpu: &mut Cpu<'a>, buffer: &mut Vec<u32>) {
+    pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
+        for y in 0..144 {
+            self.gen_BG_map_line(cpu, buffer, y);
+        }
+    }
+
+    pub fn gen_BG_map(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
         let mut x = 0;
         let mut y = 0;
 
@@ -258,33 +287,13 @@ impl<'a> Render<'a> {
     }
 
     pub fn display_BG_map(&mut self, cpu: &mut Cpu<'a> ) {
-        let mut buffer = vec![0x00; self.width*self.height];
-        self.gen_BG_map(cpu, &mut buffer);
-        self.display_scroll(cpu, &mut buffer);
-        self.bg_window.update_with_buffer(&mut buffer, self.width, self.height)
+        self.gen_BG_map(cpu, PixelBuffer::BG);
+        self.display_scroll(cpu, PixelBuffer::BG);
+        self.bg_window.update_with_buffer(&mut self.buffer_bg, self.width, self.height)
             .unwrap();
     }
 
-    pub fn display_WIN_map(&mut self, cpu: &mut Cpu<'a> ) {
-        let mut x = 0;
-        let mut y = 0;
-
-        let mut buffer = vec![0x00; self.width*self.height];
-        for offset in 0x9C00..0x9FFF {
-            let id = cpu.readMem8(offset);
-            let tile = self.get_tile_by_id(cpu, id, false);
-            self.display_tile(&mut buffer, x, y, tile);
-
-            x+=8;
-            if x>=255 {
-                x = 0;
-                y += 8;
-            }
-        }
-        self.bg_window.update_with_buffer(&mut buffer, self.width, self.height)
-            .unwrap();
-    }
-    pub fn display_sprite(&mut self, buf: &mut Vec<u32>, x: usize, y: usize, buft: Vec<u8>, flags: u8) {
+    pub fn display_sprite(&mut self, buf: PixelBuffer, x: usize, y: usize, buft: Vec<u8>, flags: u8) {
         let xflip = flags&0b0010_0000 != 0;
         let yflip = flags&0b0100_0000 != 0;
 
@@ -319,10 +328,8 @@ impl<'a> Render<'a> {
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let lcdc = cpu.mem.read8(0xFF40);
-        let mut buffer = vec![0x00; self.width*self.height];
-//        self.gen_BG_map(cpu, &mut buffer);
-        self.gen_BG_map_pixel(cpu, &mut buffer);
 
+        self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
 
         // OAM
         let SCY = cpu.mem.read8(0xFF42) as usize;
@@ -335,19 +342,19 @@ impl<'a> Render<'a> {
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
                 let tile = self.get_tile_by_id(cpu, pattern_number, true);
-                self.display_sprite(&mut buffer, x, y, tile, flags);
+                self.display_sprite(PixelBuffer::Render, x, y, tile, flags);
                 if (lcdc&0b0000_0100)!=0 {
                     let tile = self.get_tile_by_id(cpu, pattern_number+1, true);
-                    self.display_sprite(&mut buffer, x, y+8, tile, flags);
+                    self.display_sprite(PixelBuffer::Render, x, y+8, tile, flags);
                 }
             }
             offset+=4;
         }
-        self.render_window.update_with_buffer(&mut buffer, self.width, self.height)
-            .unwrap();
+        self.render_window.update_with_buffer(&mut self.buffer_render, self.width, self.height).unwrap();
+//        self.render_window.update_with_buffer(&mut buffer, self.width, self.height).unwrap();
     }
 
-    pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: &mut Vec<u32>) {
+    pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
         let SCY  = cpu.mem.read8(0xFF42) as usize;
         let SCX  = cpu.mem.read8(0xFF43) as usize;
         let cury = cpu.mem.read8(0xFF44) as usize;

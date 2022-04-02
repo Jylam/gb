@@ -112,6 +112,7 @@ impl<'a> Mem<'a>{
                 let offset = (addr as u32 - 0x4000)+(0x4000*self.mbc1_bank as u32);
                 self.rom.buffer[offset as usize]
             },
+            // Cartridge RAM
             0xA000..= 0xBFFF=>
             {
                 if self.ram_enabled == false {
@@ -164,9 +165,11 @@ impl<'a> Mem<'a>{
                     self.ram_bank = (v as u8) & 0x03;
                 }
             },
+            // Cartridge RAM enable
             0x6000..=0x7FFF => {
                 self.ram_mode = (v & 0x01) == 0x01;
             }
+            // Cartridge RAM
             0xA000..= 0xBFFF=> {
                 if self.ram_enabled == false {
                     return;
