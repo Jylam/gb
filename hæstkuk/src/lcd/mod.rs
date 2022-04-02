@@ -8,8 +8,13 @@ pub struct LCD<'a> {
 	phantom: PhantomData<&'a u8>,
     debug: bool,
     vblank: bool,
-    vblank_max_cycles: u64,
-    vblank_counter: i64,
+    max_cycles: u64,
+    counter: u64,
+    mode: usize,
+    mode0_counter: u64,
+    mode1_counter: u64,
+    mode2_counter: u64,
+    mode3_counter: u64,
     need_render: bool,
     t: u32,
 }
@@ -22,8 +27,13 @@ impl<'a> LCD<'a>{
             phantom: PhantomData,
             debug: false,
             vblank: false,
-            vblank_max_cycles: 1755,
-            vblank_counter: 0,
+            max_cycles: 70224,
+            counter: 0,
+            mode: 0,
+            mode0_counter: 0,
+            mode1_counter: 0,
+            mode2_counter: 0,
+            mode3_counter: 0,
             need_render: true,
             t: 0
         }
@@ -73,9 +83,43 @@ impl<'a> LCD<'a>{
 
     pub fn update(&mut self, cur_cycles: u64) {
 
-        self.vblank_counter -= cur_cycles as i64;
-        if self.vblank_counter <= 0 {
-            self.vblank_counter = self.vblank_max_cycles as i64;
+        self.counter += cur_cycles;
+
+        match self.mode {
+            0=>{
+                self.mode0_counter+=cur_cycles;
+                if self.mode0_counter >= 201 {
+                    self.mode0_counter = 0;
+                    self.mode = 2;
+                }
+            },
+            1=>{
+                self.mode1_counter+=cur_cycles;
+                if self.mode1_counter >= 4560 {
+                    self.mode1_counter = 0;
+                    self.mode = 2;
+                }
+            },
+            2=>{
+                self.mode2_counter+=cur_cycles;
+                if self.mode2_counter >= 80 {
+                    self.mode2_counter = 0;
+                    self.mode = 3;
+                }
+            },
+            3=>{
+                self.mode3_counter+=cur_cycles;
+                if self.mode3_counter >= 169 {
+                    self.mode3_counter = 0;
+                    self.mode = 0;
+                }
+            },
+            _=>{println!("Wrong mode !");}
+        }
+
+
+        if self.counter >= self.max_cycles {
+            self.counter = 0;
 
             // Update LY at FF44
             let mut ly = self.read8(0xFF44) as u8;
@@ -96,7 +140,6 @@ impl<'a> LCD<'a>{
             }
 
             // Update mode
-
             if ly == 144 {
                 stat = stat | 0x01;
                 self.vblank = true;
