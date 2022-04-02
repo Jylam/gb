@@ -133,8 +133,6 @@ impl<'a> Render<'a> {
         }
     }
 
-
-
     pub fn put_pixel24(&mut self, buf: PixelBuffer, x: usize, y: usize, r: u8, g: u8, b: u8) {
         if x+y*self.width > 65535 {
             return;
@@ -151,10 +149,6 @@ impl<'a> Render<'a> {
         }
     }
     pub fn put_pixel8(&mut self, buf: PixelBuffer, x: usize, y: usize, c: u8) {
-        if x+y*self.width > 65535 {
-            //    println!("put_pixel8 error");
-            return;
-        };
 
         let v;
         if      c == 0x00 {v=0x00;}
@@ -265,9 +259,13 @@ impl<'a> Render<'a> {
     }
 
     pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
-        for y in 0..144 {
-            self.gen_BG_map_line(cpu, buffer, y);
+        let y = cpu.mem.lcd.get_cur_y();
+        if y<=144 {
+            self.gen_BG_map_line(cpu, buffer, y as usize);
         }
+        //for y in 0..144 {
+        //    self.gen_BG_map_line(cpu, buffer, y);
+        //}
     }
 
     pub fn gen_BG_map(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
@@ -326,10 +324,14 @@ impl<'a> Render<'a> {
         }
     }
 
+    pub fn update_screen(&mut self, cpu: &mut Cpu<'a> ) {
+        self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
+    }
+
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let lcdc = cpu.mem.read8(0xFF40);
 
-        self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
+    //    self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
 
         // OAM
         let SCY = cpu.mem.read8(0xFF42) as usize;

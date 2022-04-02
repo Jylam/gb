@@ -68,6 +68,9 @@ fn main() {
 
         cpu.mem.timer.update(cur_cycles);
         cpu.mem.lcd.update(cur_cycles);
+        if cpu.mem.lcd.need_render() {
+            render.update_screen(&mut cpu);
+        }
         cpu.mem.joypad.update();
         //render.oam(&mut cpu);
 

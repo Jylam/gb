@@ -10,6 +10,7 @@ pub struct LCD<'a> {
     vblank: bool,
     vblank_max_cycles: u64,
     vblank_counter: i64,
+    need_render: bool,
     t: u32,
 }
 
@@ -23,6 +24,7 @@ impl<'a> LCD<'a>{
             vblank: false,
             vblank_max_cycles: 1755,
             vblank_counter: 0,
+            need_render: true,
             t: 0
         }
     }
@@ -105,10 +107,21 @@ impl<'a> LCD<'a>{
             }
 
             self.write8(0xFF41, stat);
+            self.need_render = true;
         }
-
     }
 
+    pub fn need_render(&mut self) -> bool {
+        if self.need_render {
+            self.need_render = false;
+            true
+        } else {
+            false
+        }
+    }
+    pub fn get_cur_y(&mut self) -> u8 {
+        self.read8(0xFF44) as u8
+    }
     pub fn get_scy(self) -> u8 {
         self.regs[2]
     }
