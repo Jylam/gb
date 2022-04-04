@@ -16,6 +16,7 @@ pub struct LCD<'a> {
     mode2_counter: u64,
     mode3_counter: u64,
     need_render: bool,
+    need_new_line: bool,
     t: u32,
 }
 
@@ -35,6 +36,7 @@ impl<'a> LCD<'a>{
             mode2_counter: 0,
             mode3_counter: 0,
             need_render: true,
+            need_new_line: true,
             t: 0
         }
     }
@@ -84,13 +86,49 @@ impl<'a> LCD<'a>{
     pub fn update(&mut self, cur_cycles: u64) {
 
         self.counter += cur_cycles;
-
+        let scy = self.get_scy();
+        let scx = self.get_scx();
+        println!("Mode {}   ly {} scy {} scx {}", self.mode, self.read8(0xFF44), scy, scx);
         match self.mode {
             0=>{
                 self.mode0_counter+=cur_cycles;
                 if self.mode0_counter >= 201 {
+                    // Update LY at FF44
+                    let mut ly = self.read8(0xFF44) as u8;
+                    if ly==153 {
+                        ly = 0;
+                    } else {
+                        ly = ly.wrapping_add(1);
+                    self.need_new_line = true;
+                    }
+                    self.write8(0xFF44, ly);
+
+                    // Update LYC 0xFF45  at STAT 0xFF41
+                    let lyc = self.read8(0xFF45) as u8;
+                    let mut stat = self.read8(0xFF41) as u8;
+                    if ly == lyc {
+                        stat = stat | (1 << 2);
+                    } else {
+                        stat = stat & !(1 << 2)
+                    }
+
+                    // Update mode
+                    if ly == 144 {
+                        self.mode = 1;
+                        stat &= 0b1111_1100;
+                        stat = stat | 0x01;
+                        self.vblank = true;
+                        self.need_render = true;
+                    }
+                    if ly == 0 {
+                        self.mode = 2;
+                        stat &= 0b1111_1100;
+                        stat |= 0b0000_0010;
+                        self.vblank = false;
+                    }
+
+                    self.write8(0xFF41, stat);
                     self.mode0_counter = 0;
-                    self.mode = 2;
                 }
             },
             1=>{
@@ -98,6 +136,10 @@ impl<'a> LCD<'a>{
                 if self.mode1_counter >= 4560 {
                     self.mode1_counter = 0;
                     self.mode = 2;
+                    let mut stat = self.read8(0xFF41) as u8;
+                    stat &= 0b1111_1100;
+                    stat |= 0b0000_0010;
+                    self.write8(0xFF41, stat);
                 }
             },
             2=>{
@@ -105,6 +147,10 @@ impl<'a> LCD<'a>{
                 if self.mode2_counter >= 80 {
                     self.mode2_counter = 0;
                     self.mode = 3;
+                    let mut stat = self.read8(0xFF41) as u8;
+                    stat &= 0b1111_1100;
+                    stat |= 0b0000_0011;
+                    self.write8(0xFF41, stat);
                 }
             },
             3=>{
@@ -112,6 +158,9 @@ impl<'a> LCD<'a>{
                 if self.mode3_counter >= 169 {
                     self.mode3_counter = 0;
                     self.mode = 0;
+                    let mut stat = self.read8(0xFF41) as u8;
+                    stat &= 0b1111_1100;
+                    self.write8(0xFF41, stat);
                 }
             },
             _=>{println!("Wrong mode !");}
@@ -120,40 +169,17 @@ impl<'a> LCD<'a>{
 
         if self.counter >= self.max_cycles {
             self.counter = 0;
-
-            // Update LY at FF44
-            let mut ly = self.read8(0xFF44) as u8;
-            if ly==153 {
-                ly = 0;
-            } else {
-                ly = ly.wrapping_add(1);
-            }
-            self.write8(0xFF44, ly);
-
-            // Update LYC 0xFF45  at STAT 0xFF41
-            let lyc = self.read8(0xFF45) as u8;
-            let mut stat = self.read8(0xFF41) as u8;
-            if ly == lyc {
-                stat = stat | (1 << 2);
-            } else {
-                stat = stat & !(1 << 2)
-            }
-
-            // Update mode
-            if ly == 144 {
-                stat = stat | 0x01;
-                self.vblank = true;
-            }
-            if ly == 0 {
-                stat = stat & !0x01;
-                self.vblank = false;
-            }
-
-            self.write8(0xFF41, stat);
-            self.need_render = true;
         }
     }
 
+    pub fn need_new_line(&mut self) -> bool {
+        if self.need_new_line {
+            self.need_new_line = false;
+            true
+        } else {
+            false
+        }
+    }
     pub fn need_render(&mut self) -> bool {
         if self.need_render {
             self.need_render = false;
@@ -165,18 +191,18 @@ impl<'a> LCD<'a>{
     pub fn get_cur_y(&mut self) -> u8 {
         self.read8(0xFF44) as u8
     }
-    pub fn get_scy(self) -> u8 {
+    pub fn get_scy(&mut self) -> u8 {
         self.regs[2]
     }
-    pub fn get_scx(self) -> u8 {
+    pub fn get_scx(&mut self) -> u8 {
         self.regs[3]
     }
 
     pub fn int_stat(&mut self) -> bool {
-        let mut s = self.read8(0xFF41) & 0x01;
-
+        let mut s = self.read8(0xFF41) & 0b0000_0100;
+        // TODO
         if s != 0 {
-            s = s & !0x01;
+            s = s & !0x04;
             self.write8(0xFF41, s);
             true
         } else {

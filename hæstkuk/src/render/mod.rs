@@ -248,18 +248,19 @@ impl<'a> Render<'a> {
     }
 
     pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
-        let SCY  = cpu.mem.read8(0xFF42) as usize;
-        let SCX  = cpu.mem.read8(0xFF43) as usize;
+        let SCY  = cpu.mem.lcd.get_scy() as usize;
+        let SCX  = cpu.mem.lcd.get_scx() as usize;
 
+        println!("gen_BG_map_line, line {}, SCX {}", line, SCX);
         for x in 0..160 {
             let c = self.get_bg_pixel_at(cpu, x + SCX, line + SCY);
-//            self.buffer_render[x+line*256] = c as u8;
             self.put_pixel8(buffer, x, line, c);
         }
     }
 
     pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
         let y = cpu.mem.lcd.get_cur_y();
+//        println!("X {} Y {}", cpu.mem.lcd.get_scx(), cpu.mem.lcd.get_scy());
         if y<=144 {
             self.gen_BG_map_line(cpu, buffer, y as usize);
         }
@@ -314,7 +315,7 @@ impl<'a> Render<'a> {
             while ix<8 {
                 // If the color is 0xFF, it is transparent
                 if buft[(tx+ty*8) as usize] != 0xFF {
-                self.put_pixel8(buf, (x+ix-8) as usize, (y+iy-16) as usize, buft[(tx+ty*8) as usize]);
+                    self.put_pixel8(buf, (x+ix-8) as usize, (y+iy-16) as usize, buft[(tx+ty*8) as usize]);
                 }
                 tx+=stepx;
                 ix+=1;

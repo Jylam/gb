@@ -68,16 +68,17 @@ fn main() {
 
         cpu.mem.timer.update(cur_cycles);
         cpu.mem.lcd.update(cur_cycles);
-        if cpu.mem.lcd.need_render() {
+        if cpu.mem.lcd.need_new_line() {
             render.update_screen(&mut cpu);
         }
+        if cpu.mem.lcd.need_render() {
+            render.render_screen(&mut cpu);
+        }
         cpu.mem.joypad.update();
-        //render.oam(&mut cpu);
 
         refresh_counter-=cur_cycles as i64;
         if refresh_counter <= 0 {
             refresh_counter = REFRESH_CYCLES as i64;
-            render.render_screen(&mut cpu);
             render.display_BG_map(&mut cpu);
             render.display_tile_pattern_tables (&mut cpu);
         }
