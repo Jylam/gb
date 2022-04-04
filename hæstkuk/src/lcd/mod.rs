@@ -84,11 +84,8 @@ impl<'a> LCD<'a>{
     }
 
     pub fn update(&mut self, cur_cycles: u64) {
-
         self.counter += cur_cycles;
-        let scy = self.get_scy();
-        let scx = self.get_scx();
-        println!("Mode {}   ly {} scy {} scx {}", self.mode, self.read8(0xFF44), scy, scx);
+
         match self.mode {
             0=>{
                 self.mode0_counter+=cur_cycles;
@@ -99,8 +96,8 @@ impl<'a> LCD<'a>{
                         ly = 0;
                     } else {
                         ly = ly.wrapping_add(1);
-                    self.need_new_line = true;
                     }
+                    self.need_new_line = true;
                     self.write8(0xFF44, ly);
 
                     // Update LYC 0xFF45  at STAT 0xFF41

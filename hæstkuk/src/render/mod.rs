@@ -250,23 +250,24 @@ impl<'a> Render<'a> {
     pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
         let SCY  = cpu.mem.lcd.get_scy() as usize;
         let SCX  = cpu.mem.lcd.get_scx() as usize;
+        let lcdc = cpu.mem.read8(0xFF40);
 
-        println!("gen_BG_map_line, line {}, SCX {}", line, SCX);
         for x in 0..160 {
-            let c = self.get_bg_pixel_at(cpu, x + SCX, line + SCY);
-            self.put_pixel8(buffer, x, line, c);
+            if (lcdc & 0b0000_0001) == 0x01 {
+                let c = self.get_bg_pixel_at(cpu, x + SCX, line + SCY);
+                self.put_pixel8(buffer, x, line, c);
+            } else {
+                self.put_pixel8(buffer, x, line, 0x03);
+            }
         }
     }
 
-    pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
-        let y = cpu.mem.lcd.get_cur_y();
-//        println!("X {} Y {}", cpu.mem.lcd.get_scx(), cpu.mem.lcd.get_scy());
-        if y<=144 {
+
+pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
+    let y = cpu.mem.lcd.get_cur_y();
+    if y<=144 {
             self.gen_BG_map_line(cpu, buffer, y as usize);
         }
-        //for y in 0..144 {
-        //    self.gen_BG_map_line(cpu, buffer, y);
-        //}
     }
 
     pub fn gen_BG_map(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
