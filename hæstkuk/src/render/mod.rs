@@ -7,7 +7,7 @@
 extern crate minifb;
 extern crate image;
 
-use minifb::{Key, KeyRepeat, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, Window, WindowOptions, Scale, ScaleMode};
 use std::thread::sleep;
 
 use std::marker::PhantomData;
@@ -55,7 +55,16 @@ impl<'a> Render<'a> {
             "Render - ESC to exit",
             256,
             256,
-            WindowOptions::default(),
+            WindowOptions {
+                borderless: false,
+                title: true,
+                resize: false,
+                scale: Scale::X4,
+                scale_mode: ScaleMode::Stretch,
+                topmost: false,
+                transparency: false,
+                none: false,
+            },
             )
             .unwrap_or_else(|e| {
                 panic!("{}", e);
@@ -150,14 +159,17 @@ impl<'a> Render<'a> {
         }
     }
     pub fn put_pixel8(&mut self, buf: PixelBuffer, x: usize, y: usize, c: u8) {
+        let r;
+        let g;
+        let b;
 
-        let v;
-        if      c == 0x00 {v=0x00;}
-        else if c == 0x01 {v=0x55;}
-        else if c == 0x02 {v=0xAA;}
-        else if c == 0x03 {v=0xFF;}
-        else {v=0xFF;}
-        self.put_pixel24(buf, x, y, v, v, v);
+        if      c == 0x00 {r=0x00; g=0x00; b=0x00;}
+        else if c == 0x01 {r=0x55; g=0x55; b=0x55;}
+        else if c == 0x02 {r=0xAA; g=0xAA; b=0xAA;}
+        else if c == 0x03 {r=0xFF; g=0xFF; b=0xFF;}
+        else {r=0xFF; g=0xFf; b=0xFF;}
+
+        self.put_pixel24(buf, x, y, r, g, b);
     }
 
     pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool, palette: Vec<u8>) -> Vec<u8> {
@@ -196,7 +208,6 @@ impl<'a> Render<'a> {
             ret[6+i*8] = if is_sprite && p7==0 {0xFF}else{colors[p7 as usize]};
             ret[7+i*8] = if is_sprite && p8==0 {0xFF}else{colors[p8 as usize]};
         }
-
         ret
     }
 
@@ -336,30 +347,31 @@ impl<'a> Render<'a> {
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let lcdc = cpu.mem.read8(0xFF40);
 
-        //    self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
-
-        // OAM
-        let SCY = cpu.mem.read8(0xFF42) as usize;
-        let SCX = cpu.mem.read8(0xFF43) as usize;
-        let mut offset: u16 = 0xFE00;
-        for i in 0..=40 {
-            let y = cpu.readMem8(offset) as usize;
-            let x = cpu.readMem8(offset+1) as usize;
-            let pattern_number = cpu.readMem8(offset+2);
-            let flags = cpu.readMem8(offset+3);
-            if x!=0 {
-                let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
-                let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
-                self.display_sprite(PixelBuffer::Render, x, y, tile, flags);
-                // Double size
-                if (lcdc&0b0000_0100)!=0 {
+        // TODO if lcdc&0b0000_0010 != 0 {
+            // OAM
+            let SCY = cpu.mem.read8(0xFF42) as usize;
+            let SCX = cpu.mem.read8(0xFF43) as usize;
+            let mut offset: u16 = 0xFE00;
+            for i in 0..=40 {
+                let y = cpu.readMem8(offset) as usize;
+                let x = cpu.readMem8(offset+1) as usize;
+                let pattern_number = cpu.readMem8(offset+2);
+                let flags = cpu.readMem8(offset+3);
+                if x!=0 {
                     let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
-                    let tile = self.get_tile_by_id(cpu, pattern_number+1, true, palette);
-                    self.display_sprite(PixelBuffer::Render, x, y+8, tile, flags);
+                    let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
+                    self.display_sprite(PixelBuffer::Render, x, y, tile, flags);
+                    // Double size
+                    if (lcdc&0b0000_0100)!=0 {
+                        println!("DOUBLE SIZE at {} {}", x, y);
+                        let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
+                        let tile = self.get_tile_by_id(cpu, pattern_number+1, true, palette);
+                        self.display_sprite(PixelBuffer::Render, x, y+8, tile, flags);
+                    }
                 }
+                offset+=4;
             }
-            offset+=4;
-        }
+        //}
         self.render_window.update_with_buffer(&mut self.buffer_render, self.width, self.height).unwrap();
         //        self.render_window.update_with_buffer(&mut buffer, self.width, self.height).unwrap();
     }
