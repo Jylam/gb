@@ -276,17 +276,33 @@ impl<'a> Render<'a> {
 
     pub fn get_obj_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: isize, y: isize) -> u8 {
         let mut offset: u16 = 0xFE00;
-        for _i in 0..=40 {
+        let lcdc = cpu.mem.read8(0xFF40);
+        let h;
+        let mut count = 0;
+        if (lcdc&0b0000_0100)!=0 {
+            h = 16;
+        } else {
+            h=8;
+        }
+        for _i in 0..40 {
             // Sprite position
-            let py = (cpu.readMem8(offset) as isize)-16 as isize;
-            let px = (cpu.readMem8(offset+1) as isize)-8 as isize;
+            let py = (cpu.readMem8(offset)   as isize) -16;
+            let px = (cpu.readMem8(offset+1) as isize) -8;
 
-            if px==0 || px>168 {
+            // Out of screen
+            if px<=0 || px>168 {
                 return 0xFF;
             }
-
+            // Visible
             if py<=y && px<=x {
-                if (py+8)>=y && (px+8)>=x {
+                if (py+h)>y && (px+8)>x {
+
+                let pattern_number = cpu.readMem8(offset+2);
+                let flags = cpu.readMem8(offset+3);
+                    let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
+                    let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
+
+
                     return 0x55;
                 }
 
