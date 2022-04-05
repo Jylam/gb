@@ -1,7 +1,6 @@
 // Graphical; renderer
 #![allow(non_snake_case)]
 #![allow(unused_imports)]
-#![allow(unused_variables)]
 #![allow(dead_code)]
 
 extern crate minifb;
@@ -79,7 +78,6 @@ impl<'a> Render<'a> {
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
-        //window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         let render = Render {
             render_window: render_window,
             bg_window: bg_window,
@@ -167,7 +165,8 @@ impl<'a> Render<'a> {
         else if c == 0x01 {r=0x55; g=0x55; b=0x55;}
         else if c == 0x02 {r=0xAA; g=0xAA; b=0xAA;}
         else if c == 0x03 {r=0xFF; g=0xFF; b=0xFF;}
-        else {r=0xFF; g=0xFf; b=0xFF;}
+        else if c == 0x55 {r=0xFF; g=0x00; b=0x00;}
+        else {r=0xFF; g=0xFF; b=0xFF;}
 
         self.put_pixel24(buf, x, y, r, g, b);
     }
@@ -275,6 +274,42 @@ impl<'a> Render<'a> {
         }
     }
 
+    pub fn get_obj_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: isize, y: isize) -> u8 {
+        let mut offset: u16 = 0xFE00;
+        for _i in 0..=40 {
+            // Sprite position
+            let py = (cpu.readMem8(offset) as isize)-16 as isize;
+            let px = (cpu.readMem8(offset+1) as isize)-8 as isize;
+
+            if px==0 || px>168 {
+                return 0xFF;
+            }
+
+            if py<=y && px<=x {
+                if (py+8)>=y && (px+8)>=x {
+                    return 0x55;
+                }
+
+
+            }
+            offset+=4;
+        }
+        0xFF
+    }
+    pub fn gen_OBJ_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
+        for x in 0..160 {
+            let c = self.get_obj_pixel_at(cpu, x as isize, line as isize);
+            if c!=0xFF {
+                self.put_pixel8(buffer, x, line, c);
+            }
+        }
+    }
+    pub fn gen_OBJ_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
+        let y = cpu.mem.lcd.get_cur_y();
+        if y<=144 {
+            self.gen_OBJ_map_line(cpu, buffer, y as usize);
+        }
+    }
 
     pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
         let y = cpu.mem.lcd.get_cur_y();
@@ -302,7 +337,7 @@ impl<'a> Render<'a> {
 
     pub fn display_BG_map(&mut self, cpu: &mut Cpu<'a> ) {
         self.gen_BG_map(cpu, PixelBuffer::BG);
-        self.display_scroll(cpu, PixelBuffer::BG);
+        self.display_scroll_window(cpu, PixelBuffer::BG);
         self.bg_window.update_with_buffer(&mut self.buffer_bg, self.width, self.height)
             .unwrap();
     }
@@ -342,6 +377,7 @@ impl<'a> Render<'a> {
 
     pub fn update_screen(&mut self, cpu: &mut Cpu<'a> ) {
         self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
+        self.gen_OBJ_map_pixel(cpu, PixelBuffer::Render);
     }
 
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
@@ -349,10 +385,8 @@ impl<'a> Render<'a> {
 
         // TODO if lcdc&0b0000_0010 != 0 {
             // OAM
-            let SCY = cpu.mem.read8(0xFF42) as usize;
-            let SCX = cpu.mem.read8(0xFF43) as usize;
             let mut offset: u16 = 0xFE00;
-            for i in 0..=40 {
+            for _i in 0..=40 {
                 let y = cpu.readMem8(offset) as usize;
                 let x = cpu.readMem8(offset+1) as usize;
                 let pattern_number = cpu.readMem8(offset+2);
@@ -376,7 +410,7 @@ impl<'a> Render<'a> {
         //        self.render_window.update_with_buffer(&mut buffer, self.width, self.height).unwrap();
     }
 
-    pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
+    pub fn display_scroll_window(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
         let SCY  = cpu.mem.read8(0xFF42) as usize;
         let SCX  = cpu.mem.read8(0xFF43) as usize;
         let cury = cpu.mem.read8(0xFF44) as usize;
