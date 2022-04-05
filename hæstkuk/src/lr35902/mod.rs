@@ -4604,7 +4604,7 @@ impl<'a> Cpu<'a>{
                 self.regs.PC = 0x0040;
                 DI(self);
             } else if ((ie&0b0000_0010)!=0) && (iflag&0b0000_0010)!=0 { // LCD STAT
-                println!("INT LCD STAT");
+                //println!("INT LCD STAT");
                 iflag = iflag & !(1 << 1);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0048;

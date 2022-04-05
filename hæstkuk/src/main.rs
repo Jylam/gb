@@ -68,12 +68,14 @@ fn main() {
 
         cpu.mem.timer.update(cur_cycles);
         cpu.mem.lcd.update(cur_cycles);
+
         if cpu.mem.lcd.need_new_line() {
             render.update_screen(&mut cpu);
         }
         if cpu.mem.lcd.need_render() {
             render.render_screen(&mut cpu);
         }
+
         cpu.mem.joypad.update();
 
         refresh_counter-=cur_cycles as i64;

@@ -51,7 +51,7 @@ impl<'a> Render<'a> {
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
-        let render_window = Window::new(
+        let mut render_window = Window::new(
             "Render - ESC to exit",
             256,
             256,
@@ -60,6 +60,7 @@ impl<'a> Render<'a> {
             .unwrap_or_else(|e| {
                 panic!("{}", e);
             });
+        render_window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         let bg_window = Window::new(
             "BGMap - ESC to exit",
             256,
@@ -159,16 +160,15 @@ impl<'a> Render<'a> {
         self.put_pixel24(buf, x, y, v, v, v);
     }
 
-    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool) -> Vec<u8> {
+    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool, palette: Vec<u8>) -> Vec<u8> {
 
         let addr = cpu.mem.lcd.get_tile_addr(id, is_sprite);
 
-        self.get_tile_at_addr(cpu, addr, is_sprite)
+        self.get_tile_at_addr(cpu, addr, is_sprite, palette)
     }
 
-    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16, is_sprite: bool) -> Vec<u8> {
+    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16, is_sprite: bool, colors: Vec<u8>) -> Vec<u8> {
 
-        let colors = cpu.mem.lcd.get_bw_palette();
         let mut ret = vec![0; 8*8];
         let mut offset = addr;
         for i in 0..8 {
@@ -214,7 +214,8 @@ impl<'a> Render<'a> {
         let mut y = 0;
 
         for j in (0x8000..0x97FF).step_by(16) {
-            let tile = self.get_tile_at_addr(cpu, j, false);
+            let palette = cpu.mem.lcd.get_bw_palette();
+            let tile = self.get_tile_at_addr(cpu, j, false, palette);
             self.display_tile(PixelBuffer::Tiles, x, y, tile);
             x = x+8;
             if x > 200 {
@@ -242,7 +243,8 @@ impl<'a> Render<'a> {
         // Tile ID
         let id = cpu.readMem8(bgmap+bgoff as u16);
         // Tile Pixels
-        let tile = self.get_tile_by_id(cpu, id, false);
+        let palette = cpu.mem.lcd.get_bw_palette();
+        let tile = self.get_tile_by_id(cpu, id, false, palette);
         // Get Pixel value
         tile[xrest+yrest*8]
     }
@@ -263,9 +265,9 @@ impl<'a> Render<'a> {
     }
 
 
-pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
-    let y = cpu.mem.lcd.get_cur_y();
-    if y<=144 {
+    pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
+        let y = cpu.mem.lcd.get_cur_y();
+        if y<=144 {
             self.gen_BG_map_line(cpu, buffer, y as usize);
         }
     }
@@ -276,7 +278,8 @@ pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
 
         for offset in 0x9800..=0x9BFF {
             let id = cpu.readMem8(offset);
-            let tile = self.get_tile_by_id(cpu, id, false);
+            let palette = cpu.mem.lcd.get_bw_palette();
+            let tile = self.get_tile_by_id(cpu, id, false, palette);
             self.display_tile(buffer, x, y, tile);
             x+=8;
             if x>=255 {
@@ -333,7 +336,7 @@ pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
     pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let lcdc = cpu.mem.read8(0xFF40);
 
-    //    self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
+        //    self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
 
         // OAM
         let SCY = cpu.mem.read8(0xFF42) as usize;
@@ -345,17 +348,20 @@ pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
             let pattern_number = cpu.readMem8(offset+2);
             let flags = cpu.readMem8(offset+3);
             if x!=0 {
-                let tile = self.get_tile_by_id(cpu, pattern_number, true);
+                let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
+                let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
                 self.display_sprite(PixelBuffer::Render, x, y, tile, flags);
+                // Double size
                 if (lcdc&0b0000_0100)!=0 {
-                    let tile = self.get_tile_by_id(cpu, pattern_number+1, true);
+                    let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
+                    let tile = self.get_tile_by_id(cpu, pattern_number+1, true, palette);
                     self.display_sprite(PixelBuffer::Render, x, y+8, tile, flags);
                 }
             }
             offset+=4;
         }
         self.render_window.update_with_buffer(&mut self.buffer_render, self.width, self.height).unwrap();
-//        self.render_window.update_with_buffer(&mut buffer, self.width, self.height).unwrap();
+        //        self.render_window.update_with_buffer(&mut buffer, self.width, self.height).unwrap();
     }
 
     pub fn display_scroll(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {

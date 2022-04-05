@@ -219,5 +219,16 @@ impl<'a> LCD<'a>{
 
         vec![convert[col0 as usize], convert[col1 as usize], convert[col2 as usize], convert[col3 as usize]]
     }
+    pub fn get_sprite_palette(&mut self, id: u16) -> Vec<u8> {
+        let pal = self.read8(0xFF48+id) as u8;
+        let col0 = (pal&0b00000011) >> 0;
+        let col1 = (pal&0b00001100) >> 2;
+        let col2 = (pal&0b00110000) >> 4;
+        let col3 = (pal&0b11000000) >> 6;
+
+        let convert = vec![0b11, 0b01, 0b10, 0b00];
+
+        vec![convert[col0 as usize], convert[col1 as usize], convert[col2 as usize], convert[col3 as usize]]
+    }
 
 }
