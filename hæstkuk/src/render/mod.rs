@@ -330,7 +330,7 @@ impl<'a> Render<'a> {
             for x in 0..=7 {
                 let ox = if _xflip {7-x} else {x};
                 let c = tile[ox+y*8];
-                if c!=0xFF {
+                if c!=0xFF && (x+px as usize)<160 {
                     self.put_pixel8(buffer, x+px as usize, line, c);
                 }
             }
