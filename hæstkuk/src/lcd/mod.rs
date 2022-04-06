@@ -45,7 +45,7 @@ impl<'a> LCD<'a>{
         match addr {
             // DMA OAM, handled in mem.rs
             0xFF46 => {println!("ERROR OAM DMA {:04X} -> {:02X}", addr, v);}
-            0xFF47..=0xFF49 => {self.regs[(addr-0xFF40) as usize] = v; println!("Writing {:04X}: {:08b}", addr, v);}
+            0xFF47..=0xFF49 => {self.regs[(addr-0xFF40) as usize] = v;}
             _ => {self.regs[(addr-0xFF40) as usize] = v;}
         }
     }

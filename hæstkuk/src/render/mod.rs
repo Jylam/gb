@@ -303,9 +303,6 @@ impl<'a> Render<'a> {
             offset = 0xFE00 + (i*4);
             let py = (cpu.readMem8(offset) as isize)-16;
 
-            if py<0 {
-                continue 'oamloop;
-            }
             // Sprite doesn't intersect the line
             if (py>line as isize) || ((py + (h-1)) < line as isize) {
                 continue 'oamloop;
@@ -318,9 +315,10 @@ impl<'a> Render<'a> {
             let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
             let px = (cpu.readMem8(offset+1) as isize)-8;
 
+            // Flip Y
             let mut y = if _yflip {(h-1) as usize -(line-py as usize)} else {line-py as usize};
 
-
+            // Double height ?
             let tile;
             if y<8 {
                 tile = self.get_tile_by_id(cpu, tile_index, true, palette);
