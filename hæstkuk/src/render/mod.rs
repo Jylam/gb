@@ -318,7 +318,8 @@ impl<'a> Render<'a> {
             let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
             let px = (cpu.readMem8(offset+1) as isize)-8;
 
-            let mut y = line-py as usize;
+            let mut y = if _yflip {(h-1) as usize -(line-py as usize)} else {line-py as usize};
+
 
             let tile;
             if y<8 {
