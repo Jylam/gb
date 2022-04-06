@@ -283,7 +283,7 @@ impl<'a> Render<'a> {
         if line>144 {
             return;
         }
-        let mut offset: u16 = 0xFE00;
+        let mut offset: u16;
         let lcdc = cpu.mem.read8(0xFF40);
 
         // OBJ Disabled
@@ -293,9 +293,14 @@ impl<'a> Render<'a> {
         }
         let h = if (lcdc&0b0000_0100)!=0 { 16 } else { 8 };
 
+        let mut count = 0;
         // Loop through sprites
-        'oamloop: for _i in 0..40 {
+        'oamloop: for i in 0..40 {
+            if count==10 {
+                return;
+            }
             // Sprite position
+            offset = 0xFE00 + (i*4);
             let py = (cpu.readMem8(offset) as isize)-16;
 
             if py<0 {
@@ -306,32 +311,31 @@ impl<'a> Render<'a> {
                 continue 'oamloop;
             }
 
-            let pattern_number = cpu.readMem8(offset+2);
             let flags = cpu.readMem8(offset+3);
-            let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
-            let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
             let _xflip = flags&0b0010_0000 != 0;
             let _yflip = flags&0b0100_0000 != 0;
+            let tile_index = cpu.readMem8(offset+2);
+            let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
             let px = (cpu.readMem8(offset+1) as isize)-8;
 
-            let y = line-py as usize;
+            let mut y = line-py as usize;
+
+            let tile;
+            if y<8 {
+                tile = self.get_tile_by_id(cpu, tile_index, true, palette);
+            } else {
+                tile = self.get_tile_by_id(cpu, tile_index+1, true, palette);
+                y = y-8;
+            }
 
             for x in 0..=7 {
-                let c = tile[x+y*8];
+                let ox = if _xflip {7-x} else {x};
+                let c = tile[ox+y*8];
                 if c!=0xFF {
                     self.put_pixel8(buffer, x+px as usize, line, c);
                 }
-
-                if _i == 0 {
-                    print!("{:02X}x{:02X} {:02X} ", x, y, c);
-                }
             }
-
-            if _i == 0 {
-                println!("");
-            }
-            offset+=4;
-
+            count+=1;
         }
     }
 
