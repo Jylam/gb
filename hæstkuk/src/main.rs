@@ -73,7 +73,7 @@ fn main() {
             render.update_screen(&mut cpu);
         }
         if cpu.mem.lcd.need_render() {
-            render.render_screen(&mut cpu);
+            render.render_screen();
         }
 
         cpu.mem.joypad.update();

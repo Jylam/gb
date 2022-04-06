@@ -45,9 +45,7 @@ impl<'a> LCD<'a>{
         match addr {
             // DMA OAM, handled in mem.rs
             0xFF46 => {println!("ERROR OAM DMA {:04X} -> {:02X}", addr, v);}
-            0xFF42..=0xFF43 => {
-                self.regs[(addr-0xFF40) as usize] = v;
-            }
+            0xFF47..=0xFF49 => {self.regs[(addr-0xFF40) as usize] = v; println!("Writing {:04X}: {:08b}", addr, v);}
             _ => {self.regs[(addr-0xFF40) as usize] = v;}
         }
     }
@@ -55,7 +53,7 @@ impl<'a> LCD<'a>{
     pub fn read8(&self, addr: u16) -> u8 {
         //println!("LCD read8 at {:04X}", addr);
         match addr {
-            0xFF40..=0xFF4F => {self.regs[addr as usize -0xFF40 as usize]}
+            0xFF40..=0xFF4F => {self.regs[(addr-0xFF40) as usize]}
             _ => {error!("LCD read8 range error"); 0}
         }
     }
@@ -209,7 +207,7 @@ impl<'a> LCD<'a>{
 
     // Get palette and return the color between 0..3 (0 White, 1 Light gray, 2 Dark gray, 3 Black)
     pub fn get_palette(&mut self, addr: u16) -> Vec<u8> {
-        let pal = (self.read8(addr) as u8)&0b1111_1100;
+        let pal =  self.read8(addr);
         let col0 = (pal&0b00000011) >> 0;
         let col1 = (pal&0b00001100) >> 2;
         let col2 = (pal&0b00110000) >> 4;

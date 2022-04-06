@@ -166,6 +166,8 @@ impl<'a> Render<'a> {
         else if c == 0x02 {r=0xAA; g=0xAA; b=0xAA;}
         else if c == 0x03 {r=0xFF; g=0xFF; b=0xFF;}
         else if c == 0x55 {r=0xFF; g=0x00; b=0x00;}
+        else if c == 0xAA {r=0x00; g=0xFF; b=0x00;}
+        else if c == 0xBB {r=0x00; g=0x00; b=0xFF;}
         else {r=0xFF; g=0xFF; b=0xFF;}
 
         self.put_pixel24(buf, x, y, r, g, b);
@@ -260,6 +262,9 @@ impl<'a> Render<'a> {
     }
 
     pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
+        if line>144 {
+            return;
+        }
         let SCY  = cpu.mem.lcd.get_scy() as usize;
         let SCX  = cpu.mem.lcd.get_scx() as usize;
         let lcdc = cpu.mem.read8(0xFF40);
@@ -274,63 +279,59 @@ impl<'a> Render<'a> {
         }
     }
 
-    pub fn get_obj_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: isize, y: isize) -> u8 {
+    pub fn gen_OBJ_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
+        if line>144 {
+            return;
+        }
         let mut offset: u16 = 0xFE00;
         let lcdc = cpu.mem.read8(0xFF40);
-        let h;
-        let mut count = 0;
-        if (lcdc&0b0000_0100)!=0 {
-            h = 16;
-        } else {
-            h=8;
+
+        // OBJ Disabled
+        if (lcdc&0b0000_0010) == 0 {
+            self.put_pixel8(buffer, 0, line, 0xAA);
+            return;
         }
-        for _i in 0..40 {
+        let h = if (lcdc&0b0000_0100)!=0 { 16 } else { 8 };
+
+        // Loop through sprites
+        'oamloop: for _i in 0..40 {
             // Sprite position
-            let py = (cpu.readMem8(offset)   as isize) -16;
-            let px = (cpu.readMem8(offset+1) as isize) -8;
+            let py = (cpu.readMem8(offset) as isize)-16;
 
-            // Out of screen
-            if px<=0 || px>168 {
-                return 0xFF;
+            if py<0 {
+                continue 'oamloop;
             }
-            // Visible
-            if py<=y && px<=x {
-                if (py+h)>y && (px+8)>x {
+            // Sprite doesn't intersect the line
+            if (py>line as isize) || ((py + (h-1)) < line as isize) {
+                continue 'oamloop;
+            }
 
-                let pattern_number = cpu.readMem8(offset+2);
-                let flags = cpu.readMem8(offset+3);
-                    let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
-                    let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
+            let pattern_number = cpu.readMem8(offset+2);
+            let flags = cpu.readMem8(offset+3);
+            let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
+            let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
+            let _xflip = flags&0b0010_0000 != 0;
+            let _yflip = flags&0b0100_0000 != 0;
+            let px = (cpu.readMem8(offset+1) as isize)-8;
 
+            let y = line-py as usize;
 
-                    return 0x55;
+            for x in 0..=7 {
+                let c = tile[x+y*8];
+                if c!=0xFF {
+                    self.put_pixel8(buffer, x+px as usize, line, c);
                 }
 
+                if _i == 0 {
+                    print!("{:02X}x{:02X} {:02X} ", x, y, c);
+                }
+            }
 
+            if _i == 0 {
+                println!("");
             }
             offset+=4;
-        }
-        0xFF
-    }
-    pub fn gen_OBJ_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
-        for x in 0..160 {
-            let c = self.get_obj_pixel_at(cpu, x as isize, line as isize);
-            if c!=0xFF {
-                self.put_pixel8(buffer, x, line, c);
-            }
-        }
-    }
-    pub fn gen_OBJ_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
-        let y = cpu.mem.lcd.get_cur_y();
-        if y<=144 {
-            self.gen_OBJ_map_line(cpu, buffer, y as usize);
-        }
-    }
 
-    pub fn gen_BG_map_pixel(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer) {
-        let y = cpu.mem.lcd.get_cur_y();
-        if y<=144 {
-            self.gen_BG_map_line(cpu, buffer, y as usize);
         }
     }
 
@@ -358,72 +359,15 @@ impl<'a> Render<'a> {
             .unwrap();
     }
 
-    pub fn display_sprite(&mut self, buf: PixelBuffer, x: usize, y: usize, buft: Vec<u8>, flags: u8) {
-        let xflip = flags&0b0010_0000 != 0;
-        let yflip = flags&0b0100_0000 != 0;
-
-        let sx: i32;
-        let sy: i32;
-        let stepx: i32;
-        let stepy: i32;
-
-        if !xflip { sx = 0; stepx = 1; } else { sx = 7; stepx = -1; }
-        if !yflip { sy = 0; stepy = 1; } else { sy = 7; stepy = -1; }
-
-        let mut ty = sy;
-        let mut tx;
-        let mut iy = 0;
-        let mut ix;
-
-        while iy<8 {
-            tx = sx;
-            ix = 0;
-            while ix<8 {
-                // If the color is 0xFF, it is transparent
-                if buft[(tx+ty*8) as usize] != 0xFF {
-                    self.put_pixel8(buf, (x+ix-8) as usize, (y+iy-16) as usize, buft[(tx+ty*8) as usize]);
-                }
-                tx+=stepx;
-                ix+=1;
-            }
-            ty+=stepy;
-            iy+=1;
-        }
-    }
 
     pub fn update_screen(&mut self, cpu: &mut Cpu<'a> ) {
-        self.gen_BG_map_pixel(cpu, PixelBuffer::Render);
-        self.gen_OBJ_map_pixel(cpu, PixelBuffer::Render);
+        let y = cpu.mem.lcd.get_cur_y() as usize;
+        self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
+        self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
     }
 
-    pub fn render_screen(&mut self, cpu: &mut Cpu<'a> ) {
-        let lcdc = cpu.mem.read8(0xFF40);
-
-        // TODO if lcdc&0b0000_0010 != 0 {
-            // OAM
-            let mut offset: u16 = 0xFE00;
-            for _i in 0..=40 {
-                let y = cpu.readMem8(offset) as usize;
-                let x = cpu.readMem8(offset+1) as usize;
-                let pattern_number = cpu.readMem8(offset+2);
-                let flags = cpu.readMem8(offset+3);
-                if x!=0 {
-                    let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
-                    let tile = self.get_tile_by_id(cpu, pattern_number, true, palette);
-                    self.display_sprite(PixelBuffer::Render, x, y, tile, flags);
-                    // Double size
-                    if (lcdc&0b0000_0100)!=0 {
-                        println!("DOUBLE SIZE at {} {}", x, y);
-                        let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
-                        let tile = self.get_tile_by_id(cpu, pattern_number+1, true, palette);
-                        self.display_sprite(PixelBuffer::Render, x, y+8, tile, flags);
-                    }
-                }
-                offset+=4;
-            }
-        //}
+    pub fn render_screen(&mut self) {
         self.render_window.update_with_buffer(&mut self.buffer_render, self.width, self.height).unwrap();
-        //        self.render_window.update_with_buffer(&mut buffer, self.width, self.height).unwrap();
     }
 
     pub fn display_scroll_window(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
