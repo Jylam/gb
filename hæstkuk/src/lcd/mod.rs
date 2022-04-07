@@ -85,9 +85,10 @@ impl<'a> LCD<'a>{
         self.counter += cur_cycles;
 
         match self.mode {
+            // H-Blank
             0=>{
                 self.mode0_counter+=cur_cycles;
-                if self.mode0_counter >= 221 {
+                if self.mode0_counter >= 51*4 {
                     let mut stat = self.read8(0xFF41) as u8;
                     let mut ly   = self.read8(0xFF44) as u8;
                     let lyc      = self.read8(0xFF45) as u8;
@@ -114,8 +115,7 @@ impl<'a> LCD<'a>{
                         stat = stat | 0x01;
                         self.vblank = true;
                         self.need_render = true;
-                    }
-                    if ly == 0 {
+                    } else {
                         self.mode = 2;
                         stat &= 0b1111_1100;
                         stat |= 0b0000_0010;
@@ -127,9 +127,10 @@ impl<'a> LCD<'a>{
                     self.mode0_counter = 0;
                 }
             },
+            // V-Blank
             1=>{
                 self.mode1_counter+=cur_cycles;
-                if self.mode1_counter >= 4560 {
+                if self.mode1_counter >= 114*4*10 {
                     self.mode1_counter = 0;
                     self.mode = 2;
                     let mut stat = self.read8(0xFF41) as u8;
@@ -138,9 +139,10 @@ impl<'a> LCD<'a>{
                     self.write8(0xFF41, stat);
                 }
             },
+            // OAM Search
             2=>{
                 self.mode2_counter+=cur_cycles;
-                if self.mode2_counter >= 80 {
+                if self.mode2_counter >= 20*4 {
                     self.mode2_counter = 0;
                     self.mode = 3;
                     let mut stat = self.read8(0xFF41) as u8;
@@ -149,9 +151,10 @@ impl<'a> LCD<'a>{
                     self.write8(0xFF41, stat);
                 }
             },
+            // Pixel Transfert
             3=>{
                 self.mode3_counter+=cur_cycles;
-                if self.mode3_counter >= 169 {
+                if self.mode3_counter >= 43*4 {
                     self.mode3_counter = 0;
                     self.mode = 0;
                     let mut stat = self.read8(0xFF41) as u8;
