@@ -87,20 +87,20 @@ impl<'a> LCD<'a>{
         match self.mode {
             0=>{
                 self.mode0_counter+=cur_cycles;
-                if self.mode0_counter >= 201 {
-                    // Update LY at FF44
-                    let mut ly = self.read8(0xFF44) as u8;
+                if self.mode0_counter >= 221 {
+                    let mut stat = self.read8(0xFF41) as u8;
+                    let mut ly   = self.read8(0xFF44) as u8;
+                    let lyc      = self.read8(0xFF45) as u8;
+                    self.need_new_line = true;
+
+                    // Update LY
                     if ly==153 {
                         ly = 0;
                     } else {
                         ly = ly.wrapping_add(1);
                     }
-                    self.need_new_line = true;
-                    self.write8(0xFF44, ly);
 
                     // Update LYC 0xFF45  at STAT 0xFF41
-                    let lyc = self.read8(0xFF45) as u8;
-                    let mut stat = self.read8(0xFF41) as u8;
                     if ly == lyc {
                         stat = stat | (1 << 2);
                     } else {
@@ -122,6 +122,7 @@ impl<'a> LCD<'a>{
                         self.vblank = false;
                     }
 
+                    self.write8(0xFF44, ly);
                     self.write8(0xFF41, stat);
                     self.mode0_counter = 0;
                 }
@@ -191,6 +192,9 @@ impl<'a> LCD<'a>{
     }
     pub fn get_scx(&mut self) -> u8 {
         self.regs[3]
+    }
+    pub fn get_mode(&mut self) -> usize {
+        self.mode
     }
 
     pub fn int_stat(&mut self) -> bool {

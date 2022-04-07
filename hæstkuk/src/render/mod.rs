@@ -367,6 +367,17 @@ impl<'a> Render<'a> {
         let y = cpu.mem.lcd.get_cur_y() as usize;
         self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
         self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
+
+        let mode = cpu.mem.lcd.get_mode();
+        let c;
+        match mode {
+            0 => {c=0x55},
+            1 => {c=0xAA},
+            2 => {c=0xBB},
+            3 => {c=0x00},
+            _ => {c=0xFF},
+        }
+        self.put_pixel8(PixelBuffer::Render, 0, y, c);
     }
 
     pub fn render_screen(&mut self) {
@@ -374,9 +385,9 @@ impl<'a> Render<'a> {
     }
 
     pub fn display_scroll_window(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
-        let SCY  = cpu.mem.read8(0xFF42) as usize;
-        let SCX  = cpu.mem.read8(0xFF43) as usize;
-        let cury = cpu.mem.read8(0xFF44) as usize;
+        let SCY  = cpu.mem.lcd.get_scy() as usize;
+        let SCX  = cpu.mem.lcd.get_scx() as usize;
+        let cury = cpu.mem.lcd.get_cur_y() as usize;
 
         for y in SCY..SCY+144 {
             self.put_pixel24(buf, SCX, y, 255, 0, 0);
