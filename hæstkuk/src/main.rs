@@ -4,6 +4,7 @@ extern crate env_logger;
 use std::io;
 use std::env;
 use std::process;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 mod mem;
 mod rom;
@@ -16,7 +17,7 @@ mod timer;
 extern crate minifb;
 
 const CPU_MHZ: u64 = 4_194_304;
-const REFRESH_CYCLES : u64 = CPU_MHZ / 60;
+const REFRESH_CYCLES : u64 = (CPU_MHZ  as f64 / 59.727500569606) as u64;
 
 // 4.194304 MHz
 fn main() {
@@ -50,20 +51,20 @@ fn main() {
     }
     rom.print_infos();
 
-    timer = timer::Timer::new(CPU_MHZ);
-    lcd = lcd::LCD::new();
+    timer  = timer::Timer::new(CPU_MHZ);
+    lcd    = lcd::LCD::new();
     joypad = joypad::Joypad::new();
-    mem = mem::Mem::new(rom, lcd, joypad, timer);
-    cpu = lr35902::Cpu::new(mem);
-
+    mem    = mem::Mem::new(rom, lcd, joypad, timer);
+    cpu    = lr35902::Cpu::new(mem);
     render = render::Render::new();
 
     let mut refresh_counter: i64 = REFRESH_CYCLES as i64;
 
     cpu.reset();
 
-    loop {
 
+    let mut start = SystemTime::now();
+    loop {
         let cur_cycles = cpu.step() as u64;
 
         cpu.mem.timer.update(cur_cycles);
@@ -88,6 +89,12 @@ fn main() {
             println!("EXIT");
             break;
         }
+
+        let mut end = SystemTime::now();
+        if end.duration_since(start).expect("Error").as_secs_f64()>=0.01674270629882807812 {
+            start = SystemTime::now();
+        }
+
 
     }
 }
