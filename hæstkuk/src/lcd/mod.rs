@@ -151,7 +151,7 @@ impl<'a> LCD<'a>{
                     self.write8(0xFF41, stat);
                 }
             },
-            // Pixel Transfert
+            // Pixel Transfer
             3=>{
                 self.mode3_counter+=cur_cycles;
                 if self.mode3_counter >= 43*4 {
