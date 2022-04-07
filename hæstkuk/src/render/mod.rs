@@ -35,6 +35,7 @@ pub struct Render<'a> {
     buffer_bg: Vec<u32>,
     buffer_tiles: Vec<u32>,
     f1_pressed: bool,
+
     phantom: PhantomData<&'a u8>,
 }
 
@@ -109,7 +110,18 @@ impl<'a> Render<'a> {
         if self.render_window.is_key_pressed(Key::F1, KeyRepeat::No) {
             if self.f1_pressed == false {
                 println!("Saving image");
-                //image::save_buffer("kuk.png", self.buffer_render.as_slice(), 256, 256, image::ColorType::Rgb8).unwrap();
+                let mut buffer = vec![0x00_u8; 160*144*3];
+                let mut offset = 0;
+                for y in 0..144 {
+                    for x in 0..160 {
+                        let b = self.buffer_render[x+y*256];
+                        buffer[offset]   = ((b&0x00FF0000)>>16) as u8;
+                        buffer[offset+1] = ((b&0x0000FF00)>>8)  as u8;
+                        buffer[offset+2] = (b&0x000000FF)       as u8;
+                        offset+=3;
+                    }
+                }
+                image::save_buffer("kuk.png", buffer.as_slice(), 160, 144, image::ColorType::Rgb8).unwrap();
                 self.f1_pressed = true;
             }
         }

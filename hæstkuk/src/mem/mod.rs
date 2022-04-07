@@ -148,12 +148,10 @@ impl<'a> Mem<'a>{
                 if self.rom.get_mbc() == 0x01 {
                     self.mbc1_bank = (self.mbc1_bank & 0x60) | (v & 0x1F);
                     if (self.mbc1_bank == 0x20) ||
-                        (self.mbc1_bank == 0x40) ||
-                            (self.mbc1_bank == 0x60) {
-                                self.mbc1_bank+=1;
+                       (self.mbc1_bank == 0x40) ||
+                       (self.mbc1_bank == 0x60) {
+                           self.mbc1_bank+=1;
                        }
-
-                    //println!("WRITE MBC {:04X} {:02X}, selected bank {:02X}", addr, v, self.mbc1_bank);
                 } else {
                     println!("WRITE ROM WITH NO MBC {:02X}", addr);
                 }
