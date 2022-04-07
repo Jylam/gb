@@ -97,6 +97,10 @@ impl<'a> LCD<'a>{
                     // Update LY
                     if ly==153 {
                         ly = 0;
+                        self.mode = 2;
+                        stat &= 0b1111_1100;
+                        stat |= 0b0000_0010;
+                        self.vblank = false;
                     } else {
                         ly = ly.wrapping_add(1);
                     }
