@@ -52,8 +52,8 @@ impl<'a> Render<'a> {
             });
         let mut render_window = Window::new(
             "Render - ESC to exit",
-            256,
-            256,
+            160,
+            144,
             WindowOptions {
                 borderless: false,
                 title: true,
@@ -84,9 +84,9 @@ impl<'a> Render<'a> {
             tiles_window: tiles_window,
             width: 256,
             height: 256,
-            buffer_render:    vec![0x00; 256*256],
-            buffer_bg:    vec![0x00; 256*256],
-            buffer_tiles: vec![0x00; 256*256],
+            buffer_render: vec![0x00; 256*256],
+            buffer_bg:     vec![0x00; 256*256],
+            buffer_tiles:  vec![0x00; 256*256],
             f1_pressed: false,
             phantom: PhantomData,
         };
@@ -381,7 +381,13 @@ impl<'a> Render<'a> {
     }
 
     pub fn render_screen(&mut self) {
-        self.render_window.update_with_buffer(&mut self.buffer_render, self.width, self.height).unwrap();
+        let mut buf = vec![0x00; 160*144];
+        for y in 0..144 {
+            for x in 0..160 {
+                buf[x+y*160] = self.buffer_render[x+y*256];
+            }
+        }
+        self.render_window.update_with_buffer(&mut buf, 160, 144).unwrap();
     }
 
     pub fn display_scroll_window(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
