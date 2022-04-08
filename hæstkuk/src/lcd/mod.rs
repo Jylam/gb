@@ -88,6 +88,7 @@ impl<'a> LCD<'a>{
             // H-Blank
             0=>{
                 self.mode0_counter+=cur_cycles;
+
                 if self.mode0_counter >= 51*4 {
                     let mut stat = self.read8(0xFF41) as u8;
                     let mut ly   = self.read8(0xFF44) as u8;
@@ -155,6 +156,7 @@ impl<'a> LCD<'a>{
             3=>{
                 self.mode3_counter+=cur_cycles;
                 if self.mode3_counter >= 43*4 {
+                    self.need_new_line = true;
                     self.mode3_counter = 0;
                     self.mode = 0;
                     let mut stat = self.read8(0xFF41) as u8;

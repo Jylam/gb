@@ -260,8 +260,8 @@ impl<'a> Render<'a> {
         let xoff = (x / 8)%32;
         let yoff = (y / 8)%32;
         // Pixel in the tile
-        let xrest = ((x)-(xoff*8))%256;
-        let yrest = ((y)-(yoff*8))%256;
+        let xrest = (x-(xoff*8))%256;
+        let yrest = (y-(yoff*8))%256;
         // Offset in the BGMAP
         let bgoff = xoff+yoff*32;
         // Tile ID
