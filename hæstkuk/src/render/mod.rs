@@ -323,7 +323,7 @@ impl<'a> Render<'a> {
             let flags = cpu.readMem8(offset+3);
             let _xflip = flags&0b0010_0000 != 0;
             let _yflip = flags&0b0100_0000 != 0;
-            let tile_index = cpu.readMem8(offset+2);
+            let mut tile_index = cpu.readMem8(offset+2);
             let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
             let px = (cpu.readMem8(offset+1) as isize)-8;
 
@@ -331,6 +331,9 @@ impl<'a> Render<'a> {
             let mut y = if _yflip {(h-1) as usize -(line-py as usize)} else {line-py as usize};
 
             // Double height ?
+            if h==16 {
+                tile_index = tile_index&0b1111_1110;
+            }
             let tile;
             if y<8 {
                 tile = self.get_tile_by_id(cpu, tile_index, true, palette);
