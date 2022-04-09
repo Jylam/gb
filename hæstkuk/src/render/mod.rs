@@ -253,8 +253,7 @@ impl<'a> Render<'a> {
     }
 
 
-    pub fn get_bg_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: usize, y: usize) -> u8 {
-        let bgmap = 0x9800; // End at 0x9BFF, 32x32 of 8x8 tiles
+    pub fn get_bg_pixel_at(&mut self, cpu: &mut Cpu<'a>, bgmap: u16, x: usize, y: usize) -> u8 {
 
         // X and Y offset in the 32x32 BGMAP
         let xoff = (x / 8)%32;
@@ -281,9 +280,11 @@ impl<'a> Render<'a> {
         let SCX  = cpu.mem.lcd.get_scx() as usize;
         let lcdc = cpu.mem.read8(0xFF40);
 
+        let bgmap = if lcdc&0b0000_01000!=0 { 0x9C00 } else {0x9800}; // End at 0x9BFF, 32x32 of 8x8 tiles
+
         for x in 0..160 {
             if (lcdc & 0b0000_0001) == 0x01 {
-                let c = self.get_bg_pixel_at(cpu, x + SCX, line + SCY);
+                let c = self.get_bg_pixel_at(cpu, bgmap, x + SCX, line + SCY);
                 self.put_pixel8(buffer, x, line, c);
             } else {
                 self.put_pixel8(buffer, x, line, 0x03);
