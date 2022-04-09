@@ -4,8 +4,8 @@ extern crate env_logger;
 use std::io;
 use std::env;
 use std::process;
-//use std::time::{SystemTime};
-//use std::thread;
+use std::time::{SystemTime};
+use std::thread;
 mod mem;
 mod rom;
 mod lr35902;
@@ -64,7 +64,7 @@ fn main() {
 
 
     loop {
-        //let start = SystemTime::now();
+        let start = SystemTime::now();
         let cur_cycles = cpu.step() as u64;
 
         cpu.mem.timer.update(cur_cycles);
@@ -90,8 +90,8 @@ fn main() {
             break;
         }
 
-   //     let end = SystemTime::now();
- //       let diff = end.duration_since(start).expect("Error").as_secs_f64();
+        let end = SystemTime::now();
+        let diff = end.duration_since(start).expect("Error").as_secs_f64();
 //        thread::sleep(0.01674270629882807812-diff);
 //        println!("{}", diff);
 

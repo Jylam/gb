@@ -299,6 +299,7 @@ impl<'a> Render<'a> {
 
         // OBJ Disabled
         if (lcdc&0b0000_0010) == 0 {
+            self.put_pixel8(buffer, 0, line, 0xAA);
             return;
         }
         let h = if (lcdc&0b0000_0100)!=0 { 16 } else { 8 };
@@ -324,7 +325,7 @@ impl<'a> Render<'a> {
             //}
             let _xflip = flags&0b0010_0000 != 0;
             let _yflip = flags&0b0100_0000 != 0;
-            let mut tile_index = cpu.readMem8(offset+2);
+            let tile_index = cpu.readMem8(offset+2);
             let palette = cpu.mem.lcd.get_sprite_palette(((flags&0b0001_0000)>>4) as u16);
             let px = (cpu.readMem8(offset+1) as isize)-8;
 
@@ -332,9 +333,6 @@ impl<'a> Render<'a> {
             let mut y = if _yflip {(h-1) as usize -(line-py as usize)} else {line-py as usize};
 
             // Double height ?
-            if h==16 {
-                tile_index = tile_index&0b1111_1110;
-            }
             let tile;
             if y<8 {
                 tile = self.get_tile_by_id(cpu, tile_index, true, palette);
@@ -383,6 +381,17 @@ impl<'a> Render<'a> {
         let y = cpu.mem.lcd.get_cur_y() as usize;
         self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
         self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
+
+        let mode = cpu.mem.lcd.get_mode();
+        let c;
+        match mode {
+            0 => {c=0x55},
+            1 => {c=0xAA},
+            2 => {c=0xBB},
+            3 => {c=0x00},
+            _ => {c=0xFF},
+        }
+        self.put_pixel8(PixelBuffer::Render, 0, y, c);
     }
 
     pub fn render_screen(&mut self) {
