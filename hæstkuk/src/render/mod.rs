@@ -172,7 +172,13 @@ impl<'a> Render<'a> {
         let r;
         let g;
         let b;
-
+        /*
+        // More LCDy colors
+        if      c == 0x03 {r=175; g=203; b=70;}
+        else if c == 0x02 {r=121; g=170; b=109;}
+        else if c == 0x01 {r=34; g=111; b=95;}
+        else if c == 0x00 {r=8; g=41; b=85;}
+        */
         if      c == 0x00 {r=0x00; g=0x00; b=0x00;}
         else if c == 0x01 {r=0x55; g=0x55; b=0x55;}
         else if c == 0x02 {r=0xAA; g=0xAA; b=0xAA;}
@@ -211,7 +217,7 @@ impl<'a> Render<'a> {
 
             offset+=2;
 
-            // Put 0xFF if the color is transparent
+            // Put 0xFF if the color of a sprite is transparent
             ret[0+i*8] = if is_sprite && p1==0 {0xFF}else{colors[p1 as usize]};
             ret[1+i*8] = if is_sprite && p2==0 {0xFF}else{colors[p2 as usize]};
             ret[2+i*8] = if is_sprite && p3==0 {0xFF}else{colors[p3 as usize]};
@@ -253,37 +259,30 @@ impl<'a> Render<'a> {
     }
 
 
-    pub fn get_bg_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: usize, y: usize) -> u8 {
-        let bgmap = 0x9800; // End at 0x9BFF, 32x32 of 8x8 tiles
-
-        // X and Y offset in the 32x32 BGMAP
-        let xoff = (x / 8)%32;
-        let yoff = (y / 8)%32;
-        // Pixel in the tile
-        let xrest = (x-(xoff*8))%256;
-        let yrest = (y-(yoff*8))%256;
-        // Offset in the BGMAP
-        let bgoff = xoff+yoff*32;
-        // Tile ID
-        let id = cpu.readMem8(bgmap+bgoff as u16);
-        // Tile Pixels
-        let palette = cpu.mem.lcd.get_bw_palette();
-        let tile = self.get_tile_by_id(cpu, id, false, palette);
-        // Get Pixel value
-        tile[xrest+yrest*8]
-    }
 
     pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
         if line>144 {
             return;
         }
+        let bgmap = 0x9800; // End at 0x9BFF, 32x32 of 8x8 tiles
         let SCY  = cpu.mem.lcd.get_scy() as usize;
         let SCX  = cpu.mem.lcd.get_scx() as usize;
         let lcdc = cpu.mem.read8(0xFF40);
 
+        let y = line + SCY;
+        let yoff = (y / 8)%32;
+        let yrest = (y-(yoff*8))%256;
+
         for x in 0..160 {
+            let xoff = (x / 8)%32;
+            let xrest = (x-(xoff*8))%256;
+            let bgoff = xoff+yoff*32;
+            let id = cpu.readMem8(bgmap+bgoff as u16);
+            let palette = cpu.mem.lcd.get_bw_palette();
+            let tile = self.get_tile_by_id(cpu, id, false, palette);
+
             if (lcdc & 0b0000_0001) == 0x01 {
-                let c = self.get_bg_pixel_at(cpu, x + SCX, line + SCY);
+                let c = tile[xrest+yrest*8];
                 self.put_pixel8(buffer, x, line, c);
             } else {
                 self.put_pixel8(buffer, x, line, 0x03);
@@ -320,6 +319,9 @@ impl<'a> Render<'a> {
             }
 
             let flags = cpu.readMem8(offset+3);
+            //if flags&0b1000_0000 != 0 {
+            //    return;
+            //}
             let _xflip = flags&0b0010_0000 != 0;
             let _yflip = flags&0b0100_0000 != 0;
             let mut tile_index = cpu.readMem8(offset+2);

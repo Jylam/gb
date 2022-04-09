@@ -1,5 +1,4 @@
 #![allow(unused_variables)]
-#![allow(dead_code)]
 use std::fs::File;
 use std::io::Read;
 use rom;
@@ -73,7 +72,7 @@ impl<'a> Mem<'a>{
             _ => {self.ram[addr as usize]},
         }
     }
-
+#[allow(dead_code)]
     pub fn dump_mem(&mut self, addr: u16, len: u16) {
         print!("{:04X}: ", addr);
         for i in addr..addr+len {
@@ -205,21 +204,4 @@ impl<'a> Mem<'a>{
         self.write8(addr, (v&0xFF)       as u8);
     }
 
-    pub fn display(&mut self, addr: u16, size: u16) {
-        let mut cnt = 0;
-        for i in addr..addr+size {
-            print!("{:02X}", self.read8(i));
-            if (cnt%32) == 0 {
-                println!("");
-            }
-            cnt+=1
-        }
-    }
-
-
-#[allow(dead_code)]
-    pub fn print_infos(&mut self) {
-        debug!("Zero Page    (0xFF80..0xFFFF) : {:02X?}", self.ram[0xFF80..=0xFFFF].to_vec());
-        debug!("Hardware I/O (0xFF00..0xFF7F) : {:02X?}", self.ram[0xFF00..=0xFF7F].to_vec())
-    }
 }
