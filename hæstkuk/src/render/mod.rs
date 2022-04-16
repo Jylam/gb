@@ -317,17 +317,11 @@ impl<'a> Render<'a> {
         }
 
         let WX  = cpu.mem.lcd.get_wx() as usize - 7;
-        if WX > 166 {
-            return;
-        }
-
-
         let palette = cpu.mem.lcd.get_bw_palette();
-
         let winmap = if lcdc&0b0100_0000!=0 { 0x9C00 } else {0x9800};
 
         for x in 0..160 {
-            if (lcdc & 0b0000_0001) == 0x01 {
+            if (lcdc & 0b0000_0001) == 1 {
                 let c = self.get_win_pixel_at(cpu, winmap, x, line-WY);
                 self.put_pixel8(buffer, x+WX, line, palette[c as usize]);
             } else {
