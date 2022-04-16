@@ -225,11 +225,13 @@ impl<'a> Render<'a> {
         ret
     }
 
-    pub fn display_tile(&mut self, buf: PixelBuffer, x: usize, y: usize, buft: Vec<u8>) {
+    pub fn display_tile(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer, x: usize, y: usize, buft: Vec<u8>) {
+
+        let palette = cpu.mem.lcd.get_bw_palette();
 
         for ty in 0..8 {
             for tx in 0..8 {
-                self.put_pixel8(buf, x+tx, y+ty, buft[tx+ty*8]);
+                self.put_pixel8(buf, x+tx, y+ty, palette[buft[tx+ty*8] as usize]);
             }
         }
     }
@@ -240,7 +242,7 @@ impl<'a> Render<'a> {
 
         for j in (0x8000..0x97FF).step_by(16) {
             let tile = self.get_tile_at_addr(cpu, j);
-            self.display_tile(PixelBuffer::Tiles, x, y, tile);
+            self.display_tile(cpu, PixelBuffer::Tiles, x, y, tile);
             x = x+8;
             if x > 200 {
                 x = 0;
@@ -370,7 +372,7 @@ impl<'a> Render<'a> {
         for offset in 0x9800..=0x9BFF {
             let id = cpu.readMem8(offset);
             let tile = self.get_tile_by_id(cpu, id, false);
-            self.display_tile(buffer, x, y, tile);
+            self.display_tile(cpu, buffer, x, y, tile);
             x+=8;
             if x>=255 {
                 x = 0;
