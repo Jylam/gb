@@ -255,8 +255,10 @@ impl<'a> Render<'a> {
     }
 
 
-    pub fn get_bg_pixel_at(&mut self, cpu: &mut Cpu<'a>, bgmap: u16, x: usize, y: usize) -> u8 {
+    pub fn get_bg_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: usize, y: usize) -> u8 {
 
+        let lcdc = cpu.mem.read8(0xFF40);
+        let bgmap = if lcdc&0b0000_1000!=0 { 0x9C00 } else {0x9800};
         // X and Y offset in the 32x32 BGMAP
         let xoff = (x / 8)%32;
         let yoff = (y / 8)%32;
@@ -340,13 +342,17 @@ impl<'a> Render<'a> {
         let SCY  = cpu.mem.lcd.get_scy() as usize;
         let SCX  = cpu.mem.lcd.get_scx() as usize;
         let lcdc = cpu.mem.read8(0xFF40);
+
+        if lcdc & 1 == 0 {
+            return;
+        }
+
         let palette = cpu.mem.lcd.get_bw_palette();
 
-        let bgmap = if lcdc&0b0000_1000!=0 { 0x9C00 } else {0x9800};
 
         for x in 0..160 {
             if (lcdc & 0b0000_0001) == 0x01 {
-                let c = self.get_bg_pixel_at(cpu, bgmap, x + SCX, line + SCY);
+                let c = self.get_bg_pixel_at(cpu,  x + SCX, line + SCY);
                 self.put_pixel8(buffer, x, line, palette[c as usize]);
             } else {
                 self.put_pixel8(buffer, x, line, 0x03);
@@ -408,7 +414,12 @@ impl<'a> Render<'a> {
                 let ox = if _xflip {7-x} else {x};
                 let c = tile[ox+y*8];
                 if c!=0x00 && (x+px as usize)<160 {
-                    self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
+
+                    // OBJ Priority over BG (and WIN FIXME)
+                    if (flags&0b1000_0000)==0
+                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)==0x00) {
+                        self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
+                    }
                 }
             }
             count+=1;
@@ -440,9 +451,18 @@ impl<'a> Render<'a> {
 
     pub fn update_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let y = cpu.mem.lcd.get_cur_y() as usize;
-        self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
-        self.gen_WIN_map_line( cpu, PixelBuffer::Render, y);
-        self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
+        let lcdc = cpu.mem.read8(0xFF40);
+        if lcdc&0b1000_0000 != 0 {
+            self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
+            self.gen_WIN_map_line( cpu, PixelBuffer::Render, y);
+            self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
+        } else {
+            for y in 0..144 {
+                for x in 0..160 {
+                    self.put_pixel8(PixelBuffer::Render, x, y, 0x03);
+                }
+            }
+        }
     }
 
     pub fn render_screen(&mut self) {
