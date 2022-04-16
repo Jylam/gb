@@ -173,26 +173,27 @@ impl<'a> Render<'a> {
         let g;
         let b;
 
-        if      c == 0x00 {r=0x00; g=0x00; b=0x00;}
-        else if c == 0x01 {r=0x55; g=0x55; b=0x55;}
-        else if c == 0x02 {r=0xAA; g=0xAA; b=0xAA;}
-        else if c == 0x03 {r=0xFF; g=0xFF; b=0xFF;}
-        else if c == 0x55 {r=0xFF; g=0x00; b=0x00;}
-        else if c == 0xAA {r=0x00; g=0xFF; b=0x00;}
-        else if c == 0xBB {r=0x00; g=0x00; b=0xFF;}
-        else {r=0xFF; g=0xFF; b=0xFF;}
+        match c {
+            0x00 => {r=0x00; g=0x00; b=0x00;}, // Black
+            0x01 => {r=0x55; g=0x55; b=0x55;}, // Dark gray
+            0x02 => {r=0xAA; g=0xAA; b=0xAA;}, // Light gray
+            0x03 => {r=0xFF; g=0xFF; b=0xFF;}, // White
+            // Special colors
+            0x55 => {r=0xFF; g=0x00; b=0x00;}, // Red
+            0xAA => {r=0x00; g=0xFF; b=0x00;}, // Green
+            0xBB => {r=0x00; g=0x00; b=0xFF;}, // Blue
+            _    => {r=0xFF; g=0xFF; b=0xFF;}  // Default White
+        }
 
         self.put_pixel24(buf, x, y, r, g, b);
     }
 
-    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool, palette: Vec<u8>) -> Vec<u8> {
-
+    pub fn get_tile_by_id(&mut self, cpu: &mut Cpu<'a>, id: u8, is_sprite: bool) -> Vec<u8> {
         let addr = cpu.mem.lcd.get_tile_addr(id, is_sprite);
-
-        self.get_tile_at_addr(cpu, addr, is_sprite, palette)
+        self.get_tile_at_addr(cpu, addr)
     }
 
-    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16, is_sprite: bool, colors: Vec<u8>) -> Vec<u8> {
+    pub fn get_tile_at_addr(&mut self, cpu: &mut Cpu<'a>, addr: u16) -> Vec<u8> {
 
         let mut ret = vec![0; 8*8];
         let mut offset = addr;
@@ -200,26 +201,26 @@ impl<'a> Render<'a> {
             let a = cpu.readMem8(offset);
             let b = cpu.readMem8(offset+1);
 
-            let p1 = ((a&0b10000000)>>6) | (b&0b10000000)>>7;
-            let p2 = ((a&0b01000000)>>5) | (b&0b01000000)>>6;
-            let p3 = ((a&0b00100000)>>4) | (b&0b00100000)>>5;
-            let p4 = ((a&0b00010000)>>3) | (b&0b00010000)>>4;
-            let p5 = ((a&0b00001000)>>2) | (b&0b00001000)>>3;
-            let p6 = ((a&0b00000100)>>1) | (b&0b00000100)>>2;
-            let p7 = ((a&0b00000010)>>0) | (b&0b00000010)>>1;
-            let p8 = ((a&0b00000001)<<1) | (b&0b00000001)>>0;
+            let p1 = ((a&0b10000000)>>7) | (b&0b10000000)>>6;
+            let p2 = ((a&0b01000000)>>6) | (b&0b01000000)>>5;
+            let p3 = ((a&0b00100000)>>5) | (b&0b00100000)>>4;
+            let p4 = ((a&0b00010000)>>4) | (b&0b00010000)>>3;
+            let p5 = ((a&0b00001000)>>3) | (b&0b00001000)>>2;
+            let p6 = ((a&0b00000100)>>2) | (b&0b00000100)>>1;
+            let p7 = ((a&0b00000010)>>1) | (b&0b00000010)>>0;
+            let p8 = ((a&0b00000001)>>0) | (b&0b00000001)<<1;
 
             offset+=2;
 
             // Put 0xFF if the color is transparent
-            ret[0+i*8] = if is_sprite && p1==0 {0xFF}else{colors[p1 as usize]};
-            ret[1+i*8] = if is_sprite && p2==0 {0xFF}else{colors[p2 as usize]};
-            ret[2+i*8] = if is_sprite && p3==0 {0xFF}else{colors[p3 as usize]};
-            ret[3+i*8] = if is_sprite && p4==0 {0xFF}else{colors[p4 as usize]};
-            ret[4+i*8] = if is_sprite && p5==0 {0xFF}else{colors[p5 as usize]};
-            ret[5+i*8] = if is_sprite && p6==0 {0xFF}else{colors[p6 as usize]};
-            ret[6+i*8] = if is_sprite && p7==0 {0xFF}else{colors[p7 as usize]};
-            ret[7+i*8] = if is_sprite && p8==0 {0xFF}else{colors[p8 as usize]};
+            ret[0+i*8] = p1;
+            ret[1+i*8] = p2;
+            ret[2+i*8] = p3;
+            ret[3+i*8] = p4;
+            ret[4+i*8] = p5;
+            ret[5+i*8] = p6;
+            ret[6+i*8] = p7;
+            ret[7+i*8] = p8;
         }
         ret
     }
@@ -238,8 +239,7 @@ impl<'a> Render<'a> {
         let mut y = 0;
 
         for j in (0x8000..0x97FF).step_by(16) {
-            let palette = cpu.mem.lcd.get_bw_palette();
-            let tile = self.get_tile_at_addr(cpu, j, false, palette);
+            let tile = self.get_tile_at_addr(cpu, j);
             self.display_tile(PixelBuffer::Tiles, x, y, tile);
             x = x+8;
             if x > 200 {
@@ -266,10 +266,19 @@ impl<'a> Render<'a> {
         // Tile ID
         let id = cpu.readMem8(bgmap+bgoff as u16);
         // Tile Pixels
-        let palette = cpu.mem.lcd.get_bw_palette();
-        let tile = self.get_tile_by_id(cpu, id, false, palette);
+        let tile = self.get_tile_by_id(cpu, id, false);
         // Get Pixel value
         tile[xrest+yrest*8]
+    }
+
+    pub fn get_color_name(&mut self, c: u8) {
+        match c {
+            0 => {println!("Black");},
+            1 => {println!("Dark");},
+            2 => {println!("Light");},
+            3 => {println!("White");},
+            _ => {println!("UNK");},
+        }
     }
 
     pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
@@ -279,13 +288,14 @@ impl<'a> Render<'a> {
         let SCY  = cpu.mem.lcd.get_scy() as usize;
         let SCX  = cpu.mem.lcd.get_scx() as usize;
         let lcdc = cpu.mem.read8(0xFF40);
+        let palette = cpu.mem.lcd.get_bw_palette();
 
-        let bgmap = if lcdc&0b0000_01000!=0 { 0x9C00 } else {0x9800}; // End at 0x9BFF, 32x32 of 8x8 tiles
+        let bgmap = if lcdc&0b0000_01000!=0 { 0x9C00 } else {0x9800};
 
         for x in 0..160 {
             if (lcdc & 0b0000_0001) == 0x01 {
                 let c = self.get_bg_pixel_at(cpu, bgmap, x + SCX, line + SCY);
-                self.put_pixel8(buffer, x, line, c);
+                self.put_pixel8(buffer, x, line, palette[c as usize]);
             } else {
                 self.put_pixel8(buffer, x, line, 0x03);
             }
@@ -301,7 +311,6 @@ impl<'a> Render<'a> {
 
         // OBJ Disabled
         if (lcdc&0b0000_0010) == 0 {
-            self.put_pixel8(buffer, 0, line, 0xAA);
             return;
         }
         let h = if (lcdc&0b0000_0100)!=0 { 16 } else { 8 };
@@ -337,17 +346,17 @@ impl<'a> Render<'a> {
             }
             let tile;
             if y<8 {
-                tile = self.get_tile_by_id(cpu, tile_index, true, palette);
+                tile = self.get_tile_by_id(cpu, tile_index, true);
             } else {
-                tile = self.get_tile_by_id(cpu, tile_index+1, true, palette);
+                tile = self.get_tile_by_id(cpu, tile_index+1, true);
                 y = y-8;
             }
 
             for x in 0..=7 {
                 let ox = if _xflip {7-x} else {x};
                 let c = tile[ox+y*8];
-                if c!=0xFF && (x+px as usize)<160 {
-                    self.put_pixel8(buffer, x+px as usize, line, c);
+                if c!=0x00 && (x+px as usize)<160 {
+                    self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
                 }
             }
             count+=1;
@@ -360,8 +369,7 @@ impl<'a> Render<'a> {
 
         for offset in 0x9800..=0x9BFF {
             let id = cpu.readMem8(offset);
-            let palette = cpu.mem.lcd.get_bw_palette();
-            let tile = self.get_tile_by_id(cpu, id, false, palette);
+            let tile = self.get_tile_by_id(cpu, id, false);
             self.display_tile(buffer, x, y, tile);
             x+=8;
             if x>=255 {
@@ -383,17 +391,6 @@ impl<'a> Render<'a> {
         let y = cpu.mem.lcd.get_cur_y() as usize;
         self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
         self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
-
-        let mode = cpu.mem.lcd.get_mode();
-        let c;
-        match mode {
-            0 => {c=0x55},
-            1 => {c=0xAA},
-            2 => {c=0xBB},
-            3 => {c=0x00},
-            _ => {c=0xFF},
-        }
-        self.put_pixel8(PixelBuffer::Render, 0, y, c);
     }
 
     pub fn render_screen(&mut self) {
