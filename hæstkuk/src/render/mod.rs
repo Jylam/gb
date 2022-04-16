@@ -411,7 +411,7 @@ impl<'a> Render<'a> {
 
                     // OBJ Priority over BG (and WIN FIXME)
                     if (flags&0b1000_0000)==0
-                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)==0x00) {
+                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)==0x03) {
                         self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
                     }
                 }
