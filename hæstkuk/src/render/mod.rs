@@ -1,7 +1,6 @@
 // Graphical; renderer
 #![allow(non_snake_case)]
 #![allow(unused_imports)]
-#![allow(dead_code)]
 
 extern crate minifb;
 extern crate image;
@@ -15,8 +14,6 @@ use std::process;
 use std::time::Duration;
 
 use lr35902::Cpu;
-
-const SCALE : u32 = 3;
 
 #[derive(Clone, Debug, Copy)]
 pub enum PixelBuffer {
@@ -132,26 +129,8 @@ impl<'a> Render<'a> {
         self.bg_window.is_key_down(Key::Escape) ||
             self.tiles_window.is_key_down(Key::Escape) ||
             self.render_window.is_key_down(Key::Escape)
-
     }
 
-    pub fn oam(&mut self, cpu: &mut Cpu<'a>) {
-        let mut offset: u16 = 0xFE00;
-        for i in 0..=40 {
-            let x = cpu.readMem8(offset);
-            let y = cpu.readMem8(offset+1);
-            let pattern_number = cpu.readMem8(offset+2);
-            let flags = cpu.readMem8(offset+3);
-            if x!=0 {
-                println!("Sprite {}", i);
-                println!("X: {:02X} {}", x, x);
-                println!("Y: {:02X} {}", y, y);
-                println!("Pattern Number: {:02X}", pattern_number);
-                println!("Flags: {:02X}", flags);
-            }
-            offset+=4;
-        }
-    }
 
     pub fn put_pixel24(&mut self, buf: PixelBuffer, x: usize, y: usize, r: u8, g: u8, b: u8) {
         if x+y*self.width > 65535 {
@@ -292,16 +271,6 @@ impl<'a> Render<'a> {
         tile[xrest+yrest*8]
     }
 
-    pub fn get_color_name(&mut self, c: u8) {
-        match c {
-            0 => {println!("Black");},
-            1 => {println!("Dark");},
-            2 => {println!("Light");},
-            3 => {println!("White");},
-            _ => {println!("UNK");},
-        }
-    }
-
     pub fn gen_WIN_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
         if line>143 {
             return;
@@ -411,7 +380,7 @@ impl<'a> Render<'a> {
 
                     // OBJ Priority over BG (and WIN FIXME)
                     if (flags&0b1000_0000)==0
-                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)==0x03) {
+                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)==0x00) {
                         self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
                     }
                 }
