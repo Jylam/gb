@@ -227,7 +227,6 @@ impl<'a> LCD<'a>{
         let col2 = pal >> 4 & 0b0000_0011;
         let col3 = pal >> 6 & 0b0000_0011;
 
-        //vec![col0, col1, col2, col3]
         let convert = vec![0b11, 0b10, 0b01, 0b00];
         vec![convert[col0 as usize], convert[col1 as usize], convert[col2 as usize], convert[col3 as usize]]
     }

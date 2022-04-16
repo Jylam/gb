@@ -301,11 +301,11 @@ impl<'a> Render<'a> {
     }
 
     pub fn gen_WIN_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
-        if line>144 {
+        if line>143 {
             return;
         }
         let lcdc = cpu.mem.read8(0xFF40);
-        if lcdc&0b0001_0000 == 0 {
+        if lcdc&0b0010_0000 == 0 {
             return;
         }
 
@@ -314,8 +314,12 @@ impl<'a> Render<'a> {
             return;
         }
 
-
         let WX  = cpu.mem.lcd.get_wx() as usize - 7;
+        if WX > 166 {
+            return;
+        }
+
+
         let palette = cpu.mem.lcd.get_bw_palette();
 
         let winmap = if lcdc&0b0100_0000!=0 { 0x9C00 } else {0x9800};
