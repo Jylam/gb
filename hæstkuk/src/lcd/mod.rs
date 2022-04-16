@@ -196,6 +196,12 @@ impl<'a> LCD<'a>{
     pub fn get_scx(&mut self) -> u8 {
         self.regs[3]
     }
+    pub fn get_wy(&mut self) -> u8 {
+        self.regs[0xA]
+    }
+    pub fn get_wx(&mut self) -> u8 {
+        self.regs[0xB]
+    }
     pub fn get_mode(&mut self) -> usize {
         self.mode
     }

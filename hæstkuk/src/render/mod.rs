@@ -272,6 +272,23 @@ impl<'a> Render<'a> {
         // Get Pixel value
         tile[xrest+yrest*8]
     }
+    pub fn get_win_pixel_at(&mut self, cpu: &mut Cpu<'a>, winmap: u16, x: usize, y: usize) -> u8 {
+
+        // X and Y offset in the 32x32 WIN
+        let xoff = (x / 8)%32;
+        let yoff = (y / 8)%32;
+        // Pixel in the tile
+        let xrest = (x-(xoff*8))%256;
+        let yrest = (y-(yoff*8))%256;
+        // Offset in the WINMAP
+        let winoff = xoff+yoff*32;
+        // Tile ID
+        let id = cpu.readMem8(winmap+winoff as u16);
+        // Tile Pixels
+        let tile = self.get_tile_by_id(cpu, id, false);
+        // Get Pixel value
+        tile[xrest+yrest*8]
+    }
 
     pub fn get_color_name(&mut self, c: u8) {
         match c {
@@ -283,6 +300,35 @@ impl<'a> Render<'a> {
         }
     }
 
+    pub fn gen_WIN_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
+        if line>144 {
+            return;
+        }
+        let lcdc = cpu.mem.read8(0xFF40);
+        if lcdc&0b0001_0000 == 0 {
+            return;
+        }
+
+        let WY  = cpu.mem.lcd.get_wy() as usize;
+        if WY>line {
+            return;
+        }
+
+
+        let WX  = cpu.mem.lcd.get_wx() as usize - 7;
+        let palette = cpu.mem.lcd.get_bw_palette();
+
+        let winmap = if lcdc&0b0100_0000!=0 { 0x9C00 } else {0x9800};
+
+        for x in 0..160 {
+            if (lcdc & 0b0000_0001) == 0x01 {
+                let c = self.get_win_pixel_at(cpu, winmap, x, line-WY);
+                self.put_pixel8(buffer, x+WX, line, palette[c as usize]);
+            } else {
+                self.put_pixel8(buffer, x, line, 0x03);
+            }
+        }
+    }
     pub fn gen_BG_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
         if line>144 {
             return;
@@ -292,7 +338,7 @@ impl<'a> Render<'a> {
         let lcdc = cpu.mem.read8(0xFF40);
         let palette = cpu.mem.lcd.get_bw_palette();
 
-        let bgmap = if lcdc&0b0000_01000!=0 { 0x9C00 } else {0x9800};
+        let bgmap = if lcdc&0b0000_1000!=0 { 0x9C00 } else {0x9800};
 
         for x in 0..160 {
             if (lcdc & 0b0000_0001) == 0x01 {
@@ -388,10 +434,10 @@ impl<'a> Render<'a> {
             .unwrap();
     }
 
-
     pub fn update_screen(&mut self, cpu: &mut Cpu<'a> ) {
         let y = cpu.mem.lcd.get_cur_y() as usize;
         self.gen_BG_map_line(  cpu, PixelBuffer::Render, y);
+        self.gen_WIN_map_line( cpu, PixelBuffer::Render, y);
         self.gen_OBJ_map_line( cpu, PixelBuffer::Render, y);
     }
 
