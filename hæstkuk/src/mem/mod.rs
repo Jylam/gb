@@ -190,7 +190,6 @@ impl<'a> Mem<'a>{
                 if self.ram_mode {
                     bank = self.ram_bank
                 }
-                println!("Writing {:02X} in ram bank {}, address {:04X}", v, bank, addr);
                 self.ram[(bank as usize * 0x2000) | ((addr & 0x1FFF) as usize)] = v
             },
             0xFF40..=0xFF4F => {
