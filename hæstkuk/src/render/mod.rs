@@ -4,7 +4,11 @@
 
 extern crate minifb;
 extern crate image;
+extern crate webp_animation;
 
+use std::fs::File;
+use std::io::Write;
+use self::webp_animation::{Encoder};
 use minifb::{Key, KeyRepeat, Window, WindowOptions, Scale, ScaleMode};
 use std::thread::sleep;
 
@@ -121,6 +125,7 @@ impl<'a> Render<'a> {
                     }
                 }
                 image::save_buffer("kuk.png", buffer.as_slice(), 160, 144, image::ColorType::Rgb8).unwrap();
+//                let mut encoder = Encoder::new((160, 144)).unwrap();
                 self.f11_pressed = true;
             }
         }

@@ -9,3 +9,4 @@ authors = ["Jylam <jylam@lnxscene.org>"]
     minifb="*"
     image="*"
     cpal = "*"
+    webp-animation = "*"
