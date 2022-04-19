@@ -32,6 +32,7 @@ pub struct Render<'a> {
     buffer_bg: Vec<u32>,
     buffer_tiles: Vec<u32>,
     f1_pressed: bool,
+    f11_pressed: bool,
 
     phantom: PhantomData<&'a u8>,
 }
@@ -86,6 +87,7 @@ impl<'a> Render<'a> {
             buffer_bg:     vec![0x00; 256*256],
             buffer_tiles:  vec![0x00; 256*256],
             f1_pressed: false,
+            f11_pressed: false,
             phantom: PhantomData,
         };
         render
@@ -104,8 +106,8 @@ impl<'a> Render<'a> {
         cpu.mem.joypad.set_left(self.render_window.is_key_down(Key::Left));
         cpu.mem.joypad.set_right(self.render_window.is_key_down(Key::Right));
 
-        if self.render_window.is_key_pressed(Key::F1, KeyRepeat::No) {
-            if self.f1_pressed == false {
+        if self.render_window.is_key_pressed(Key::F11, KeyRepeat::No) {
+            if self.f11_pressed == false {
                 println!("Saving image");
                 let mut buffer = vec![0x00_u8; 160*144*3];
                 let mut offset = 0;
@@ -119,8 +121,17 @@ impl<'a> Render<'a> {
                     }
                 }
                 image::save_buffer("kuk.png", buffer.as_slice(), 160, 144, image::ColorType::Rgb8).unwrap();
-                self.f1_pressed = true;
+                self.f11_pressed = true;
             }
+        }
+        if self.render_window.is_key_released(Key::F11) {
+            self.f11_pressed = false;
+        }
+        if self.render_window.is_key_pressed(Key::F1, KeyRepeat::No) {
+            if self.f1_pressed == false {
+                cpu.toggle_disasm();
+            }
+            self.f1_pressed = true;
         }
         if self.render_window.is_key_released(Key::F1) {
             self.f1_pressed = false;
@@ -153,10 +164,16 @@ impl<'a> Render<'a> {
         let b;
 
         match c {
-            0x00 => {r=0x00; g=0x00; b=0x00;}, // Black
+/*            0x00 => {r=0x00; g=0x00; b=0x00;}, // Black
             0x01 => {r=0x55; g=0x55; b=0x55;}, // Dark gray
             0x02 => {r=0xAA; g=0xAA; b=0xAA;}, // Light gray
             0x03 => {r=0xFF; g=0xFF; b=0xFF;}, // White
+*/
+            0x00 => {r=0x40; g=0x50; b=0x10;}, // Black
+            0x01 => {r=0x70; g=0x80; b=0x28;}, // Dark gray
+            0x02 => {r=0xA0; g=0xA8; b=0x40;}, // Light gray
+            0x03 => {r=0xD0; g=0xD0; b=0x58;}, // White
+
             // Special colors
             0x55 => {r=0xFF; g=0x00; b=0x00;}, // Red
             0xAA => {r=0x00; g=0xFF; b=0x00;}, // Green
@@ -253,8 +270,10 @@ impl<'a> Render<'a> {
         // Get Pixel value
         tile[xrest+yrest*8]
     }
-    pub fn get_win_pixel_at(&mut self, cpu: &mut Cpu<'a>, winmap: u16, x: usize, y: usize) -> u8 {
+    pub fn get_win_pixel_at(&mut self, cpu: &mut Cpu<'a>, x: usize, y: usize) -> u8 {
 
+        let lcdc = cpu.mem.read8(0xFF40);
+        let winmap = if lcdc&0b0100_0000!=0 { 0x9C00 } else {0x9800};
         // X and Y offset in the 32x32 WIN
         let xoff = (x / 8)%32;
         let yoff = (y / 8)%32;
@@ -272,7 +291,7 @@ impl<'a> Render<'a> {
     }
 
     pub fn gen_WIN_map_line(&mut self, cpu: &mut Cpu<'a>, buffer: PixelBuffer, line: usize) {
-        if line>143 {
+        if line>144 {
             return;
         }
         let lcdc = cpu.mem.read8(0xFF40);
@@ -287,11 +306,10 @@ impl<'a> Render<'a> {
 
         let WX  = cpu.mem.lcd.get_wx() as usize - 7;
         let palette = cpu.mem.lcd.get_bw_palette();
-        let winmap = if lcdc&0b0100_0000!=0 { 0x9C00 } else {0x9800};
 
         for x in 0..160 {
             if (lcdc & 0b0000_0001) == 1 {
-                let c = self.get_win_pixel_at(cpu, winmap, x, line-WY);
+                let c = self.get_win_pixel_at(cpu, x, line-WY);
                 self.put_pixel8(buffer, x+WX, line, palette[c as usize]);
             } else {
                 self.put_pixel8(buffer, x, line, 0x03);
@@ -380,7 +398,8 @@ impl<'a> Render<'a> {
 
                     // OBJ Priority over BG (and WIN FIXME)
                     if (flags&0b1000_0000)==0
-                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)==0x00) {
+                        || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)!=0x00)
+                        || ((flags&0b1000_0000)!=0 && self.get_win_pixel_at(cpu, x+px as usize, line)!=0x00) {
                         self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
                     }
                 }

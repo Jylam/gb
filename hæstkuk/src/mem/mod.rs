@@ -59,6 +59,15 @@ impl<'a> Mem<'a>{
                     self.read8_mbc1(addr) // Use MBC1 FIXME
                 }
             }
+            0xA000..= 0xBFFF => {
+                if self.rom.get_mbc() == 0x00 {
+                    self.ram[addr as usize]
+                }  else if self.rom.get_mbc() == 0x01 {
+                    self.read8_mbc1(addr)
+                } else {
+                    self.read8_mbc1(addr) // Use MBC1 FIXME
+                }
+            }
             // LCD
             0xFF40..=0xFF4F => { self.lcd.read8(addr) },
             // Joypad
@@ -67,7 +76,6 @@ impl<'a> Mem<'a>{
             0xFF04..=0xFF07 => { self.timer.read8(addr) },
             // IF
             0xFF0F          => { self.ram[addr as usize]}, // IF - Interrupt Flag (R/W)
-                                                           // IE
             0xFFFF          => { self.ram[addr as usize]}, // IE - Interrupt Enable (R/W)
 
             _ => {self.ram[addr as usize]},
@@ -116,6 +124,7 @@ impl<'a> Mem<'a>{
             0xA000..= 0xBFFF=>
             {
                 if self.ram_enabled == false {
+                    println!("Reading while RAM disabled");
                     return 0;
                 }
                 let mut bank = 0;
@@ -130,17 +139,18 @@ impl<'a> Mem<'a>{
 
     pub fn write8(&mut self, addr: u16, v: u8)  {
         match addr {
-            // Either BOOTROM or Bank1, shouldn't happen
             0x0000..=0x00FF => {
                 if addr<=0x00FF {
-                    if self.bootrom_enable {self.bootrom[addr as usize] = v; return}
+                    if self.bootrom_enable {
+                        return;
+                    }
                 }
                 if v == 0x00 {
                     self.ram_enabled = false;
                 } else if (v&0x0F) == 0x0A {
                     self.ram_enabled = true;
                 } else {
-
+                    self.ram[addr as usize] = v;
                 }
             },
             // Bank select register
@@ -159,23 +169,28 @@ impl<'a> Mem<'a>{
             0x4000..=0x5FFF => {
                 if !self.ram_mode {
                     self.mbc1_bank = self.mbc1_bank & 0x1F | (((v as u8) & 0x03) << 5);
+                    println!("Changing MBC1 bank to {}", self.mbc1_bank);
                 } else {
                     self.ram_bank = (v as u8) & 0x03;
+                    println!("Changing RAM bank to {}", self.ram_bank);
                 }
             },
             // Cartridge RAM enable
             0x6000..=0x7FFF => {
                 self.ram_mode = (v & 0x01) == 0x01;
+                println!("Changing RAM mode to {}", self.ram_mode);
             }
             // Cartridge RAM
             0xA000..= 0xBFFF=> {
                 if self.ram_enabled == false {
+                println!("RAM NOT ENABLED");
                     return;
                 }
                 let mut bank = 0;
                 if self.ram_mode {
                     bank = self.ram_bank
                 }
+                println!("Writing {:02X} in ram bank {}, address {:04X}", v, bank, addr);
                 self.ram[(bank as usize * 0x2000) | ((addr & 0x1FFF) as usize)] = v
             },
             0xFF40..=0xFF4F => {
@@ -193,6 +208,7 @@ impl<'a> Mem<'a>{
             0xFF50 =>          { self.bootrom_enable = false; println!("Disabling BOOTROM");}
             0xFF00 =>          { self.joypad.write8(v);},
             0xFF04..=0xFF07 => { self.timer.write8(addr, v) },
+            0xFFFF => {println!("IE: {:08b}", v);self.ram[addr as usize] = v;}
             _ => {self.ram[addr as usize] = v;},
         }
     }

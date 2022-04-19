@@ -8,3 +8,4 @@ authors = ["Jylam <jylam@lnxscene.org>"]
     env_logger = "0.6"
     minifb="*"
     image="*"
+    cpal = "*"

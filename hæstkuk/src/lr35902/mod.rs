@@ -125,6 +125,7 @@ pub struct Cpu<'a> {
     opcodes: Vec<Opcode>,
     alt_opcodes: Vec<Opcode>,
     halted: bool,
+    disasm: bool,
 }
 
 pub fn imm16(cpu: &mut Cpu) -> u16 {
@@ -529,7 +530,7 @@ impl<'a> Cpu<'a>{
                         jump: false,
                     }; 256],
                 halted: false,
-
+                disasm: false,
         };
         cpu.opcodes[0] = Opcode {
             name: "NOP",
@@ -4544,6 +4545,10 @@ impl<'a> Cpu<'a>{
         self.regs.PC = 0x0000;
     }
 
+    pub fn toggle_disasm(&mut self) {
+        self.disasm = !self.disasm;
+    }
+
     pub fn step(&mut self) -> u8 {
         let mut cycles = 1;
 
@@ -4556,6 +4561,10 @@ impl<'a> Cpu<'a>{
                 opcode = self.alt_opcodes[code];
             } else {
                 opcode = self.opcodes[code];
+            }
+
+            if self.disasm {
+                self.print_status_small();
             }
             if self.regs.PC > 0x00FF || (self.mem.is_bootrom_enabled() == false) {
       //          self.print_dump();
@@ -4599,6 +4608,7 @@ impl<'a> Cpu<'a>{
 
         if self.regs.I {
             if (ie&0b0000_0001)!=0 && (iflag&0b0000_0001)!=0 { // VBLANK
+                //println!("INT VBLANK");
                 iflag = iflag & !(1 << 0);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0040;
@@ -4610,12 +4620,13 @@ impl<'a> Cpu<'a>{
                 self.regs.PC = 0x0048;
                 DI(self);
             } else if ((ie&0b0000_0100)!=0) && (iflag&0b0000_0100)!=0 { // Timer
+                //println!("INT TIMER");
                 iflag = iflag & !(1 << 2);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0050;
                 DI(self);
             } else if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
-                println!("INT Serial");
+                //println!("INT Serial");
                 iflag = iflag & !(1 << 3);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0058;
