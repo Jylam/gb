@@ -25,6 +25,7 @@ pub enum PixelBuffer {
         BG,
         Tiles,
 }
+
 #[allow(dead_code)]
 pub struct Render<'a> {
     render_window: Window,
@@ -37,6 +38,8 @@ pub struct Render<'a> {
     buffer_tiles: Vec<u32>,
     f1_pressed: bool,
     f11_pressed: bool,
+    f12_pressed: bool,
+    webp_encoder: webp_animation::Encoder,
 
     phantom: PhantomData<&'a u8>,
 }
@@ -92,6 +95,8 @@ impl<'a> Render<'a> {
             buffer_tiles:  vec![0x00; 256*256],
             f1_pressed: false,
             f11_pressed: false,
+            f12_pressed: false,
+            webp_encoder: Encoder::new((160, 144)).unwrap(),
             phantom: PhantomData,
         };
         render
@@ -110,6 +115,18 @@ impl<'a> Render<'a> {
         cpu.mem.joypad.set_left(self.render_window.is_key_down(Key::Left));
         cpu.mem.joypad.set_right(self.render_window.is_key_down(Key::Right));
 
+        // Disasm
+        if self.render_window.is_key_pressed(Key::F1, KeyRepeat::No) {
+            if self.f1_pressed == false {
+                cpu.toggle_disasm();
+            }
+            self.f1_pressed = true;
+        }
+        if self.render_window.is_key_released(Key::F1) {
+            self.f1_pressed = false;
+        }
+
+        // Screenshot
         if self.render_window.is_key_pressed(Key::F11, KeyRepeat::No) {
             if self.f11_pressed == false {
                 println!("Saving image");
@@ -125,22 +142,24 @@ impl<'a> Render<'a> {
                     }
                 }
                 image::save_buffer("kuk.png", buffer.as_slice(), 160, 144, image::ColorType::Rgb8).unwrap();
-//                let mut encoder = Encoder::new((160, 144)).unwrap();
                 self.f11_pressed = true;
             }
         }
         if self.render_window.is_key_released(Key::F11) {
             self.f11_pressed = false;
         }
-        if self.render_window.is_key_pressed(Key::F1, KeyRepeat::No) {
-            if self.f1_pressed == false {
-                cpu.toggle_disasm();
+
+        // Animation
+        if self.render_window.is_key_pressed(Key::F12, KeyRepeat::No) {
+            if self.f12_pressed == false {
+                self.webp_encoder = Encoder::new((160, 144)).unwrap();
             }
-            self.f1_pressed = true;
+            self.f12_pressed = true;
         }
-        if self.render_window.is_key_released(Key::F1) {
-            self.f1_pressed = false;
+        if self.render_window.is_key_released(Key::F12) {
+            self.f12_pressed = false;
         }
+
 
         self.bg_window.is_key_down(Key::Escape) ||
             self.tiles_window.is_key_down(Key::Escape) ||
