@@ -39,6 +39,7 @@ impl<'a> Mem<'a>{
             ram_bank: 0x00,
             ram_mode: false,
             ram_enabled: false,
+            mbc1: MBC1::MBC1::new(),
             ..Default::default()
         };
 
