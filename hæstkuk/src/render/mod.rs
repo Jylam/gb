@@ -14,7 +14,7 @@ use minifb::{Key, KeyRepeat, Window, WindowOptions, Scale, ScaleMode};
 use std::thread::sleep;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::borrow::Borrow;
-use  std::mem::swap;
+use std::mem::swap;
 use std::marker::PhantomData;
 use std::process;
 
@@ -24,9 +24,9 @@ use lr35902::Cpu;
 
 #[derive(Clone, Debug, Copy)]
 pub enum PixelBuffer {
-        Render,
-        BG,
-        Tiles,
+    Render,
+    BG,
+    Tiles,
 }
 
 #[allow(dead_code)]
@@ -210,11 +210,11 @@ impl<'a> Render<'a> {
         let b;
 
         match c {
-/*            0x00 => {r=0x00; g=0x00; b=0x00;}, // Black
-            0x01 => {r=0x55; g=0x55; b=0x55;}, // Dark gray
-            0x02 => {r=0xAA; g=0xAA; b=0xAA;}, // Light gray
-            0x03 => {r=0xFF; g=0xFF; b=0xFF;}, // White
-*/
+            /*            0x00 => {r=0x00; g=0x00; b=0x00;}, // Black
+                          0x01 => {r=0x55; g=0x55; b=0x55;}, // Dark gray
+                          0x02 => {r=0xAA; g=0xAA; b=0xAA;}, // Light gray
+                          0x03 => {r=0xFF; g=0xFF; b=0xFF;}, // White
+                          */
             0x00 => {r=0x40; g=0x50; b=0x10;}, // Black
             0x01 => {r=0x70; g=0x80; b=0x28;}, // Dark gray
             0x02 => {r=0xA0; g=0xA8; b=0x40;}, // Light gray
@@ -445,9 +445,9 @@ impl<'a> Render<'a> {
                     // OBJ Priority over BG (and WIN FIXME)
                     if (flags&0b1000_0000)==0
                         || ((flags&0b1000_0000)!=0 && self.get_bg_pixel_at(cpu, x+px as usize, line)!=0x00)
-                        || ((flags&0b1000_0000)!=0 && self.get_win_pixel_at(cpu, x+px as usize, line)!=0x00) {
-                        self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
-                    }
+                            || ((flags&0b1000_0000)!=0 && self.get_win_pixel_at(cpu, x+px as usize, line)!=0x00) {
+                                self.put_pixel8(buffer, x+px as usize, line, palette[c as usize]);
+                            }
                 }
             }
             count+=1;

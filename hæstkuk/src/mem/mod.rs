@@ -158,10 +158,10 @@ impl<'a> Mem<'a>{
                 if self.rom.get_mbc() == 0x01 {
                     self.mbc1_bank = (self.mbc1_bank & 0x60) | (v & 0x1F);
                     if (self.mbc1_bank == 0x20) ||
-                       (self.mbc1_bank == 0x40) ||
-                       (self.mbc1_bank == 0x60) {
-                           self.mbc1_bank+=1;
-                       }
+                        (self.mbc1_bank == 0x40) ||
+                            (self.mbc1_bank == 0x60) {
+                                self.mbc1_bank+=1;
+                            }
                 } else {
                     println!("WRITE ROM WITH NO MBC {:02X}", addr);
                 }
@@ -183,7 +183,7 @@ impl<'a> Mem<'a>{
             // Cartridge RAM
             0xA000..= 0xBFFF=> {
                 if self.ram_enabled == false {
-                println!("RAM NOT ENABLED");
+                    println!("RAM NOT ENABLED");
                     return;
                 }
                 let mut bank = 0;

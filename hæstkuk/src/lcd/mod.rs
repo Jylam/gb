@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 // LCD controller
 #[derive(Clone, Debug, Default)]
 pub struct LCD<'a> {
-	regs: Vec<u8>,
-	phantom: PhantomData<&'a u8>,
+    regs: Vec<u8>,
+    phantom: PhantomData<&'a u8>,
     debug: bool,
     vblank: bool,
     max_cycles: u64,

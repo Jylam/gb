@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 // Joypad controller
 #[derive(Clone, Debug, Default)]
 pub struct Joypad<'a> {
-	input: u8,
-	phantom: PhantomData<&'a u8>,
+    input: u8,
+    phantom: PhantomData<&'a u8>,
     debug: bool,
     btn_a:       bool,
     btn_b:       bool,
@@ -20,10 +20,10 @@ pub struct Joypad<'a> {
 
 
 impl<'a> Joypad<'a>{
-	pub fn new() -> Joypad<'a> {
-		Joypad{
-			input: 0b0011_1111,
-			phantom: PhantomData,
+    pub fn new() -> Joypad<'a> {
+        Joypad{
+            input: 0b0011_1111,
+            phantom: PhantomData,
             debug: false,
             btn_a:      false,
             btn_b:      false,
@@ -34,9 +34,9 @@ impl<'a> Joypad<'a>{
             btn_up:     false,
             btn_down:   false,
             interrupt:  false,
-		}
-	}
-	pub fn write8(&mut self, v: u8)  {
+        }
+    }
+    pub fn write8(&mut self, v: u8)  {
         self.input = v & 0b0011_0000;
     }
 
