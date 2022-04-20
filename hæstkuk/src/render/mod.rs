@@ -6,12 +6,15 @@ extern crate minifb;
 extern crate image;
 extern crate webp_animation;
 
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use self::webp_animation::{Encoder};
 use minifb::{Key, KeyRepeat, Window, WindowOptions, Scale, ScaleMode};
 use std::thread::sleep;
-
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::borrow::Borrow;
+use  std::mem::swap;
 use std::marker::PhantomData;
 use std::process;
 
@@ -39,7 +42,9 @@ pub struct Render<'a> {
     f1_pressed: bool,
     f11_pressed: bool,
     f12_pressed: bool,
+    recording: bool,
     webp_encoder: webp_animation::Encoder,
+    webp_timestamp: i32,
 
     phantom: PhantomData<&'a u8>,
 }
@@ -49,6 +54,15 @@ impl<'a> Render<'a> {
     pub fn new() -> Render<'a> {
         let tiles_window = Window::new(
             "Tiles - ESC to exit",
+            256,
+            256,
+            WindowOptions::default(),
+            )
+            .unwrap_or_else(|e| {
+                panic!("{}", e);
+            });
+        let bg_window = Window::new(
+            "BGMap - ESC to exit",
             256,
             256,
             WindowOptions::default(),
@@ -75,15 +89,6 @@ impl<'a> Render<'a> {
                 panic!("{}", e);
             });
         render_window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
-        let bg_window = Window::new(
-            "BGMap - ESC to exit",
-            256,
-            256,
-            WindowOptions::default(),
-            )
-            .unwrap_or_else(|e| {
-                panic!("{}", e);
-            });
         let render = Render {
             render_window: render_window,
             bg_window: bg_window,
@@ -96,7 +101,9 @@ impl<'a> Render<'a> {
             f1_pressed: false,
             f11_pressed: false,
             f12_pressed: false,
+            recording: false,
             webp_encoder: Encoder::new((160, 144)).unwrap(),
+            webp_timestamp: 0,
             phantom: PhantomData,
         };
         render
@@ -152,7 +159,22 @@ impl<'a> Render<'a> {
         // Animation
         if self.render_window.is_key_pressed(Key::F12, KeyRepeat::No) {
             if self.f12_pressed == false {
-                self.webp_encoder = Encoder::new((160, 144)).unwrap();
+                if self.webp_timestamp == 0 {
+                    self.webp_encoder = Encoder::new((160, 144)).unwrap();
+                    self.recording = true;
+                } else {
+                    println!("SAVING");
+                    let w = self.webp_timestamp;
+                    let mut webpe = Encoder::new((160, 144)).unwrap();
+                    swap(&mut webpe, &mut self.webp_encoder);
+
+                    let contents = &webpe.finalize(w).unwrap();
+
+                    fs::write("test.webp", contents).unwrap();
+
+                    self.webp_timestamp = 0;
+                    self.recording = false;
+                }
             }
             self.f12_pressed = true;
         }
@@ -479,6 +501,25 @@ impl<'a> Render<'a> {
             }
         }
         self.render_window.update_with_buffer(&mut buf, 160, 144).unwrap();
+
+        if self.recording {
+
+            let mut rgba8 = vec![0 as u8; 160*144*4];
+            let mut offset = 0;
+            for y in 0..144 {
+                for x in 0..160 {
+                    let pixel = self.buffer_render[x+y*256];
+                    rgba8[offset]   = ((pixel&0x00FF0000)>>16) as u8;
+                    rgba8[offset+1] = ((pixel&0x0000FF00)>>8) as u8;
+                    rgba8[offset+2] = ((pixel&0x000000FF)) as u8;
+                    rgba8[offset+3] = 0xFF as u8;
+                    offset+=4;
+
+                }
+            }
+            self.webp_encoder.add_frame(rgba8.as_slice(), self.webp_timestamp).unwrap();
+            self.webp_timestamp += 16;
+        }
     }
 
     pub fn display_scroll_window(&mut self, cpu: &mut Cpu<'a>, buf: PixelBuffer) {
