@@ -78,7 +78,8 @@ impl<'a> Mem<'a>{
             0xFF0F          => { self.ram[addr as usize]}, // IF - Interrupt Flag (R/W)
             0xFFFF          => { self.ram[addr as usize]}, // IE - Interrupt Enable (R/W)
 
-            _ => {self.ram[addr as usize]},
+            _ => {
+                self.ram[addr as usize]},
         }
     }
 

@@ -4578,11 +4578,11 @@ impl<'a> Cpu<'a>{
                 self.regs.PC = self.regs.PC.wrapping_add(opcode.len);
             }
 
-            if self.mem.read8(0xFF02) == 0x81 {
-                let _c = self.mem.read8(0xFF01);
-                //println!("SERIAL got {}", c as char);
-                self.mem.write8(0xff02, 0x0);
-            }
+        //    if self.mem.read8(0xFF02) == 0x81 {
+        //        let _c = self.mem.read8(0xFF01);
+        //        println!("SERIAL got {:02X} ({})", _c, _c as char);
+         //       self.mem.write8(0xff02, 0x0);
+         //   }
             cycles = opcode.cycles;
         }
         /* Interrupts */
@@ -4598,6 +4598,13 @@ impl<'a> Cpu<'a>{
         }
         if self.mem.timer.int_timer() {
             iflag = iflag | (1 << 2);
+        }
+        // Serial
+        if self.mem.read8(0xFF02) == 0x81 {
+            iflag = iflag | (1<<3);
+            //let _c = self.mem.read8(0xFF01);
+            //println!("SERIAL got {:02X} ({})", _c, _c as char);
+            self.mem.write8(0xff02, 0x0);
         }
         if self.mem.joypad.int_joypad() {
             iflag = iflag | (1 << 4);
@@ -4626,7 +4633,6 @@ impl<'a> Cpu<'a>{
                 self.regs.PC = 0x0050;
                 DI(self);
             } else if ((ie&0b0000_1000)!=0) && (iflag&0b0000_1000)!=0 { // Serial
-                //println!("INT Serial");
                 iflag = iflag & !(1 << 3);
                 PushStack(self, self.regs.PC);
                 self.regs.PC = 0x0058;
