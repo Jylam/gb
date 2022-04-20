@@ -11,6 +11,7 @@ mod lcd;
 mod render;
 mod joypad;
 mod timer;
+mod MBC1;
 
 extern crate minifb;
 

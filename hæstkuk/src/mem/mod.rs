@@ -6,6 +6,7 @@ use rom;
 use lcd;
 use joypad;
 use timer;
+use MBC1;
 // Memory controller
 #[derive(Clone, Debug, Default)]
 pub struct Mem<'a> {
@@ -21,6 +22,7 @@ pub struct Mem<'a> {
     ram_bank: u8,
     ram_mode: bool,
     ram_enabled: bool,
+    mbc1: MBC1::MBC1<'a>,
 }
 
 impl<'a> Mem<'a>{
