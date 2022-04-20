@@ -207,7 +207,8 @@ impl<'a> Mem<'a>{
             0xFF50 =>          { self.bootrom_enable = false; println!("Disabling BOOTROM");}
             0xFF00 =>          { self.joypad.write8(v);},
             0xFF04..=0xFF07 => { self.timer.write8(addr, v) },
-            0xFFFF => {println!("IE: {:08b}", v);self.ram[addr as usize] = v;}
+            // IE
+            0xFFFF => {self.ram[addr as usize] = v;}
             _ => {self.ram[addr as usize] = v;},
         }
     }
